@@ -1,0 +1,146 @@
+Добавление пользователя
+net user username userpassword /ADD
+
+Добавление пользователя в локальные администраторы
+net localgroup administrators ruacii2 /add
+
+Монтирование сетевого ресурса от имени пользователя
+net use X: "\\raiffeisen\dfs\RBA\MSK\Troitskaya\Workgroups\Operations\Back Office\Cards" sfcvKi87sd /user:raiffeisen\srv-processing /persistent:no
+
+Демонтировать все сетевые ресурсы (без подтверждения):
+net use * /DELETE /y
+
+Узнать, от имени какого пользователя монтирован сетевой ресурс:
+
+wmic netuse where LocalName="Z:" get UserName /value
+
+Узнать, какие порты используются процессом или службой
+
+tasklist /svc
+Netstat -nao > d:\1.log
+Netstat -nao | findstr <id интересующего процесса>
+
+Получить список слушаемых портов и связанных с ними программ (анализ сети):
+
+(-v отображается последовательность компонентов, участвующих в создании соединения или слушаемого порта)
+
+netstat -anbv
+
+получить статистические данные 
+(дополнительно к статистике Ethernet, отображается статистика для протоколов IP , ICMP , TCP , UDP)
+
+netstat -e -s
+
+Проверка возможности изменения ip
+
+ping 10.243.12.46
+arp -a
+этого адреса (10.243.12.46 - тот, который будет потенциально использоваться для смены) не должно быть в результатах выполнения команды
+
+Очистить кеш DNS
+
+ipconfig /flushdns
+
+Вывести все записи по серверу из DNS по его адресу
+
+nslookup -type=PTR  10.243.100.237
+
+Задание переменных в независимости от формата даты
+
+@echo off
+Set _Date=%date%
+If "%_Date%A" LSS "A" (Set _NumTok=1-3) Else (Set _NumTok=2-4)
+:: Default Delimiter of TAB and Space are used
+For /F "TOKENS=2*" %%A In ('REG QUERY "HKCU\Control Panel\International" /v iDate') Do Set _iDate=%%B
+For /F "TOKENS=2*" %%A In ('REG QUERY "HKCU\Control Panel\International" /v sDate') Do Set _sDate=%%B
+IF %_iDate%==0 For /F "TOKENS=%_NumTok% DELIMS=%_sDate% " %%B In ("%_Date%") Do Set _fdate=%%D%%B%%C
+IF %_iDate%==1 For /F "TOKENS=%_NumTok% DELIMS=%_sDate% " %%B In ("%_Date%") Do Set _fdate=%%D%%C%%B
+IF %_iDate%==2 For /F "TOKENS=%_NumTok% DELIMS=%_sDate% " %%B In ("%_Date%") Do Set _fdate=%%B%%C%%D
+Set _Today=%_fdate:~0,4%%_fdate:~4,2%%_fdate:~6,2%
+
+Вызов командного файла из командного файла с продолжением работы файла ,из которого вызываем
+
+call file.bat
+
+Перенаправление сообщений об ошибках (STDERR) и выполнении (STDOUT) в один файл (dir file.xxx 1> output.msg 2>&1)
+
+можно использовать и при запуске назначенных заданий
+
+D:\Prog\bin\commands.bat 1> E:\Trace\logfile_%date%.log 2>&1
+
+Анализ сетевой активности
+
+Wireshark
+
+Установка обновлений
+
+net stop wuauserv
+net start wuauserv
+
+wuauclt /detectnow
+
+wuauclt /r /ReportNow
+
+Windows Update log can be found at %systemroot%\WindowsUpdate.log
+
+Вывод информации об установленных 4/21 (дата) обновлениях:
+
+wmic qfe list brief /format:texttablewsys | findstr 4/21
+
+Запрос параметров пользователя в реестре:
+
+Windows6.1-KB958830-x64-RefreshPkg - инструменты для AD
+
+dsquery * -filter "samaccountname=ruakomi" -attr objectSid
+
+Далее для этого SID смотрим записи в реестре в ветви HKEY_USERS
+
+Как предоставить доступ к EVENTLOG для локальной учетной записи:
+
+http://support.microsoft.com/kb/323076
+
+Уточнил еще раз, для доступа к Application и System, все-таки надо редактировать реестр:
+1. в Command Promt выполнить «wmic useraccount get name,sid». В результате выполнения найти SID для учетки srv-arcsight-local
+2. в реестре в ветках «HKLM\SYSTEM\CurrentControlSet\Services\Eventlog\System» и «HKEY_LOCAL_MACHINE\System\CurrentControlSet\Services\Eventlog\Application» найти ключ «CustomSD»
+3. в конец значения ключа добавить «(A;;0x3;;;%SID%)», где %SID% - SID учетки srv-arcsight-local, найденный в пункте 1.
+
+Дефолтные значения:
+http://msdn.microsoft.com/en-us/library/windows/desktop/aa363648%28v=vs.85%29.aspx
+Application:
+O:BAG:SYD(A;;0xf0007;;;SY)(A;;0x7;;;BA)(A;;0x7;;;SO)(A;;0x3;;;IU)(A;;0x3;;;SU)(A;;0x3;;;S-1-5-3)(A;;0x3;;;S-1-5-33)(A;;0x1;;;S-1-5-32-573)
+System
+O:BAG:SYD:(A;;0xf0007;;;SY)(A;;0x7;;;BA)(A;;0x3;;;BO)(A;;0x5;;;SO)(A;;0x1;;;IU)(A;;0x3;;;SU)(A;;0x1;;;S-1-5-3)(A;;0x2;;;S-1-5-33)(A;;0x1;;;S-1-5-32-573)
+
+либо (не работает)
+
+1  Go to Settings -> Control Panel -> Administrative Tools -> Local Security Policy -> Security 
+Settings -> Local Policies -> User Rights Assignment.
+2  Open the Manage auditing and security log policy.
+3  Enable Define these Policy Settings and add src-arcsight-local to this policy.
+4  Go to Settings -> Control Panel -> Administrative Tools -> Local Security Policy -> Security 
+Settings -> Local Policies -> Security Options.
+5  Open the Network access: Sharing and security model for local accounts policy.
+6  Set this policy to the option: Classic – local users authenticate as themselves. 
+
+Автоматическая синхронизация каталогов: ROBOCOPY
+
+Информация о домене: dsquery, dsget (входят в пакет Remote Server Administration Tools (RSAT)):
+
+информация о пользователе:
+dsquery user -samid name_of_user | dsget user -memberof -expand | dsget group -samid
+
+информация о группe:
+dsquery group -samid "Full Name of Group"
+
+информация о членах группы:
+dsquery group DC=raiffeisen,DC=ru -name "Full Name of Group" | dsget group -members
+
+группа ATM: "App-Prime4-BCD_Technical_Support"
+
+dsquery group DC=raiffeisen,DC=ru -name "Org-IT-o4821" | dsget group -members
+dsquery user -samid ruadna | dsget user -memberof -expand | dsget group -samid
+
+информация о количестве попыток неверного ввода доменного пароля пользователем:
+dsquery * -filter "(sAMAccountName=user_name_in_domain)" -attr givenName sn badPwdCount
+или
+dsquery * -filter "(&(objectCategory=User)(objectClass=Person)(sAMAccountName=user_name_in_domain))" -attr givenName sn badPwdCount
