@@ -1,3 +1,100 @@
+-- TALEND related sessions AWR info:
+
+  SELECT count(1),MACHINE,PROGRAM,MODULE,ACTION
+    FROM DBA_HIST_ACTIVE_SESS_HISTORY
+   WHERE     SAMPLE_TIME BETWEEN sysdate-2 and sysdate and MACHINE in ('TALNDFSB','WHOTALNDAPB01')
+   group by MACHINE,PROGRAM,MODULE,ACTION 
+ORDER BY 1 desc;
+
+  SELECT count(1),MACHINE,PROGRAM,MODULE,ACTION
+    FROM DBA_HIST_ACTIVE_SESS_HISTORY
+   WHERE     SAMPLE_TIME BETWEEN sysdate-2 and sysdate and MACHINE <> 'TALNDFSB' and upper(module) like 'TALEND%'
+   group by MACHINE,PROGRAM,MODULE,ACTION 
+ORDER BY 1 desc;
+
+  SELECT MACHINE,ACTION,MODULE,substr(module,1,12) mod1
+    FROM DBA_HIST_ACTIVE_SESS_HISTORY
+   WHERE     SAMPLE_TIME BETWEEN sysdate-2 and sysdate and MACHINE in ('TALNDFSB','WHOTALNDAPB01')
+   group by MACHINE,MODULE,ACTION,substr(module,1,12)
+ --  having module not like '%:%'
+ORDER BY 1,2;
+
+select distinct mod1 from (
+  SELECT MACHINE,ACTION,MODULE,substr(module,1,12) mod1
+    FROM DBA_HIST_ACTIVE_SESS_HISTORY
+   WHERE     SAMPLE_TIME BETWEEN sysdate-1 and sysdate and MACHINE in ('TALNDFSB','WHOTALNDAPB01')
+   group by MACHINE,MODULE,ACTION,substr(module,1,12)
+ --  having module not like '%:%'
+ORDER BY 1,2);
+
+-- Kill long running sessions from w4 manager users query (https://jira.network.ae/jira/browse/PRD-10098):
+
+SELECT
+    substr(message_name,instr(message_name,'=',1,1)+1,instr(message_name,';',1,2)-instr(message_name,'=',1,1)-1) sid,
+    substr(message_name,instr(message_name,'=',1,4)+1,instr(message_name,';',1,5)-instr(message_name,'=',1,4)-1) sql_id,
+    TO_CHAR(message_date, 'dd/mm/yyyy hh24:mi:ss') time
+FROM
+    process_log JOIN process_mess
+    ON process_mess.process_log__oid = process_log.id
+WHERE
+    process_log.process_name = 'OPT_SESSION_MONITOR'
+    AND process_mess.message_date > SYSDATE - 1 -- can be changed as per required
+    AND process_mess.object_type = 'KILL_SESSION';
+
+-- OSwatcher historical logs / traces analysis
+
+--way4db PROD servers:
+
+--run in bg:
+cd /grid/OSwatcher/oswbb
+nohup java -jar oswbba.jar -i /grid/OSwatcher/oswbb/output -b Feb 28 00:00:00 2021 -e Mar 02 11:30:00 2021 -s >> analysis_`date +%Y%m%d_%H%M%S`.log 2>&1 &
+java -jar oswbba.jar -i /grid/OSwatcher/oswbb/output -b Feb 09 00:00:00 2021 -e Feb 16 10:00:00 2021 -s
+
+-- dependencies for OWS objects (for patching, datapatch phase)
+
+with o as
+ (select /*+materialize*/
+ distinct o.referenced_owner, o.referenced_name, o.referenced_type
+ from dba_dependencies o
+ where o.owner = 'OWS'
+ and (o.referenced_owner = 'SYS' or o.referenced_owner = 'PUBLIC')
+ and o.referenced_type <> 'JAVA CLASS')
+select o.referenced_owner, o.referenced_name, o.referenced_type
+ from o
+union
+select distinct d.referenced_owner, d.referenced_name, d.referenced_type
+ from dba_dependencies d, o
+ start with d.owner = o.referenced_owner and d.name = o.referenced_name and
+ d.type = o.referenced_type
+connect by prior d.referenced_owner = d.owner AND
+ PRIOR d.referenced_name = d.name AND
+ PRIOR d.referenced_type = d.type
+ order by referenced_type, referenced_name;
+ 
+--recompiled sys objects while doing patching (see LAST_DDL_TIME value during datapatch execution)
+ 
+   SELECT *
+    FROM DBA_OBJECTS
+   WHERE     OWNER = 'SYS'
+         AND OBJECT_TYPE NOT IN ('JOB',
+                                 'INDEX PARTITION',
+                                 'TABLE PARTITION',
+                                 'TABLE SUBPARTITION',
+                                 'TABLE',
+                                 'JAVA CLASS',
+                                 'INDEX',
+                                 'CLUSTER','LOB','SEQUENCE')and LAST_DDL_TIME >= add_months(sysdate,-9)
+ORDER BY LAST_DDL_TIME DESC;
+
+--ETL timings for each day from datamart. Everyday there will be 5 processes (on release days there could be one more).
+
+select  round((finished-started)*24*60,2) as duration,to_char(started,'dd-mon-yyyy hh24:mi:ss'),to_char(finished,'dd-mon-yyyy hh24:mi:ss'),l.* 
+from process_log l where process_name like '%Lock%' order by id desc;
+
+-- datamart process log
+
+select * from dwh.process_log where last_updated >= trunc(sysdate) and error_level is not null order by last_updated;
+
 -- LONG running sessions monitoring:
 
   SELECT DISTINCT SQL_ID, MAX (EXEC_TIME)
