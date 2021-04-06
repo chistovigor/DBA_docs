@@ -1,21 +1,8 @@
 #!/bin/bash
 
-#backup/restore preprod DB script, ver 1.2, created by Igor Chistov, Rajavardhan Reddy
-
-#variables
-
-export script_ver="1.2"
-export catalog_server="10.129.115.44:4420/ppctldb"
-export ORACLE_SID=$1
-export jira_task=$2
-export mode=$3
-export host_name=`hostname`
-export catalog_db="sys/ni123456@$catalog_server as sysdba"
-export catalog_tns=\"${host_name}_${jira_task}/${host_name}_${jira_task}@$catalog_server\"
-export timestamp=`date '+%d%m%y_%H_%M'`
-export logdir=$HOME/logs/
-export NLS_DATE_FORMAT='DD-MM-YYYY HH24:MI'
-export SBT_PARMS="SBT_PARMS=(NSR_SERVER=lnibkpprd1,NSR_CLIENT=$host_name,NSR_RECOVER_POOL=Oracle)"
+#backup/restore preprod DB script, created by Igor Chistov
+#documentation available here: https://jira.network.ae/confluence/display/DBA/Rman+backup-restore#Rmanbackup-restore-pp_backup_restore
+#bitbucket version: https://bitbucket.org/network-international/infrastructure/src/master/BAU_scripts/Backup_restore/backup_restore_script_preprod.sh
 
 # crontab example backup (first number - minute, second number - hour, third number - day of months for start job)
 # 00 17 22 * * $HOME/scripts/preprod_backup_restore.sh way4db0 JIRA_EE3106 backup >> $HOME/logs/backup_JIRA_EE-3106.log 2>&1
@@ -29,6 +16,26 @@ export SBT_PARMS="SBT_PARMS=(NSR_SERVER=lnibkpprd1,NSR_CLIENT=$host_name,NSR_REC
 # command line run example (remove hash from the beginning)
 #nohup $HOME/scripts/preprod_backup_restore.sh way4db0 JIRA_EE3106 backup >> $HOME/logs/backup_JIRA_EE-3106.log 2>&1
 
+#variables common
+export script_ver="2.6"
+export timestamp=`date '+%d%m%y_%H_%M_%S'`
+log_folder=$HOME/logs
+os_ver=`uname -o | cut -d '/' -f 2`
+script_name=`basename $0`
+username=`whoami`
+export NLS_DATE_FORMAT='DD-MM-YYYY HH24:MI:SS'
+
+#variables specific to the given script
+export ORACLE_SID=$1
+export jira_task=$2
+export mode=$3
+export host_name=`hostname`
+export catalog_server="10.129.115.44:4420/ppctldb"
+export catalog_db="sys/ni123456@$catalog_server as sysdba"
+export catalog_tns=\"${host_name}_${jira_task}/${host_name}_${jira_task}@$catalog_server\"
+export SBT_PARMS="SBT_PARMS=(NSR_SERVER=lnibkpprd1,NSR_CLIENT=$host_name,NSR_RECOVER_POOL=Oracle)"
+export num_cpu="$(("`kstat -m cpu_info | grep -w core_id | wc -l`/8"))"
+export parallelism=$(($num_cpu*3/2))
 
 #functions
 
@@ -87,15 +94,30 @@ export catloguser=`sqlplus -s  $catalog_db << EOF
 set  heading off feedback off termout off trim off
 select username from dba_users where username like '%${jira_task}';
 EOF`
-export DBID=`sqlplus -s  $catalog_db << EOF
+export DBID1=`sqlplus -s  $catalog_db << EOF
 set heading off feedback off termout off trim off
 select DBID from ${catloguser}.rc_database;
 EOF`
+export DBID=`echo $DBID1`
 echo DBID for the database $ORACLE_SID and recovery catalog owner ${host_name}_${jira_task} is $DBID
 else
  echo "Unable to reach recovery catalog database, exit"
  exit 2
 fi
+}
+
+function check_catalog_restore {
+echo check database status, exit if instance unreachable
+export catloguser=`sqlplus -s  $catalog_db << EOF
+set  heading off feedback off termout off trim off
+select lower(username) from dba_users where upper(username) like upper('%${jira_task}') order by created desc fetch first 1 row only;
+EOF`
+export DBID1=`sqlplus -s  $catalog_db << EOF
+set heading off feedback off termout off trim off
+select DBID from ${catloguser}.rc_database;
+EOF`
+export DBID=`echo $DBID1`
+echo DBID for the database $ORACLE_SID and recovery catalog owner $catloguser is $DBID
 }
 
 function register_catalog {
@@ -113,30 +135,18 @@ sqlplus -S / as sysdba <<EOF
  startup mount;
  exit;
 EOF
-echo Backup the source database using {$host_name}_{$jira_task} user as catalog owner
+
+export SBT_PARMS="SBT_PARMS=(NSR_SERVER=lnibkpprd1,NSR_CLIENT=$host_name,NSR_RECOVER_POOL=Oracle)"
+rman_channels=`for i in $(eval echo "{1..$parallelism}")
+do
+echo ALLOCATE AUXILIARY CHANNEL CH$i TYPE 'SBT_TAPE' PARMS \"$SBT_PARMS\"";"
+done`
+
+echo Backup the source database using ${host_name}_${jira_task} user as catalog owner
 rman target / catalog $catalog_tns << EOF
-spool log to ${logdir}/${ORACLE_SID}_${timestamp}_${jira_task}.log
+spool log to ${log_folder}/${ORACLE_SID}_${timestamp}_${jira_task}.log
 run{
- ALLOCATE CHANNEL CH1  TYPE 'SBT_TAPE' PARMS "$SBT_PARMS";
- ALLOCATE CHANNEL CH2  TYPE 'SBT_TAPE' PARMS "$SBT_PARMS";
- ALLOCATE CHANNEL CH3  TYPE 'SBT_TAPE' PARMS "$SBT_PARMS";
- ALLOCATE CHANNEL CH4  TYPE 'SBT_TAPE' PARMS "$SBT_PARMS";
- ALLOCATE CHANNEL CH5  TYPE 'SBT_TAPE' PARMS "$SBT_PARMS";
- ALLOCATE CHANNEL CH6  TYPE 'SBT_TAPE' PARMS "$SBT_PARMS";
- ALLOCATE CHANNEL CH7  TYPE 'SBT_TAPE' PARMS "$SBT_PARMS";
- ALLOCATE CHANNEL CH8  TYPE 'SBT_TAPE' PARMS "$SBT_PARMS";
- ALLOCATE CHANNEL CH9  TYPE 'SBT_TAPE' PARMS "$SBT_PARMS";
- ALLOCATE CHANNEL CH10 TYPE 'SBT_TAPE' PARMS "$SBT_PARMS";
- ALLOCATE CHANNEL CH11 TYPE 'SBT_TAPE' PARMS "$SBT_PARMS";
- ALLOCATE CHANNEL CH12 TYPE 'SBT_TAPE' PARMS "$SBT_PARMS";
- ALLOCATE CHANNEL CH13 TYPE 'SBT_TAPE' PARMS "$SBT_PARMS";
- ALLOCATE CHANNEL CH14 TYPE 'SBT_TAPE' PARMS "$SBT_PARMS";
- ALLOCATE CHANNEL CH15 TYPE 'SBT_TAPE' PARMS "$SBT_PARMS";
- ALLOCATE CHANNEL CH16 TYPE 'SBT_TAPE' PARMS "$SBT_PARMS";
- ALLOCATE CHANNEL CH17 TYPE 'SBT_TAPE' PARMS "$SBT_PARMS";
- ALLOCATE CHANNEL CH18 TYPE 'SBT_TAPE' PARMS "$SBT_PARMS";
- ALLOCATE CHANNEL CH19 TYPE 'SBT_TAPE' PARMS "$SBT_PARMS";
- ALLOCATE CHANNEL CH20 TYPE 'SBT_TAPE' PARMS "$SBT_PARMS";
+ $rman_channels
  BACKUP INCREMENTAL LEVEL 0 FILESPERSET 20 FORMAT '%d_%u_%s_%p' DATABASE INCLUDE CURRENT CONTROLFILE;
 }
 exit;
@@ -173,35 +183,25 @@ function dup_aux_db {
 export ORACLE_SID=$ORACLE_SID
 echo $ORACLE_SID
 export host_name=`echo $catloguser | cut -d '_' -f 1`
-echo " Database restoring from host :"$host_name "DB Name "$ORACLE_SID "DBID" $DBID
+echo Duplicate the source database using ${host_name}_$jira_task user as catalog owner
+echo " Database restoring from host: "$host_name "DB Name "$ORACLE_SID "DBID" $DBID
+export catalog_tns=${host_name}_$jira_task/${host_name}_$jira_task@$catalog_server
+
+echo connection string for recovery catalog is: $catalog_tns
 
 export SBT_PARMS="SBT_PARMS=(NSR_SERVER=lnibkpprd1,NSR_CLIENT=$host_name,NSR_RECOVER_POOL=Oracle)"
+rman_channels=`for i in $(eval echo "{1..$parallelism}")
+do
+echo ALLOCATE AUXILIARY CHANNEL CH$i TYPE 'SBT_TAPE' PARMS \"$SBT_PARMS\"";"
+done`
+
 rman catalog $catalog_tns AUXILIARY / <<EOF
 set echo on
-spool log to ${logdir}/${ORACLE_SID}_${timestamp}_${jira_task}.log
+spool log to ${log_folder}/${ORACLE_SID}_${timestamp}_${jira_task}.log
 run {
- ALLOCATE AUXILIARY CHANNEL CH1  TYPE 'SBT_TAPE' PARMS "$SBT_PARMS";
- ALLOCATE AUXILIARY CHANNEL CH2  TYPE 'SBT_TAPE' PARMS "$SBT_PARMS";
- ALLOCATE AUXILIARY CHANNEL CH3  TYPE 'SBT_TAPE' PARMS "$SBT_PARMS";
- ALLOCATE AUXILIARY CHANNEL CH4  TYPE 'SBT_TAPE' PARMS "$SBT_PARMS";
- ALLOCATE AUXILIARY CHANNEL CH5  TYPE 'SBT_TAPE' PARMS "$SBT_PARMS";
- ALLOCATE AUXILIARY CHANNEL CH6  TYPE 'SBT_TAPE' PARMS "$SBT_PARMS";
- ALLOCATE AUXILIARY CHANNEL CH7  TYPE 'SBT_TAPE' PARMS "$SBT_PARMS";
- ALLOCATE AUXILIARY CHANNEL CH8  TYPE 'SBT_TAPE' PARMS "$SBT_PARMS";
- ALLOCATE AUXILIARY CHANNEL CH9  TYPE 'SBT_TAPE' PARMS "$SBT_PARMS";
- ALLOCATE AUXILIARY CHANNEL CH10 TYPE 'SBT_TAPE' PARMS "$SBT_PARMS";
- ALLOCATE AUXILIARY CHANNEL CH11 TYPE 'SBT_TAPE' PARMS "$SBT_PARMS";
- ALLOCATE AUXILIARY CHANNEL CH12 TYPE 'SBT_TAPE' PARMS "$SBT_PARMS";
- ALLOCATE AUXILIARY CHANNEL CH13 TYPE 'SBT_TAPE' PARMS "$SBT_PARMS";
- ALLOCATE AUXILIARY CHANNEL CH14 TYPE 'SBT_TAPE' PARMS "$SBT_PARMS";
- ALLOCATE AUXILIARY CHANNEL CH15 TYPE 'SBT_TAPE' PARMS "$SBT_PARMS";
- ALLOCATE AUXILIARY CHANNEL CH16 TYPE 'SBT_TAPE' PARMS "$SBT_PARMS";
- ALLOCATE AUXILIARY CHANNEL CH17 TYPE 'SBT_TAPE' PARMS "$SBT_PARMS";
- ALLOCATE AUXILIARY CHANNEL CH18 TYPE 'SBT_TAPE' PARMS "$SBT_PARMS";
- ALLOCATE AUXILIARY CHANNEL CH19 TYPE 'SBT_TAPE' PARMS "$SBT_PARMS";
- ALLOCATE AUXILIARY CHANNEL CH20 TYPE 'SBT_TAPE' PARMS "$SBT_PARMS";
- SET DBID=$DBID;
- DUPLICATE TARGET DATABASE TO $ORACLE_SID NOFILENAMECHECK;
+ $rman_channels
+ SET DBID $DBID;
+ DUPLICATE TARGET DATABASE TO $ORACLE_SID NOFILENAMECHECK NOREDO;
 }
 spool log off
 exit;
@@ -251,14 +251,20 @@ echo variables given:
 echo ORACLE_SID: $1
 echo jira task: $2
 echo mode: $3
-echo User for recovery catalog: {$host_name}_{$jira_task}
+case $3 in
+   "backup" )
+   echo User for recovery catalog: ${host_name}_${jira_task}
+   ;;
+   "restore" )
+   echo
+esac   
 
 echo Find ORACLE_HOME for source instance
 echo
 find_ora_home
 echo
 
-echo rman log: ${logdir}/${ORACLE_SID}_${timestamp}_${jira_task}.log
+echo rman log: ${log_folder}/${ORACLE_SID}_${timestamp}_${jira_task}.log
 
 if [ -n $3 ];then
   case $3 in
@@ -279,7 +285,7 @@ if [ -n $3 ];then
    "restore" )
    echo restore mode execution start
    echo
-   check_catalog
+   check_catalog_restore
    echo
    echo
    echo rman channel params is: $SBT_PARMS
@@ -292,7 +298,6 @@ if [ -n $3 ];then
    echo
    nomount_aux_db
    echo
-   echo Duplicate the source database using {$host_name}_{$2} user as catalog owner
    dup_aux_db
    echo
    echo restart the target database with pfile
@@ -310,13 +315,16 @@ if [ -n $3 ];then
   exit 3
 fi
 
-export backup_state=`cat ${logdir}/${ORACLE_SID}_${timestamp}_${jira_task}.log | egrep 'ORA-|RMAN-' | wc -l`
+export backup_state=`cat ${log_folder}/${ORACLE_SID}_${timestamp}_${jira_task}.log | egrep 'ORA-|RMAN-' | wc -l`
 
-if [[ ${backup_state} -eq 0 && -f ${logdir}/${ORACLE_SID}_${timestamp}_${jira_task}.log ]];then
+if [[ ${backup_state} -eq 0 && -f ${log_folder}/${ORACLE_SID}_${timestamp}_${jira_task}.log ]];then
  echo "backup/restore completed successfully"
  else
  echo "backup/restore completed with errors"
- echo check log file ${logdir}/${ORACLE_SID}_${timestamp}_${jira_task}.log
+ echo check log file ${log_folder}/${ORACLE_SID}_${timestamp}_${jira_task}.log
+ echo
+ echo "check errors in the below rman log (25 last lines of the file):"
+ tail -25 ${log_folder}/${ORACLE_SID}_${timestamp}_${jira_task}.log
  echo end time: `date '+%d%m%y_%H_%M'`
  echo
  echo script finished in $SECONDS seconds or $(($SECONDS/60)) minutes
@@ -327,7 +335,3 @@ echo end time: `date '+%d%m%y_%H_%M'`
 echo
 echo script finished in $SECONDS seconds or $(($SECONDS/60)) minutes
 exit
-
-
-
- 
