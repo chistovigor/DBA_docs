@@ -26,6 +26,27 @@ SELECT * FROM V$ACTIVE_SESSION_HISTORY WHERE USER_ID  = 597 and SAMPLE_TIME betw
 SELECT * FROM V$ACTIVE_SESSION_HISTORY WHERE USER_ID  = 597 and SAMPLE_TIME >= sysdate- 1/24 order by SAMPLE_TIME;
 SELECT * FROM V$ACTIVE_SESSION_HISTORY WHERE SAMPLE_TIME between to_date('08012019 21:07:00','ddmmyyyy hh24:mi:ss') and to_date('08012019 21:07:10','ddmmyyyy hh24:mi:ss') order by SAMPLE_TIME;
 
+--plan lines execution monitoring 
+
+SELECT count(1),
+       SQL_ID,
+       SESSION_ID,
+       SESSION_SERIAL#,
+       SQL_CHILD_NUMBER,
+       SQL_PLAN_HASH_VALUE,
+       SQL_PLAN_LINE_ID,
+       SQL_PLAN_OPERATION,
+       SQL_PLAN_OPTIONS
+  FROM V$ACTIVE_SESSION_HISTORY
+ WHERE SQL_ID = 'g1d2u941gurtz' group by SQL_ID,
+       SESSION_ID,
+       SESSION_SERIAL#,
+       SQL_CHILD_NUMBER,
+       SQL_PLAN_HASH_VALUE,
+       SQL_PLAN_LINE_ID,
+       SQL_PLAN_OPERATION,
+       SQL_PLAN_OPTIONS order by 1 desc;
+
 -- SQL execution monitoring (for plan operations)
 
 select * from V$SQL_PLAN_MONITOR where sql_id = '3xr4ktt8tpb3k' and SQL_EXEC_ID = 20437692 order by PLAN_LINE_ID;
@@ -132,13 +153,15 @@ FROM
             dba_hist_active_sess_history --V$ACTIVE_SESSION_HISTORY 
         WHERE
             sql_exec_start IS NOT NULL
-            AND sql_id = 'cv29ua5npgm14'
+            AND sql_id = '6bwu1g1f9y0sw'--'3w8s06wss9vt4'
 			AND DBID = (select DBID from v$database)
+			AND sample_time >= sysdate-14
         GROUP BY
             sql_id,
             sql_exec_id,
             TO_CHAR(sql_exec_start, 'ddmmyyyy hh24:mi:ss'),
             sql_plan_hash_value
+        --having MAX(sample_time - sql_exec_start) >=INTERVAL '01:00:00.0000000' HOUR TO SECOND
         ORDER BY
             sql_exec_id
     )
@@ -149,7 +172,7 @@ GROUP BY
 ORDER BY
     avg_time_sec DESC;
 	
--- locking ROWIDs
+-- locking/locked ROWIDs
 
   SELECT ASH.SESSION_ID,
          ASH.SQL_ID,
@@ -232,6 +255,43 @@ and sample_time between trunc(sysdate) and trunc(sysdate)+50/24
 group by h.sql_id,  object_type, object_name, operation, options
 order by 1, 2;
 
+--	Top elapsed time queries (Egypt):
+
+select st.*,sql_text  from
+     (select * from
+     (select * from
+     (select    Parsing_schema_name schema, module, sql_id,plan_hash_value plan_HV, 
+           min(t.snap_id) lo_snap, max(t.snap_id) hi_snap, count(t.snap_id) snap_cnt,
+           min(to_number(to_char(end_interval_time,'hh24'))) min_hr, max(to_number(to_char(end_interval_time,'hh24'))) max_hr, 
+           count(distinct to_number(to_char(end_interval_time,'hh24'))) hr_cnt, sum(executions_delta) exec#,
+           trunc(sum(elapsed_time_delta)/1000000) elap, (sum(elapsed_time_delta)/1000000)/nullif(sum(executions_delta),0) elap_exec# , trunc(sum(cpu_time_delta)/1000000) cpu, trunc(sum(clwait_delta)/1000000) CLTIME,
+           trunc(sum(ccwait_delta)/1000000) CCTIME, trunc(sum(apwait_delta)/1000000) APTIME, trunc(sum(iowait_delta)/1000000) IOTIME,
+           sum(buffer_gets_delta) gets, sum(disk_reads_delta) reads,
+           sum(physical_read_requests_delta) read_reqs,
+           sum(rows_processed_delta) rowsss, sum(sorts_delta) sorts, sum(px_servers_execs_delta) PX
+     from dba_hist_sqlstat t, dba_hist_snapshot n
+     where t.snap_id=n.snap_id
+     and   t.instance_number=n.instance_number
+     and   t.dbid=n.dbid
+     --and   to_number(to_char(end_interval_time,'hh24')) between 10 and 17
+     and plan_hash_value>0
+     and t.snap_id between 8192  and 8198
+     --and end_interval_time>sysdate -(5/24)
+     --and lower(module) like 'pth%' 
+     --and sql_id='dsvnh50zv3g1z'
+     group by Parsing_schema_name ,module, sql_id,plan_hash_value)) s ) st, dba_hist_sqltext sq
+     where st.sql_id=sq.sql_id
+     order by elap desc;
+
+--	How to check if sql id has baseline created and which planhv (Egypt):
+
+select s.*,
+(select REGEXP_SUBSTR(plan_table_output,'[0-9]+') plan_hv
+    from table(DBMS_XPLAN.DISPLAY_SQL_PLAN_BASELINE(s.sql_handle, s.plan_name))
+    where plan_table_output like 'Plan hash value:%'
+    ) baseline_phv
+      from dba_sql_plan_baselines s where SIGNATURE = (select DISTINCT EXACT_MATCHING_SIGNATURE from gv$sql  where sql_id = '48b7rapy18r91');
+
 select * from DBA_HIST_ACTIVE_SESS_HISTORY WHERE UPPER(MODULE) LIKE '%INSERT_SE_ORD_TRD_ONLINE%' and SAMPLE_TIME >= trunc(sysdate-7) and MACHINE <> 'NT_D\CHISTOV15' order by SAMPLE_TIME;
 SELECT COUNT(SQL_EXEC_ID),D_START FROM (SELECT DISTINCT SQL_EXEC_ID SQL_EXEC_ID,TRUNC(SQL_EXEC_START) D_START FROM DBA_HIST_ACTIVE_SESS_HISTORY WHERE SQL_ID = 'fu7p0q9y9wsgw') WHERE SQL_EXEC_ID IS NOT NULL GROUP BY D_START ORDER BY 1 DESC;
 select * from DBA_HIST_ACTIVE_SESS_HISTORY WHERE SESSION_ID in (216,3884) and SAMPLE_TIME between to_date('19012018 03:40:00','ddmmyyyy hh24:mi:ss') and to_date('19012018 03:50:00','ddmmyyyy hh24:mi:ss') order by SAMPLE_TIME;
@@ -259,6 +319,145 @@ SELECT * FROM DBA_HIST_SQLTEXT WHERE lower(SQL_TEXT) LIKE '%v_lor%';
 SELECT * FROM DBA_HIST_SQLTEXT WHERE SQL_ID in ('904aa7z02tv6z','5q8j0zrqzsycm','0d5cwwc3wd65j');
 SELECT * FROM DBA_HIST_SQLSTAT WHERE SQL_ID = 'bvkv5t8qmprd9' order by SNAP_ID;
 SELECT * FROM DBA_HIST_SNAPSHOT where SNAP_ID = 26724;--order by 1;
+
+-- deep AWR analysis
+
+--execution time per SQL execution for particular SQL_ID
+
+SELECT max(sample_time)-SQL_EXEC_START exec_time,sql_exec_id,sql_id,PROGRAM
+    FROM DBA_HIST_ACTIVE_SESS_HISTORY
+   WHERE SAMPLE_TIME BETWEEN TO_DATE ('24022021 20:31:10',
+                                      'ddmmyyyy hh24:mi:ss')
+                         AND TO_DATE ('24022021 20:39:50',
+                                      'ddmmyyyy hh24:mi:ss') and SQL_ID = '3n4cu6chdnh6s'                                     
+group by SQL_EXEC_START,sql_exec_id,sql_id,PROGRAM order by 1 desc;
+
+--wait_time per event and amount of data being read for particular SQL_ID
+
+select sum(READ_MB), sum(time_ms), event from (
+  SELECT ROUND (SUM (DELTA_READ_IO_BYTES) / 1024 / 1024)     READ_MB,
+         SUM (TIME_WAITED) time_ms,
+         EVENT/*,
+         SQL_EXEC_ID*/
+    FROM DBA_HIST_ACTIVE_SESS_HISTORY
+   WHERE     DBID = 510869778
+         AND SAMPLE_TIME BETWEEN TO_DATE ('24022021 20:31:10',
+                                          'ddmmyyyy hh24:mi:ss')
+                             AND TO_DATE ('24022021 20:40:10',
+                                          'ddmmyyyy hh24:mi:ss')
+         AND MACHINE = 'uniw4prfdb3p'
+         --  AND SQL_EXEC_ID = 16777303
+         AND SQL_ID = '86bwssryn55d0'
+GROUP BY SQL_EXEC_ID,EVENT
+ORDER BY 2 DESC)
+group by event
+order by 2 desc;
+
+-- WAIT events histogram trend analysis for particular event
+
+select trunc(snap_end),WAIT_TIME_MILLI,sum(WAIT_COUNT) from (
+SELECT s.END_INTERVAL_TIME snap_end, h.*
+  FROM DBA_HIST_EVENT_HISTOGRAM H, DBA_HIST_SNAPSHOT S
+ WHERE     S.SNAP_ID = H.SNAP_ID
+       AND S.INSTANCE_NUMBER = H.INSTANCE_NUMBER
+       AND EVENT_NAME = 'log file sync'
+       AND WAIT_TIME_MILLI > 1000
+       AND WAIT_COUNT > 10
+       AND H.INSTANCE_NUMBER = 1
+       order by WAIT_TIME_MILLI*WAIT_COUNT desc)
+group by trunc(snap_end),WAIT_TIME_MILLI having trunc(snap_end) >= sysdate-90 order by 1,2 desc;
+
+-- histogram for i/o related wait events with the most difference:
+
+  SELECT TRUNC (S.END_INTERVAL_TIME)     MON_DATE,
+         EVENT_NAME,
+         WAIT_CLASS,
+         WAIT_TIME_MILLI,
+         SUM (WAIT_COUNT) total_waits_for_day
+    FROM DBA_HIST_EVENT_HISTOGRAM H, DBA_HIST_SNAPSHOT S
+   WHERE     S.SNAP_ID = H.SNAP_ID
+         AND S.INSTANCE_NUMBER = H.INSTANCE_NUMBER
+         AND EVENT_NAME = 'log file sync'
+         AND WAIT_TIME_MILLI = 4096
+         -- AND WAIT_COUNT > 10
+         AND H.INSTANCE_NUMBER = 1
+         --AND WAIT_CLASS <> 'Idle'
+         AND (WAIT_CLASS = 'Commit' OR WAIT_CLASS LIKE '% I/O')
+         AND S.END_INTERVAL_TIME >= SYSDATE - 14
+GROUP BY TRUNC (S.END_INTERVAL_TIME),
+         EVENT_NAME,
+         WAIT_CLASS,
+         WAIT_TIME_MILLI
+         HAVING SUM (WAIT_COUNT) > 5000
+ORDER BY 1, 5 DESC;
+
+-- wait events time for SQL_ID for particular action/module activity
+
+  SELECT /*+ parallel*/
+         TRUNC (SAMPLE_TIME)     REPORT_DATE,
+         min(sample_time),
+         max(sample_time)-min(sample_time) time_diff,
+         SQL_ID,
+         SQL_EXEC_ID,
+         SQL_PLAN_HASH_VALUE,
+         SQL_FULL_PLAN_HASH_VALUE,
+         EVENT,
+         WAIT_CLASS,
+         SUM (TIME_WAITED)       WAITS,
+         round(SUM (DELTA_READ_IO_BYTES)/1024/1024) READ_MB,
+         round(SUM (DELTA_WRITE_IO_BYTES)/1024/1024) WRITE_MB
+    FROM DBA_HIST_ACTIVE_SESS_HISTORY
+   WHERE  dbid = 3829535888 and   ACTION LIKE '%opt_dunf_stmt_load%'
+         AND TRUNC (SAMPLE_TIME) between
+                TO_DATE ('10022021', 'ddmmyyyy') and
+                  TO_DATE ('27022021', 'ddmmyyyy')
+GROUP BY TRUNC (SAMPLE_TIME),
+         SQL_ID,
+         SQL_EXEC_ID,
+         SQL_PLAN_HASH_VALUE,
+         SQL_FULL_PLAN_HASH_VALUE,
+         EVENT,
+         WAIT_CLASS
+ORDER BY 1, 4, 5, 2, 10 desc;
+
+-- waits for particular SQL_ID with deviation groupped by event
+
+  SELECT EVENT,
+         ROUND (AVG (TIME_WAITED)) avg_wait,
+         --COUNT (1),
+         SUM (TIME_WAITED) total_waits,
+         ROUND (STDDEV (TIME_WAITED)) deviation
+    FROM DBA_HIST_ACTIVE_SESS_HISTORY
+   WHERE     DBID = 3829535888
+         AND ACTION LIKE '%opt_dunf_stmt_load%'
+         AND TRUNC (SAMPLE_TIME) BETWEEN TO_DATE ('10022021', 'ddmmyyyy')
+                                     AND TO_DATE ('27022021', 'ddmmyyyy')
+         AND SQL_ID = 'apqs43qp9j5bz'
+         AND SQL_EXEC_ID = 16777216
+GROUP BY TRUNC (SAMPLE_TIME),
+         SQL_ID,
+         SQL_EXEC_ID,
+         EVENT
+ORDER BY 3 DESC, 4 DESC;
+
+-- temporary tablespace consumption over time (for SQL_ID, plan line)
+
+  SELECT SQL_ID,
+         EVENT,
+         ROUND (TEMP_SPACE_ALLOCATED) / 1024 / 1024     TEMP_MB,
+         SQL_PLAN_LINE_ID,
+         DBA_HIST_ACTIVE_SESS_HISTORY.*
+    FROM DBA_HIST_ACTIVE_SESS_HISTORY
+   WHERE SAMPLE_TIME BETWEEN TO_DATE ('22022021 00:01:00',
+                                      'ddmmyyyy hh24:mi:ss')
+                         AND TO_DATE ('22022021 10:25:00',
+                                      'ddmmyyyy hh24:mi:ss')
+                                      and ROUND (TEMP_SPACE_ALLOCATED) / 1024 / 1024 > 1000
+ORDER BY SAMPLE_TIME DESC;
+
+-- find PL SQL procedures from AWR (PLSQL_ENTRY_OBJECT_ID)
+
+select * from dba_procedures where object_name = 'SCDP' and procedure_name = 'POST_MTR1';
 
 -- DISTINCT modules and action from last day
 
@@ -299,7 +498,7 @@ ORDER BY MAX (SAMPLE_TIME) - MIN (SAMPLE_TIME) DESC;
 SELECT * FROM table(DBMS_XPLAN.DISPLAY_AWR(sql_id=>'gr8m0ug8nbdn5',plan_hash_value=>4053659781,format=>'ALL'));
 SELECT * FROM table(DBMS_XPLAN.DISPLAY_AWR(sql_id=>'82ja5tjsrcz5y',plan_hash_value=>3052885806,format=>'+outline'));
 --as in SQLT report (with bind variables)
-SELECT * FROM table(DBMS_XPLAN.DISPLAY_AWR(sql_id=>'g69svm2vvquky',plan_hash_value=>664402698,format=>'ADVANCED ALLSTATS LAST REPORT ADAPTIVE'));
+SELECT * FROM table(DBMS_XPLAN.DISPLAY_AWR(sql_id=>'3r93rsxgrsf49',plan_hash_value=>3803250840,format=>'ADVANCED ALLSTATS LAST REPORT ADAPTIVE +outline'));
 SELECT * FROM table(DBMS_XPLAN.DISPLAY_AWR(sql_id=>'7wyp2tu352jbv',format=>'ALL'));
 SELECT * FROM table(DBMS_XPLAN.DISPLAY_AWR(sql_id=>'gr8m0ug8nbdn5',format=>'+outline')); --after it select sql stmt with hint from Outline Data section from the output 
 SELECT * FROM table(DBMS_XPLAN.DISPLAY_AWR(sql_id=>'fxyh2jbc9wb5s',plan_hash_value=>2163610841,format=>'ALL'));
@@ -307,7 +506,7 @@ SELECT * FROM table(DBMS_XPLAN.DISPLAY_AWR(sql_id=>'fxyh2jbc9wb5s',plan_hash_val
 SELECT * FROM TABLE(DBMS_XPLAN.DISPLAY_SQL_PLAN_BASELINE(SQL_HANDLE => 'SQL_7ddbf799d693753b',PLAN_NAME=>'SQL_PLAN_7vqzrm7b96x9v4cb5a735',FORMAT => 'advanced'));
 -- find plan with its bind variables
 SELECT * FROM TABLE (DBMS_XPLAN.DISPLAY_CURSOR ('7wyp2tu352jbv',0, 'ADVANCED'));
-SELECT * FROM TABLE (DBMS_XPLAN.DISPLAY_CURSOR ('f381qj6qv32q6',0, 'ADVANCED ALLSTATS LAST REPORT ADAPTIVE'));
+SELECT * FROM TABLE (DBMS_XPLAN.DISPLAY_CURSOR ('f381qj6qv32q6',0, 'ADVANCED ALLSTATS LAST REPORT ADAPTIVE +PEEKED_BINDS'));
 SELECT * FROM TABLE (DBMS_XPLAN.DISPLAY_CURSOR ('7wyp2tu352jbv',1, 'ADVANCED')); --child cursor 1
 SELECT * FROM TABLE(DBMS_XPLAN.DISPLAY_CURSOR(SQL_ID=>'68nx6kzv9cx6j',CURSOR_CHILD_NO=>0,format=>'ALLSTATS ALL'));
 SELECT * FROM TABLE(DBMS_XPLAN.DISPLAY_CURSOR('ak6m7xt756bv5', 1, format => '+note')); --for child cursor number 1, show note for plan
@@ -319,7 +518,10 @@ SELECT * FROM V$ACTIVE_SESSION_HISTORY WHERE SESSION_ID = 801 and SAMPLE_TIME BE
 spool c:\temp\sql_plan_full_bad.log
 set timing on echo on linesize 250 pagesize 0
 select  /*+ GATHER_PLAN_STATISTICS */ ...
-SELECT * FROM table(DBMS_XPLAN.DISPLAY_CURSOR(FORMAT=>'ALLSTATS LAST'));
+SELECT * FROM table(DBMS_XPLAN.DISPLAY_CURSOR(FORMAT=>'ALLSTATS LAST ALL +OUTLINE'));
+SELECT * FROM table(DBMS_XPLAN.DISPLAY_CURSOR(FORMAT=>'ALLSTATS LAST ALL +OUTLINE +PEEKED_BINDS'));
+--another option (no change in query text is required):
+alter session set statistics_level='ALL'; --same select, same DBMS_XPLAN select after that
 
 --for more detailed plan:
 
@@ -344,6 +546,201 @@ from   v$session vs,
        dba_datapump_sessions dp 
 where  vp.addr = vs.paddr(+) and 
        vs.saddr = dp.saddr);
+       
+-- keep pool (keep_pool) usage size 
+
+select segment_name, sum(bytes)
+from dba_segments
+where buffer_pool = 'KEEP'
+group by segment_name
+order by 2
+;
+	   
+-- analyze wait_time by session/module/action for particular SQL_ID
+
+  SELECT SUM (TIME_WAITED) / 1000000     SEC,
+         SQL_ID,
+         SQL_EXEC_ID,
+         TRUNC (SAMPLE_TIME),
+         min(SAMPLE_TIME),max(SAMPLE_TIME),
+         MODULE,
+         ACTION
+    FROM DBA_HIST_ACTIVE_SESS_HISTORY
+   WHERE     SQL_ID IN ('6bwu1g1f9y0sw', '3w8s06wss9vt4')
+         AND SAMPLE_TIME >= TRUNC (SYSDATE - 40)
+GROUP BY SQL_ID,
+         SQL_EXEC_ID,
+         TRUNC (SAMPLE_TIME),
+         MODULE,
+         ACTION
+         having sum(time_waited)/1000000>0
+ORDER BY TRUNC (SAMPLE_TIME),min(SAMPLE_TIME);
+
+-- waits for i/o IO from storage in the database:
+
+  SELECT *
+    FROM DBA_HIST_ACTIVE_SESS_HISTORY
+   WHERE     P3TEXT = 'block cnt'
+         AND WAIT_CLASS = 'User I/O'
+         AND SAMPLE_TIME BETWEEN TO_DATE ('11-03-2020 00:00:00',
+                                          'dd-mm-yyyy hh24:mi:ss')
+                             AND TO_DATE ('11-03-2020 06:00:00',
+                                          'dd-mm-yyyy hh24:mi:ss')
+ORDER BY TIME_WAITED DESC;
+
+--grouping for trend analysis io i/o related issues slowness
+
+  SELECT trunc(sample_time,'mi') hour,event,round(avg(time_waited/p3)) microsec_per_block,count(1)
+    FROM DBA_HIST_ACTIVE_SESS_HISTORY
+   WHERE     P3TEXT = 'block cnt'
+         AND WAIT_CLASS = 'User I/O'
+         AND SAMPLE_TIME BETWEEN TO_DATE ('27-03-2020 04:00:00',
+                                          'dd-mm-yyyy hh24:mi:ss')
+                             AND TO_DATE ('27-03-2020 11:00:00',
+                                          'dd-mm-yyyy hh24:mi:ss')
+         --AND event not like '%write%'
+         group by trunc(sample_time,'mi'),event
+         having count(1) > 10
+ORDER BY 3 desc;
+
+     SELECT TRUNC (SAMPLE_TIME, 'mi')    MINUTE,
+            EVENT,
+            P3TEXT,
+            P2TEXT,
+            CASE
+                WHEN P3TEXT IN ('blocks', 'block cnt')
+                THEN
+                    ROUND (AVG (TIME_WAITED / P3))
+                ELSE
+                    ROUND (AVG (TIME_WAITED / P2))
+            END                          AVG_MICROSEC_PER_BLOCK,
+            CASE
+                WHEN P3TEXT IN ('blocks', 'block cnt')
+                THEN
+                    ROUND (MIN (TIME_WAITED / P3))
+                ELSE
+                    ROUND (AVG (TIME_WAITED / P2))
+            END                          MIN_MICROSEC_PER_BLOCK,
+            CASE
+                WHEN P3TEXT IN ('blocks', 'block cnt')
+                THEN
+                    ROUND (MAX (TIME_WAITED / P3))
+                ELSE
+                    ROUND (AVG (TIME_WAITED / P2))
+            END                          MAX_MICROSEC_PER_BLOCK,
+            ROUND (
+                  (CASE
+                       WHEN P3TEXT IN ('blocks', 'block cnt')
+                       THEN
+                           ROUND (MAX (TIME_WAITED / P3))
+                       ELSE
+                           ROUND (AVG (TIME_WAITED / P2))
+                   END)
+                / (CASE
+                       WHEN P3TEXT IN ('blocks', 'block cnt')
+                       THEN
+                           ROUND (MIN (TIME_WAITED / P3))
+                       ELSE
+                           ROUND (AVG (TIME_WAITED / P2))
+                   END))                 TIMES_DIFF_MIN_MAX,
+            COUNT (1)                    TOTAL_WAITS
+       FROM DBA_HIST_ACTIVE_SESS_HISTORY
+      WHERE     (P3TEXT IN ('block cnt', 'blocks') OR P2TEXT = 'blocks') --P3TEXT = 'block cnt'
+            AND WAIT_CLASS = 'User I/O'
+            AND SAMPLE_TIME BETWEEN TO_DATE ('27-03-2020 00:00:00',
+                                             'dd-mm-yyyy hh24:mi:ss')
+                                AND TO_DATE ('27-03-2020 11:00:00',
+                                             'dd-mm-yyyy hh24:mi:ss')
+   --AND EVENT NOT LIKE '%write%'
+   GROUP BY TRUNC (SAMPLE_TIME, 'mi'),
+            EVENT,
+            P3TEXT,
+            P2TEXT
+     HAVING     COUNT (1) > 10
+            AND CASE
+                    WHEN P3TEXT IN ('blocks', 'block cnt')
+                    THEN
+                        ROUND (MIN (TIME_WAITED / P3))
+                    ELSE
+                        ROUND (AVG (TIME_WAITED / P2))
+                END >
+                0
+   ORDER BY 8 DESC
+FETCH FIRST 50 ROWS ONLY;
+
+--check comparison results:
+
+select sample_time,event,p2text,p2,p3text,p3,session_state,time_waited wait_microseconds FROM DBA_HIST_ACTIVE_SESS_HISTORY
+      WHERE     WAIT_CLASS = 'User I/O' and (P3TEXT IN ('block cnt', 'blocks') OR P2TEXT = 'blocks')
+            AND (SAMPLE_TIME BETWEEN TO_DATE ('10-04-2020 05:07:00',
+                                          'dd-mm-yyyy hh24:mi:ss')
+                             AND TO_DATE ('10-04-2020 05:08:00',
+                                          'dd-mm-yyyy hh24:mi:ss') or SAMPLE_TIME BETWEEN TO_DATE ('11-04-2020 01:38:00',
+                                          'dd-mm-yyyy hh24:mi:ss')
+                             AND TO_DATE ('11-04-2020 01:39:00',
+                                          'dd-mm-yyyy hh24:mi:ss')) order by SAMPLE_TIME;
+
+--comparison analysis for particular SQLID:
+
+SELECT event,count(1),sum(time_waited),max(time_waited/p2) max_mcs_per_block,min(time_waited/p2) min_mcs_per_block, min(sample_time),max(time_waited/p2)/min(time_waited/p2) times_diff_min_max,max(sample_time) from DBA_HIST_ACTIVE_SESS_HISTORY where sql_id = '3pk1t83zabb20' and 
+sample_time BETWEEN TO_DATE('23032020 05:00:00',
+                                          'ddmmyyyy hh24:mi:ss')
+                             AND TO_DATE ('23032020 06:00:00',
+                                          'ddmmyyyy hh24:mi:ss')
+and (P3text in ('block cnt' ,'blocks') or P2text ='blocks') and time_waited > 0 group by event
+union all
+SELECT event,count(1),sum(time_waited),max(time_waited/p2) max_mcs_per_block,min(time_waited/p2) min_mcs_per_block, min(sample_time),max(time_waited/p2)/min(time_waited/p2) times_diff_min_max,max(sample_time) from DBA_HIST_ACTIVE_SESS_HISTORY where sql_id = '3pk1t83zabb20' and 
+sample_time BETWEEN TO_DATE ('24032020 05:00:00',
+                                          'ddmmyyyy hh24:mi:ss')
+                             AND TO_DATE ('24032020 06:00:00',
+                                          'ddmmyyyy hh24:mi:ss')
+and (P3text in ('block cnt' ,'blocks') or P2text ='blocks') and time_waited > 0 group by event
+ order by 6 ;
+ 
+ --data amount read/write comparison
+ 
+  SELECT SQL_ID,ROUND (SUM (DELTA_READ_IO_BYTES) / 1024 / 1024 / 1024)      READ_GB,
+         ROUND (SUM (DELTA_WRITE_IO_BYTES) / 1024 / 1024 / 1024)     WRITE_GB,
+         MIN (SAMPLE_TIME),
+         MAX (SAMPLE_TIME),
+         MAX (SAMPLE_TIME)-MIN (SAMPLE_TIME) EXEC_TIME,
+         SQL_EXEC_ID
+    FROM DBA_HIST_ACTIVE_SESS_HISTORY
+   WHERE     SQL_ID IN ('3pk1t83zabb20', '13z41gv6fkdw8')
+         AND SAMPLE_TIME BETWEEN TO_DATE ('23032020 05:00:00',
+                                          'ddmmyyyy hh24:mi:ss')
+                             AND TO_DATE ('23032020 06:00:00',
+                                          'ddmmyyyy hh24:mi:ss')
+GROUP BY SQL_ID, SQL_EXEC_ID;
+
+--by plan line comparison
+
+  SELECT SQL_PLAN_LINE_ID,
+         SQL_PLAN_LINE_ID,
+         SQL_PLAN_OPTIONS,
+         CURRENT_OBJ#,
+         OWNER,
+         OBJECT_NAME,
+         SUBOBJECT_NAME,
+         COUNT (1),
+         ROUND (SUM (DELTA_READ_IO_BYTES) / 1024 / 1024)      READ_MB,
+         ROUND (SUM (DELTA_WRITE_IO_BYTES) / 1024 / 1024)     WRITE_MB
+    FROM DBA_HIST_ACTIVE_SESS_HISTORY, DBA_OBJECTS
+   WHERE     DBA_HIST_ACTIVE_SESS_HISTORY.CURRENT_OBJ# = DBA_OBJECTS.OBJECT_ID
+         AND SQL_ID = '3pk1t83zabb20'
+         AND SAMPLE_TIME BETWEEN TO_DATE ('23032020 05:00:00',
+                                          'ddmmyyyy hh24:mi:ss')
+                             AND TO_DATE ('23032020 06:00:00',
+                                          'ddmmyyyy hh24:mi:ss')
+GROUP BY SQL_ID,
+         SQL_PLAN_LINE_ID,
+         SQL_PLAN_LINE_ID,
+         SQL_PLAN_OPTIONS,
+         CURRENT_OBJ#,
+         OWNER,
+         OBJECT_NAME,
+         SUBOBJECT_NAME
+ORDER BY COUNT (1) DESC;
 
 -- get predicates with outline for query
 
@@ -369,6 +766,12 @@ select DBMS_SQL_MONITOR.REPORT_SQL_MONITOR('1yv5b06tm696p',type=>'HTML',sql_exec
 select DBMS_SQL_MONITOR.REPORT_SQL_MONITOR('4pcku9ns71v0n',type=>'HTML') from dual;
 select DBMS_SQL_MONITOR.REPORT_SQL_MONITOR('gp5tuv2v1j9s4',type=>'TEXT',sql_exec_start=>to_date('13.04.2018 13:00:00','dd.mm.yyyy hh24:mi:ss')) from dual;
 select DBMS_SQL_MONITOR.REPORT_SQL_MONITOR('f381qj6qv32q6',type=>'TEXT') from dual;
+
+--active HTML report using the command line (same as in OEM)
+
+select DBMS_SQL_MONITOR.REPORT_SQL_MONITOR('an05rsj1up1k5',report_level =>'all',type=>'ACTIVE') report from dual;
+--if NOT avaialble we can force query monitoring
+select /*+ MONITOR */ ... --monitor report will be avaialble post that
 
 -- take monitor report with particular query
 
@@ -409,6 +812,17 @@ SELECT DBMS_SQLTUNE.report_sql_detail(sql_id=> '526mvccm5nfy4',-- type         =
 report_level => 'ALL') AS report FROM dual;
 SPOOL OFF
 
+-- active report for particular execution (OEM style)
+
+SELECT DBMS_SQLTUNE.report_sql_monitor(
+  sql_id       => '0x6zwpwyr7nfx',
+  session_id   => 683,
+  session_serial => 25218,
+--  sql_exec_id  =>         ,
+  type         => 'ACTIVE',
+  report_level => 'ALL') AS report
+FROM dual;
+
 -- Creating AWR baselines
 
 Select DBMS_WORKLOAD_REPOSITORY.create_baseline(start_snap_id=>123, end_snap_id=>124, baseline_name=>'name_for_baseline', expiration=>in number of days or NULL for non expired) as bline_id from dual;
@@ -445,7 +859,7 @@ EXEC DBMS_WORKLOAD_REPOSITORY.MODIFY_SNAPSHOT_SETTINGS(INTERVAL=>10,TOPNSQL=>200
 SELECT * FROM V$PARAMETER WHERE NAME = 'statistics_level';
 SELECT * FROM DBA_HIST_WR_CONTROL; --TOPNSQL = 30 for statistics_level = TYPICAL and 100 for ALL
 
--- ADD colored SQL (this will be gathered whether it is in TOP SQL or not
+-- ADD colored SQL (this will be gathered whether it is in TOP SQL or not) 
 
 EXEC DBMS_WORKLOAD_REPOSITORY.ADD_COLORED_SQL(SQL_ID=>'9575wxsvqhzy4');
 EXEC DBMS_WORKLOAD_REPOSITORY.REMOVE_COLORED_SQL(SQL_ID=>'9575wxsvqhzy4'); --for remove
@@ -475,6 +889,17 @@ order by BEGIN_INTERVAL_TIME))));
 
 exec dbms_workload_repository.awr_set_report_thresholds(top_n_sql=>200);
 
+SET LONG 1000000
+SET LONGCHUNKSIZE 1000000
+SET LINESIZE 1000
+SET PAGESIZE 0
+SET TRIM ON
+SET TRIMSPOOL ON
+SET ECHO OFF
+SET FEEDBACK OFF
+
+SPOOL "W:\Dba_docs\DB Tasks\XLSDB\Issues\INFRA-1613\AWR\AWR Rpt xlsdb 02032021_10-30_15.html"
+
 SELECT OUTPUT
   FROM TABLE (DBMS_WORKLOAD_REPOSITORY.AWR_REPORT_HTML (
                   L_DBID       => (SELECT DBID FROM V$DATABASE),
@@ -492,7 +917,7 @@ SELECT OUTPUT
                                         AND BEGIN_INTERVAL_TIME BETWEEN   TO_DATE (
                                                                               '19/10/2019 23:00:00',
                                                                               'dd/mm/yyyy hh24:mi:ss')
-                                                                        - INTERVAL '10' MINUTE
+                                                                        - INTERVAL '15' MINUTE
                                                                     AND   TO_DATE (
                                                                               '19/10/2019 23:30:00',
                                                                               'dd/mm/yyyy hh24:mi:ss')
@@ -511,7 +936,7 @@ SELECT OUTPUT
                                         AND BEGIN_INTERVAL_TIME BETWEEN   TO_DATE (
                                                                               '19/10/2019 23:00:00',
                                                                               'dd/mm/yyyy hh24:mi:ss')
-                                                                        - INTERVAL '10' MINUTE
+                                                                        - INTERVAL '15' MINUTE
                                                                     AND   TO_DATE (
                                                                               '19/10/2019 23:30:00',
                                                                               'dd/mm/yyyy hh24:mi:ss')
@@ -595,7 +1020,8 @@ FROM TABLE( DBMS_WORKLOAD_REPOSITORY.ASH_GLOBAL_REPORT_HTML (
            ,TO_DATE ('29.01.2019 22:00:00', 'dd.mm.yyyy hh24:mi:ss')
            ,TO_DATE ('30.01.2019 16:40:00', 'dd.mm.yyyy hh24:mi:ss')
            --,L_MODULE   => 'GWDBUpdTradesOracle.spur_exadata%'
-           ,L_SID => 398
+           ,L_SID => 398,
+		   l_slot_width=>300 -- period to break for in seconds
            ));
   
 SPOOL OFF
@@ -637,6 +1063,22 @@ l_inst_num=>(select INSTANCE_NUMBER from v$instance),
 l_btime=>TO_DATE ('19.11.2018 10:06:00', 'dd.mm.yyyy hh24:mi:ss'),
 l_etime=>TO_DATE ('19.11.2018 10:12:00', 'dd.mm.yyyy hh24:mi:ss'),
 l_slot_width=>10));
+
+-- AWR report from sqlplus 
+
+set linesize 8000 termout on feedback off heading off echo off veri off trimspool on trimout on  
+
+SPOOL w:\trace\new4.html
+
+SELECT OUTPUT
+  FROM TABLE (DBMS_WORKLOAD_REPOSITORY.AWR_REPORT_HTML (
+                  L_DBID       => (SELECT DBID FROM V$DATABASE),
+                  L_INST_NUM   => (SELECT INSTANCE_NUMBER FROM V$INSTANCE), --NULL --if required ALL RAC instances
+                  L_BID        =>373588,
+                  L_EID        =>373589));
+                  
+spool off 
+exit
 
 --compare periods AWR report
 
@@ -713,6 +1155,34 @@ exec DBMS_STATS.GATHER_TABLE_STATS('OWS','DOC',method_opt=>'FOR COLUMNS AMND_STA
 select * from dba_tab_col_statistics where TABLE_NAME = 'DOC' order by 1,2,3;
 select * from dba_tab_histograms where TABLE_NAME = 'DOC' and column_name = 'AMND_STATE' order by 1,2,3;
 
+BEGIN  DBMS_STATS.GATHER_TABLE_STATS ( 
+    ownname          => 'OWS'
+,   tabname          => 'DOC'
+,   method_opt       => 'FOR COLUMNS TARGET_FEE_CODE TARGET_SERVICE SEC_TRANS_COND_ATT SIZE 1'
+,   estimate_percent => 10 
+);
+END;
+
+--gather Height Balanced histograms:
+
+https://docs.oracle.com/database/121/TGSQL/tgsql_histo.htm#TGSQL383
+https://docs.oracle.com/database/121/TGSQL/tgsql_histo.htm#TGSQL380
+
+RECONS_AMOUNT
+SOURCE_FEE_AMOUNT
+
+BEGIN  DBMS_STATS.GATHER_TABLE_STATS ( 
+    ownname          => 'OWS'
+,   tabname          => 'DOC'
+,   method_opt       => 'FOR COLUMNS RECONS_AMOUNT SOURCE_FEE_AMOUNT SIZE 254'
+,   estimate_percent => 10 
+);
+END;
+
+--gather frequency histogramm (default est %):
+
+DBMS_STATS.GATHER_table_STATS ('OWS', 'DOC',METHOD_OPT => 'FOR COLUMNS OUTWARD_STATUS SIZE 14');
+
 --check after/befor gathering
 
 select distinct owner,table_name,column_name from dba_tab_histograms where TABLE_NAME = 'UT_TEST_MSG' order by 1,2,3; 
@@ -722,6 +1192,14 @@ select * from dba_tab_histograms where TABLE_NAME = 'UT_TEST_MSG' order by 1,2,3
 -- gather dictionary statistics (see Doc ID 2046826.1)
 
 exec dbms_stats.gather_dictionary_stats;
+
+--find the difference between statistics for the table over time (stats history must be enabled, default is 31 days)
+
+SELECT dbms_stats.get_stats_history_availability FROM dual;
+SELECT dbms_stats.get_stats_history_retention FROM dual;
+--if available can be compared (clob output as report)
+select  * from table(dbms_stats.diff_table_stats_in_history('OWS','DOC',systimestamp-2,systimestamp));
+
 
 -- bind variables for sql cursor cache
 
@@ -1073,6 +1551,21 @@ ORDER BY TRUNC (BEGIN_INTERVAL_TIME),
 select ADDRESS, HASH_VALUE from V$SQLAREA where SQL_ID like '0sagz5rtm8jga';
 exec DBMS_SHARED_POOL.PURGE ('0000000A2B3ECA20, 4080289258', 'C'); --ADDRESS HASH_VALUE as parameters (!!! AS SYS)
 select ADDRESS, HASH_VALUE from V$SQLAREA where SQL_ID like '0sagz5rtm8jga'; --should be no rows!
+
+--Fragmentation of the shared pool can be reduced by specifying that objects should be kept. 
+--Kept objects are not subject to aging out of the shared pool
+--reduce "library cache: mutex X" and "cursor: pin S" wait events
+
+EXECUTE dbms_shared_pool.keep ('SYS.STANDARD','P'); --Package,Type,tRigger,FUNCTION
+EXECUTE dbms_shared_pool.keep ('6B8551B8,593239587','C');
+--first obtain the address of the parent cursor and the hash value V$SQL.ADDRESS (hexadecimal), V$SQL.HASH_VALUE (decimal)
+--unkeep:
+EXECUTE dbms_shared_pool.unkeep ('SYS.STANDARD','P');
+EXECUTE dbms_shared_pool.unkeep ('6B8551B8,593239587','C');
+
+--Reports the largest objects currently in the shared pool (specify min size in Kb)
+SET SERVEROUTPUT ON
+EXECUTE dbms_shared_pool.sizes (64);
 
 -- MOVE SQL profiles between databases:
 
@@ -1814,6 +2307,22 @@ ORDER BY 1,
          3,
          4,
          5;
+         
+-- find WHICH directives as used by particular SQL:
+
+explain plan for --below the SQL statement for which you need to find an information
+select /*NORULE */'DATAPOINT@ ' bpb,                 
+df.TABLESPACE_NAME,         sum(fs.PHYRDS),         sum(fs.PHYWRTS),    
+     sum(fs.PHYBLKRD),         sum(fs.PHYBLKWRT)    from            
+V$FILESTAT fs, DBA_DATA_FILES df,                 (SELECT DISTINCT 
+(P.TABLESPACE_NAME) TABLESPACE_NAME                  FROM 
+P$ETSM_CNTNREF P                  WHERE p.container_id = 2 ) K where    
+       df.FILE_ID = fs.FILE# and   DF.TABLESPACE_NAME=K.TABLESPACE_NAME 
+group by   df.TABLESPACE_NAME;
+
+SELECT * FROM TABLE(DBMS_XPLAN.DISPLAY(null, null, '+metrics'));
+
+--directives will be in the "Sql Plan Directive information" section
 
 EXEC DBMS_SPD.DROP_SQL_PLAN_DIRECTIVE(10091005918999074784);
 
