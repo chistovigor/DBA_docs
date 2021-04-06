@@ -464,6 +464,28 @@ using select from a database:
                                                        'DD.MM.YYYY HH24:MI:SS')
 ORDER BY 1;
 
+--example of rman periodical restore (and recover) checking script:
+
+rman target sys/$db_pass <<!
+SELECT CAST(TO_CHAR(SYSDATE,'DD-MM-YYYY HH24:MI:SS') AS VARCHAR2(30)) AS CROSSCHECK_STEP_1 FROM DUAL;
+CROSSCHECK BACKUP;
+REPORT OBSOLETE;
+LIST EXPIRED BACKUP;
+SELECT CAST(TO_CHAR(SYSDATE,'DD-MM-YYYY HH24:MI:SS') AS VARCHAR2(30)) AS DELETE_STEP_2 FROM DUAL;
+DELETE NOPROMPT OBSOLETE;
+DELETE NOPROMPT EXPIRED BACKUP;
+DELETE NOPROMPT ARCHIVELOG ALL BACKED UP 1 TIMES TO 'SBT_TAPE';
+DELETE NOPROMPT BACKUP OF ARCHIVELOG UNTIL TIME 'SYSDATE-5';
+DELETE NOPROMPT ARCHIVELOG ALL COMPLETED BEFORE 'SYSDATE-5';
+DELETE NOPROMPT BACKUP OF CONTROLFILE COMPLETED BEFORE 'SYSDATE-7';
+SELECT CAST(TO_CHAR(SYSDATE,'DD-MM-YYYY HH24:MI:SS') AS VARCHAR2(30)) AS RESTORE_STEP_3 FROM DUAL;
+# see SR 3-15869076511, Doc ID 1554636.1, the restore preview will list all backups required for the entire restore and recovery operation
+RESTORE DATABASE PREVIEW;
+SELECT CAST(TO_CHAR(SYSDATE,'DD-MM-YYYY HH24:MI:SS') AS VARCHAR2(30)) AS SUMMARY_STEP_4 FROM DUAL;
+LIST BACKUP SUMMARY;
+exit
+!
+
 
 Set Rman backup pieces size and location:
 
@@ -1089,9 +1111,22 @@ Gather table stats:
 
 EXEC DBMS_STATS.GATHER_TABLE_STATS ('tctdbs', 'AUTHORIZATIONS');
 
-Gather hystograms (for given columns):
+Gather histograms (for given columns):
 
 EXEC DBMS_STATS.GATHER_TABLE_STATS(ownname=>'TCTDBS', tabname=>'ACQUIRERLOG', METHOD_OPT=>'FOR COLUMNS SIZE AUTO EDCFLAG EDCSERNO I041_POS_ID');
+
+To simulate Oracle Database 11g behavior, which is necessary to create a height-based histogram, set estimate_percent to a nondefault value. If you specify a nondefault percentage, then the database creates frequency or height-balanced histograms.
+For example, enter the following command:
+
+--height-balanced
+
+BEGIN  DBMS_STATS.GATHER_TABLE_STATS ( 
+    ownname          => 'SH'
+,   tabname          => 'COUNTRIES'
+,   method_opt       => 'FOR COLUMNS COUNTRY_SUBREGION_ID SIZE 254' --for frequency less values
+,   estimate_percent => 100 
+);
+END;
 
 Gather partition stats:
 
@@ -1241,6 +1276,10 @@ END;
 
 print my_report
 
+Hint for setting cardinality (number of rows returned by the query block):
+
+/*+ CARDINALITY (qb_alias, 10) */
+
 
 Add hint for using the index emp_department_ix on employees table:
 
@@ -1265,6 +1304,8 @@ Set OPTIMIZER_FEATURES_ENABLE = '11.2.0.4' in init.ora or as hint to SQL ie /*+ 
 Set _OPTIMIZER_UNNEST_SCALAR_SQ = FALSE in init.ora or as hint to SQL ie /*+ OPT_PARAM('_OPTIMIZER_UNNEST_SCALAR_SQ' 'FALSE') */
 ALTER SESSION SET OPTIMIZER_USE_INVISIBLE_INDEXES=TRUE;
 
+--possible vaues for OPTIMIZER_FEATURES_ENABLE: 11.2.0.4, 11.2.0.1, 10.2.0.4, 9.2.0
+
 Turn BLOOM filter off
 
 /*+ OPT_PARAM('_bloom_filter_enabled' 'FALSE') */
@@ -1276,6 +1317,30 @@ Turn INMEMORY OFF at the query level
 Turn fix for the given bug on in hint:
 
 /*+ OPT_PARAM('_fix_control' '16391176:1') */
+for several fixes:
+SELECT /*+ OPT_PARAM('_fix_control' '6377505:OFF 6006300:OFF') */ *
+
+with alter session/system:
+
+ALTER SESSION SET "_fix_control"='6377505:0';
+ALTER system SET "_fix_control"='31310771:1','20636003:0';
+
+check this:
+
+select bugno, value ,sql_feature, description from v$session_fix_control 
+      where bugno in (31310771,20636003);
+select bugno, value ,sql_feature, description from v$system_fix_control 
+      where bugno in (31310771,20636003);
+
+-- list of bugfixes (inly form sys in 12.1):
+
+execute dbms_optim_bundle.getBugsforBundle('201020');
+
+--check how to add in pfile:
+
+exec dbms_optim_bundle.enable_optim_fixes('ON', 'INITORA');
+
+https://oracle-base.com/articles/misc/granular-control-of-optimizer-features-using-fix-control
 
 Turn Automatic Dynamic Sampling OFF (reliable)
 
@@ -1603,6 +1668,8 @@ SELECT 'BACKUP TAG RO_TS_ FILESPERSET 1 TABLESPACE '||LISTAGG (TABLESPACE_NAME, 
            TSNAMES
   FROM DBA_TABLESPACES
  WHERE STATUS = 'READ ONLY' ORDER BY TABLESPACE_NAME;
+ 
+select nvl(listagg(tablespace_name,',') within group (order by tablespace_name),'XXX') as ts_4_exclude from dba_tablespaces where tablespace_name like '%HSK_EXP%'  ;
 
 or (may return CLOB fields while previuos query cannot)
 
@@ -1628,10 +1695,52 @@ ALTER SESSION SET EVENTS '10046 trace name context forever, level 1';
 alter session set tracefile_identifier='mytracefile';
 alter SESSION set events '10046 trace name context off';
 
--- tracing the given error (ORA-08103 for example)
-alter session set events '8103 trace name errorstack level 5';
-alter session set tracefile_identifier='trace_8103';
-alter session set events '8103 trace name context off';
+--do tracing for both parce and execute:
+
+alter session set timed_statistics = true;
+alter session set statistics_level=ALL;
+alter session set max_dump_file_size=UNLIMITED;
+alter session set tracefile_identifier='10046_10053';
+alter session set events '10046 trace name context forever, level 12';
+alter session set events '10053 trace name context forever, level 1';
+--run sql_id
+alter SESSION set events '10046 trace name context off';
+alter SESSION set events '10053 trace name context off';
+
+
+--example of tracing in sqlplus:
+
+alter session set current_schema = OWS;
+alter session set timed_statistics = true;
+alter session set statistics_level = ALL;
+alter session set max_dump_file_size = UNLIMITED;
+alter session set tracefile_identifier='10046_10053_B02';
+alter session set events '10046 trace name context forever, level 12';
+alter session set events '10053 trace name context forever, level 1';
+
+variable B4 NUMBER;
+variable B1 VARCHAR2(1);
+variable B2 VARCHAR2(1);
+variable B3 VARCHAR2(1);
+exec :B4:= 95656187;
+exec :B3:='P';
+exec :B2:='S';
+exec :B1:='T';
+---!!! NOTE: if date is required declaration MUST be as varchar, see example:
+variable B5 VARCHAR2(40);
+exec :B5:=sysdate;
+
+SELECT NEW_SCHEME FROM USAGE_ACTION WHERE ACNT_CONTRACT__ID = :B4 AND NEW_SCHEME IS NOT NULL AND POSTING_STATUS IN (:B3 , :B2 , :B1 ) ORDER BY ID DESC;
+
+alter SESSION set events '10046 trace name context off';
+alter SESSION set events '10053 trace name context off';
+exit
+
+
+--tracing for particular SQL_ID only:
+
+alter system set events 'sql_trace[sql: <sql_id> | <sql_id> | <sql_id> ]'; 
+alter system set events 'sql_trace[sql: <sql_id> ] off';
 
 --tracing particular SQL_ID execution (trace every execution of the SQL statement):
 
@@ -1643,13 +1752,34 @@ ALTER SYSTEM SET events 'sql_trace [sql:<SQL_ID>] off';
 
 How to Collect Standard Diagnostic Information Using SQLT for SQL Issues (Doc ID 1683772.1)
 
+A convenient way to use tkprof is to create a batch file in the folder where you retrieve the .trc traces files. 
+The batch file (for example tkprof.bat) should contain:
+
+Tkprof.exe %1 %1.tkprf Explain=%2 Table=%3.tun_plan_table Sort=(ExeEla,FchEla)
+
+Simply run this batch file by providing the following arguments:
+
+%1 - the name of the *.trc trace file;
+%2 - the TNS connect string to the database with the credentials of the <app_user> user;
+%3 - the username of <app_user>
+Example: tkprof.bat mytraces.trc app_user/app_password@mytns app_user
+
+The generated trace file will be placed in the same folder and will have the name "mytraces.trc.tkprf"
+
+-- tracing the given error (ORA-08103 for example)
+alter session set events '8103 trace name errorstack level 5';
+alter session set tracefile_identifier='trace_8103';
+alter session set events '8103 trace name context off';
+
 after sqlt setup run from the name of application user (runs problem sql) for analyzing:
 
 cd scripts/sqlt
 -- MIN_MAX_select_not_use_INDEX_SS_1.sql - в этом файле sql для анализа
 START run/sqltxecute.sql input/MIN_MAX_select_not_use_INDEX_SS_1.sql
 
-please do the following action plan and provide the generated trace file. 
+please do the following action plan and provide the generated trace file.
+
+-- IF SQLT not working use SQL Tuning Health-Check Script (SQLHC) (Doc ID 1366133.1) 
 
 alter session set max_dump_file_size=unlimited; 
 alter session set db_file_multiblock_read_count=1; 
@@ -1895,6 +2025,9 @@ END;
 
 select to_char(systimestamp,'YYYY-MM-DD HH24:MI:SS.FF') as b_date from dual;
 
+--convert sysdate to timestamp with TZ /timestamp_tz
+SELECT from_tz(CAST (SYSDATE AS TIMESTAMP), '+04:00') tz FROM dual;
+
 -- трассировка сессии
 -- session tracing
 
@@ -1903,10 +2036,25 @@ exec DBMS_MONITOR.SESSION_TRACE_ENABLE(SESSION_ID=>1391,SERIAL_NUM=>27435,WAITS=
 
 трейс будет в diagnostic_dest/diag/rdbms/instance_name/db_name/trace/<имя процесса>.trc
 trace will be placed into diagnostic_dest/diag/rdbms/instance_name/db_name/trace/<process name>.trc
+select tracefile from v$process where addr = (select PADDR from v$session where sid = 4215 and serial# = 20110);
 (select tracefile from v$process where pid=11;)
 
 exec DBMS_MONITOR.SESSION_TRACE_DISABLE(SID,SERIAL);
 exec DBMS_MONITOR.SESSION_TRACE_DISABLE(SESSION_ID=>1391,SERIAL_NUM=>27435);
+
+--add tracing in PL SQL code
+declare
+...
+V_TRACE_MOMENT     VARCHAR2(14);
+begin
+SELECT TO_CHAR(SYSDATE,'hh24_mi') INTO V_TRACE_SUFF FROM DUAL;
+EXECUTE IMMEDIATE 'ALTER SESSION SET MAX_DUMP_FILE_SIZE = UNLIMITED';
+EXECUTE IMMEDIATE 'ALTER SESSION SET TRACEFILE_IDENTIFIER = "SE_ONLINE_'||V_TRACE_MOMENT||'"';
+DBMS_MONITOR.SESSION_TRACE_ENABLE (BINDS => TRUE, PLAN_STAT => 'all_executions');
+
+--code ...
+
+DBMS_MONITOR.SESSION_TRACE_DISABLE;
 
 -- определение имени трейса текущей сессии
 -- determine the name of a trace for current session
@@ -2085,7 +2233,7 @@ ORA$AT_SA_SPC_SY_nnn is for Space Advisor tasks
 ORA$AT_OS_OPT_SY_nnn is for CBO stats collection tasks
 ORA$AT_SQ_SQL_SW_nnn is for SQL Tuning Advisor tasks
 
-Анализ архива с информацией os watcher black box (oswbb):
+Анализ архива с информацией os watcher (OSwatcher) black box (oswbb) :
 Archive with os watcher black box (oswbb) analyzing:
 
 -- в автоматическом режиме:
@@ -2094,6 +2242,14 @@ java -jar oswbba.jar -i C:\temp\archive -A
 -- с возможностью выбора опций
 -- options may be choosed
 java -jar oswbba.jar -i C:\temp\archive
+
+--for particular interval (faster analysis when you have a lot of files in history):
+java -jar oswbba.jar -i /grid/OSwatcher/oswbb/output -b Feb 09 00:00:00 2021 -e Feb 16 10:00:00 2021 -s
+java -jar oswbba.jar -i /u01/OSwatcher/oswbb/archive -b Jun 11 23:00:00 2020 -e Jun 18 09:00:00 2020 -s
+
+--run in bg:
+cd /grid/OSwatcher/oswbb
+nohup java -jar oswbba.jar -i /grid/OSwatcher/oswbb/output -b Feb 14 00:00:00 2021 -e Feb 16 13:00:00 2021 -s >> analysis_`date +%Y%m%d_%H%M%S`.log 2>&1 &
 
 SQL Monitoring (отчеты по sql, которые есть в мониториге)
 SQL Monitoring (reports for sql exists in monitoring)
@@ -2107,14 +2263,77 @@ As HTML:
 SELECT DBMS_SQLTUNE.REPORT_SQL_MONITOR_LIST (type=>'HTML') TEXT_LINE FROM DUAL;
 SELECT DBMS_SQLTUNE.REPORT_SQL_MONITOR (type=>'HTML') TEXT_LINE FROM DUAL;
 
+SET trimspool ON
+SET TRIM      ON
+SET pages    0
+SET linesize 32767
+SET LONG    1000000
+SET longchunksize 1000000
+ 
+spool sqlmon_active.html
+ 
+SELECT dbms_sqltune.Report_sql_monitor(SQL_ID=>'&sql_id', TYPE=>'active')
+FROM   dual;
+ 
+spool OFF
 
-Поиск части кода внутри БД:
+-- monitoring SQL execution:
+
+https://sqlmaria.com/2017/08/01/getting-the-most-out-of-oracle-sql-monitor/
+
+By default, a SQL statement that either runs in parallel or has consumed at least 5 seconds of combined CPU and I/O time in a single execution will be monitored.
+you can lower or increase the default threshold of 5 seconds by setting the underscore parameter 
+_sqlmon_threshold
+However, you should be aware that any increase might mean the monitored executions will age out of the SQL Monitor buffer faster.
+
+It is also possible to force monitoring to occur for any SQL statement by simply adding the MONITOR hint to the statement.
+
+SELECT /*+ MONITOR */ col1, col2, col3
+
+you can still force monitoring to occur by setting the event "sql_monitor" with a list of SQL_IDs for the statements you want to monitor at the system level:
+ALTER SYSTEM SET EVENTS 'sql_monitor [sql: 5hc07qvt8v737|sql: 9ht3ba3arrzt3] force=true';
+
+By default, Oracle limits the number of SQL statements that will be monitored to 20 X CPU_COUNT. 
+You can increase this limit by setting the underscore parameter
+_sqlmon_max_plan 
+but be aware this will increase the amount of memory used by SQL Monitor in the Shared_Pool and may result in SQL Monitoring information being aged out of the memory faster.
+SQL Monitor will only monitor a SQL statement if the execution plan has less than 300 lines. If you know your execution plans are much larger than that, you can set the underscore parameter 
+_sqlmon_max_planlines
+ to increase this limit. Again, this will increase the amount of memory used by SQL Monitor in the Shared_Pool.
+ In Oracle Database 12c SQL Monitor reports are persisted in the data dictionary table DBA_HIST_REPORTS. By default, Oracle will retain SQL Monitor reports for 8 days (or AWR retention policy).
+ 
+ -- select report from history:
+ 
+SELECT report_id rid FROM dba_hist_reports
+WHERE dbid = 1954845848 AND component_name = 'sqlmonitor'
+AND report_name = 'main' AND period_start_time BETWEEN
+To_date('27/07/2017 11:00:00','DD/MM/YYYY HH:MI:SS') AND To_date('27/07/2017 11:15:00','DD/MM/YYYY HH:MI:SS')
+AND key1 = 'cvn84bcx7xgp3';
+ 
+get HTML monior report:
+
+SET echo ON
+SET trimspool ON
+SET TRIM ON
+SET pages 0
+SET linesize 32767
+SET LONG 10000000
+SET longchunksize 1000000
+spool old_sqlmon.html
+ 
+SELECT dbms_auto_report.Report_repository_detail(rid=>42, TYPE=>'active')
+FROM dual;
+spool OFF 
+
+ Поиск части кода внутри БД:
 Search for SOURCE into db:
 
 SELECT * FROM ALL_SOURCE WHERE UPPER(text) LIKE UPPER('%what I am searching for%') ORDER BY type, name, line;
 
 Анализ CHAINED ROWS
-CHAINED ROWS analysis
+CHA
+
+INED ROWS analysis
 
 Создание таблицы для хранения результатов анализа с помощью скрипта utlchain.sql в ?/rdbms/admin
 Create table using utlchain.sql script (into ?/rdbms/admin)
@@ -2233,6 +2452,8 @@ http://ivenxu.com/2014/01/05/oracle-undo-block-experiment/
 -- DDL operation logging (Enterprise option) allow the tracking of all ddls in the alert log
 
 ALTER SYSTEM SET enable_ddl_logging=TRUE
+
+(trace will be in <diagostic_dest>/rdbms/<sid>/<dbname>/log/ddl_$ORACLE_SID.log)
  
  
 --настройка аудита:
@@ -2275,6 +2496,18 @@ exec DBMS_SHARED_POOL.KEEP('LOADER_MARKETS_DBL.IN_REQUEST_DEPENDENCES');
 
 select * from v$db_object_cache where kept='YES' and owner <> 'SYS' order by 1,2;
 
+--flush particular cursor from the shared pool:
+https://oracle-base.com/articles/misc/purge-the-shared-pool
+
+SELECT sql_id,
+       address,
+       hash_value,
+       sql_text
+FROM   v$sqlarea
+WHERE  sql_text LIKE 'SELECT empno FROM emp WHERE job%';
+
+EXEC sys.DBMS_SHARED_POOL.purge('000000010182AE70,1862304678', 'C'); --'ADDRESS,HASH_VALUE'
+
 -- MOVE партиции и автоматическая перестройка индексов по ней
 -- move partitions and rebuild indexes automaticaly
   
@@ -2290,6 +2523,11 @@ select * from v$db_object_cache where kept='YES' and owner <> 'SYS' order by 1,2
   
   !!! db_big_table_cache_percent_target работает только при AUTO или ADAPTIVE
   !!! db_big_table_cache_percent_target works only when AUTO or ADAPTIVE
+  
+-- force query with particular prallelism
+
+alter session force parallel query parallel 34;
+select /*+parallel(ua 34)*/ ...
   
 Правильные параметры монтирования NFS для Oracle (решает проблему ORA-27054 при использовании datapump)
 MOS Doc ID 359515.1
@@ -2307,6 +2545,10 @@ mount -o remount,rw,bg,hard,rsize=32768,wsize=32768,vers=3,nointr,timeo=600,prot
 Table compression after delete/change rows size in LOB (BLOB,CLOB)
 
 ALTER TABLE prot.INP_FILE_BODY MODIFY LOB(FILE_BODY) (SHRINK SPACE);
+
+--move lob column data into different tablespace:
+
+ALTER TABLE STG_ETL.ADCB_LULU_EMBOSS_FILE2IDEMIA MOVE LOB (APPLDATANOTIFICATION) STORE AS SECUREFILE  (NOCOMPRESS TABLESPACE STG_ETL);
 
 -- Сбор диагностики:
 -- Diagnistic gathering:
@@ -2784,6 +3026,12 @@ https://oracle-base.com/articles/12c/weblogic-installation-on-oracle-linux-6-and
 https://oracle-base.com/articles/12c/oracle-forms-and-reports-12c-installation-on-oracle-linux-6-and-7 --forms and reports
 https://oracle-base.com/articles/12c/weblogic-repository-configuration-utility-1221 --connect to repository
 
+-- clone existing oracle home (new location is /u01/app/oracle/product/12.1.0/dbhome_1):
+
+export ORACLE_HOME=/oracle/app/product/12.1.0/dbhome_1
+cd $ORACLE_HOME/oui/bin
+./runInstaller -clone -silent -ignorePreReq ORACLE_HOME="/u01/app/oracle/product/12.1.0/dbhome_1" ORACLE_HOME_NAME="dbhome_12gR2" ORACLE_BASE="/u01/app/oracle" OSDBA_GROUP=dba OSOPER_GROUP=oinstall 
+
 --reduce concurrency (cursor pin S, cursor: pins S wait for X)
 
 use alternative mutex wait scheme, parameter:
@@ -2804,7 +3052,27 @@ SQLNET.ENCRYPTION_SERVER=REQUESTED
 SQLNET.ENCRYPTION_TYPES_SERVER=(AES256)
 
 with sertificates:
-https://oracle-base.com/articles/misc/configure-tcpip-with-ssl-and-tls-for-database-connections  
+https://oracle-base.com/articles/misc/configure-tcpip-with-ssl-and-tls-for-database-connections 
+
+--configuration with encryption of ONE particular client ONLY (Doc ID 76629.1):
+
+If we want to force encryption from a client, while not affecting any other connections to the server,
+we would add the following to the client "sqlnet.ora" file.
+The server does not need to be altered as the default settings (ACCEPTED and no named encryption algorithm)
+will allow it to successfully negotiate a connection.
+
+--client
+SQLNET.ENCRYPTION_CLIENT=REQUIRED
+
+If we would prefer clients to use encrypted connections to the server, but will accept non-encrypted connections,
+we would add the following to the server side "sqlnet.ora".
+
+--server
+SQLNET.ENCRYPTION_SERVER=REQUESTED
+
+-- ADD additionaly (to resolve TNS-12592 error in listener log)
+--client
+SQLNET.SEND_TIMEOUT=600
 
 -- Find biggest dfference between 2 rows in of the same table example (100 rows with biggest difference)
 
@@ -2825,6 +3093,43 @@ select sysdate - interval '3' minute from dual;
 
 Best Practices and Recommendations for RAC databases with SGA size over 100GB (Doc ID 1619155.1)
 
+--necessary Oracle parameters for RAC for decrease interconnect related events:
+
+_gc_override_force_cr FALSE   
+_gc_override_force_cr FALSE
+_gc_persistent_read_mostly FALSE   
+_gc_read_mostly_locking FALSE
+_clusterwide_global_transactions FALSE   
+_cr_grant_local_role TRUE
+_high_priority_processes LMS*|LGWR|LM*|LG*|LCK0|GCR*|CKPT|DBRM|RMS0|CR*|RMV*|LM*|LCK0|CKPT|DBRM|RMS0|LGWR|CR*|RS0*|RS1*|RS2*
+
+private interconnect OsWatcher private.net file example (names are from /etc/hosts of one RAC node, node 2):
+
+	
+Node 1 have 2 private interconnect IPs:
+
+xx.59.169.40 unidbdomdr1-1-priv
+xx.59.179.40 unidbdomdr1-2-priv
+
+Node 2 have 2 private interconnect IPs:
+
+xx.59.169.41 unidbdomdr2-1-priv
+xx.59.179.41 unidbdomdr2-2-priv
+
+Node 1:
+grid@unidbdomdr1:/grid/OSwatcher/oswbb$ cat private.net
+echo "zzz ***"`date`
+traceroute -s xx.59.169.40 -r -F xx.59.169.41 1472
+traceroute -s xx.59.179.40 -r -F xx.59.179.41 1472
+rm locks/lock.file
+
+Node 2:
+grid@unidbdomdr2:/grid/OSwatcher/oswbb$ cat private.net
+echo "zzz ***"`date`
+traceroute -s xx.59.169.41 -r -F xx.59.169.40 1472
+traceroute -s xx.59.179.41 -r -F xx.59.179.40 1472
+rm locks/lock.file
+
 --Using the PL/SQL Hierarchical Profiler
 The profiler reports the dynamic execution profile of a PL/SQL program organized by function calls, and accounts for SQL and PL/SQL execution times separately. 
 No special source or compile-time preparation is required; any PL/SQL program can be profiled.
@@ -2837,6 +3142,10 @@ Add before and after DB activity launch point (menu item)
 DBMS_HPROF.START_PROFILING('PLSHPROF_DIR', 'test.trc');
 DBMS_HPROF.STOP_PROFILING;
 
+--example
+begin DBMS_HPROF.start_profiling( location=>'PROFILER_DIR', filename=>'profiler'||sys_context('USERENV', 'SID')||'.txt'); end;
+begin DBMS_HPROF.stop_profiling;end;
+
 Run db activity for analysis
 
 By oracle on server side:
@@ -2844,3 +3153,354 @@ By oracle on server side:
 % plshprof -output html_root_filename profiler_output_filename
 
 --How to identify table fragmentation and remove it: https://blog.yannickjaquier.com/oracle/table-fragmentation-identification.html
+
+--analyze segment fragmentation using temporary table in the DB:
+
+drop table opt_segments_stats;
+create table opt_segments_stats (
+    stat_date                   date,
+    owner                       varchar2(255),
+    segment_name                varchar2(255),
+    segment_type                varchar2(255),
+    partition_name              varchar2(255),
+    tablespace_name             varchar2(255),
+    unformatted_blocks          number,
+    unformatted_bytes           number,
+    fs1_blocks                  number,
+    fs1_bytes                   number,
+    fs2_blocks                  number,
+    fs2_bytes                   number,
+    fs3_blocks                  number,
+    fs3_bytes                   number,
+    fs4_blocks                  number,
+    fs4_bytes                   number,
+    full_blocks                 number,
+    full_bytes                  number,
+    total_blocks                number,
+    total_bytes                 number,
+    unused_blocks               number,
+    unused_bytes                number,
+    last_used_extent_file_id    number,
+    last_used_extent_block_id   number,
+    last_used_block             number,
+    segment_fragmentation       number
+);
+
+-- fragmentation stats collection
+
+declare
+    segstat     opt_segments_stats  %rowtype;
+begin
+    segstat.stat_date := sysdate;
+    segstat.owner := 'OWS';
+    
+    for rec in(
+        select
+            segment_name,
+            partition_name,
+            segment_type,
+            tablespace_name
+        from dba_segments
+        where owner = segstat.owner
+            and (segment_type like 'TABLE%'
+            or segment_type like 'INDEX%')
+            and extents > 1
+        order by bytes desc
+    ) loop
+        segstat.segment_name := rec.segment_name;
+        segstat.partition_name := rec.partition_name;
+        segstat.segment_type := rec.segment_type;
+        segstat.tablespace_name := rec.tablespace_name;
+        
+        dbms_space.space_usage(
+            segstat.owner,
+            segstat.segment_name,
+            segstat.segment_type,
+            segstat.unformatted_blocks,
+            segstat.unformatted_bytes,
+            segstat.fs1_blocks,
+            segstat.fs1_bytes,
+            segstat.fs2_blocks,
+            segstat.fs2_bytes,
+            segstat.fs3_blocks,
+            segstat.fs3_bytes,
+            segstat.fs4_blocks,
+            segstat.fs4_bytes,
+            segstat.full_blocks,
+            segstat.full_bytes,
+            segstat.partition_name
+        );
+        
+        dbms_space.unused_space(
+            segstat.owner,
+            segstat.segment_name,
+            segstat.segment_type,
+            segstat.total_blocks,
+            segstat.total_bytes,
+            segstat.unused_blocks,
+            segstat.unused_bytes,
+            segstat.last_used_extent_file_id,
+            segstat.last_used_extent_block_id,
+            segstat.last_used_block,
+            segstat.partition_name
+        );
+        
+        segstat.segment_fragmentation := round((segstat.fs4_blocks*0.875 + segstat.fs3_blocks*0.625 + segstat.fs2_blocks*0.375 + 
+            segstat.fs1_blocks*0.125 + segstat.unformatted_blocks) / segstat.total_blocks * 100, 2);
+        
+        insert into opt_segments_stats values segstat;
+        
+        commit;
+    end loop;
+end;
+/
+
+
+--see results
+
+select stat_date, owner, segment_name, segment_type, partition_name, tablespace_name, round(total_bytes/1024/1024/1024, 2) gb, segment_fragmentation
+from opt_segments_stats
+where segment_type like 'TABLE%'
+order by stat_date desc, gb desc
+;
+
+
+-- instance consolidation in one server (enable instance caging) Doc ID 1362445.1:
+
+ALTER SYSTEM SET CPU_COUNT = 4;
+--for 11g the only 2 plans may be used: DEFAULT_PLAN or DEFAULT_MAINTENANCE_PLAN
+
+alter system set resource_manager_plan = 'default_plan'; --*.resource_manager_plan='default_plan'
+
+select name from v$rsrc_plan where is_top_plan = 'TRUE' and cpu_managed ='ON';
+
+--Monitoring Throttling
+select begin_time, consumer_group_name, cpu_consumed_time, cpu_wait_time from v$rsrcmgrmetric_history order by begin_time;
+select to_char(begin_time, 'HH24:MI') time, sum(avg_running_sessions) avg_running_sessions, sum(avg_waiting_sessions) avg_waiting_sessions from v$rsrcmgrmetric_history group by begin_time order by begin_time;
+
+--Information for resolve/troubleshoot patches conflicts
+
+1) download latest TFA Support Tools Bundle (See Doc:1594347.1) and generate output using the command:
+2) $TFA_HOME/bin/tfactl diagcollect -srdc dbdatapatch
+
+-- JAVA / JDBC official information
+
+https://www.oracle.com/database/technologies/faq-jdbc.html (see What are the Oracle JDBC releases Vs JDK versions?)
+
+-- convert raw TIMESTAMP as HEXDUMP to date:
+
+select to_timestamp(
+        to_char( to_number( substr( p_str, 1, 2 ), 'xx' ) - 100, 'fm00' ) ||
+        to_char( to_number( substr( p_str, 3, 2 ), 'xx' ) - 100, 'fm00' ) ||
+        to_char( to_number( substr( p_str, 5, 2 ), 'xx' ), 'fm00' ) ||
+        to_char( to_number( substr( p_str, 7, 2 ), 'xx' ), 'fm00' ) ||
+        to_char( to_number( substr( p_str,9, 2 ), 'xx' )-1, 'fm00' ) ||
+        to_char( to_number( substr( p_str,11, 2 ), 'xx' )-1, 'fm00' ) ||
+        to_char( to_number( substr( p_str,13, 2 ), 'xx' )-1, 'fm00' ), 'yyyymmddhh24miss' )
+from (select '&raw_timestamp' p_str from dual);
+
+-- dimp data block into the trace file 
+
+oradebug setmypid
+alter system dump datafile 691 block 64180 ;
+oradebug tracefile_name
+
+-- setup for prevent remastering for particular physical object in the database
+
+Get the OBJECT_ID for the required_object object from dba_objects.
+Run below query and provide the output (check before and AFTER remastering):
+
+select * from v$gcspfmaster_info where object_id=<object id for DOC object>
+
+manually remaster an object with oradebug command:
+
+sqlplus "/as sysdba"
+SQL> oradebug setmypid
+SQL> oradebug lkdebug -m pkey <object_id> <instance_id>
+
+-- rman dupicate DB into particular folder:
+in run block before restoration:
+SET NEWNAME FOR DATABASE TO '/w4merppdb/%b'; 
+
+--Upgrade To Oracle 19c Using Newly Introduced AutoUpgrade.jar
+
+-- insert random % (percent) of rows from one table into another table
+
+set timing on echo on feedback on
+alter session force parallel DML;
+insert /*+ APPEND PARALLEL(8) */ into XLS_ADMIN.TC_TXN_STG_1 select /*+ PARALLEL(8) */ * from XLS_ADMIN.TC_TXN sample(5);
+commit;
+alter session disable parallel DML;
+
+-- parameters for OFA (common in masterfile):
+
+DB files:    DB_CREATE_FILE_DEST and DB_CREATE_ONLINE_LOG_DEST_1
+Archivelogs: DB_RECOVERY_FILE_DEST 
+
+--SRDC - Required Diagnostic Data Collection for ORA-01578 (Doc ID 1671531.1)
+
+tfactl diagcollect -srdc ora1578
+
+-- How to Analyze an ORA-12801 (Doc ID 1187823.1), ORA-12801: error signaled in parallel query server P001
+
+ALTER SYSTEM SET EVENTS '10397 trace name context forever, level 1';
+
+-- multitenant connections for oracle DB (from 12.1):
+
+https://oracle-base.com/articles/12c/multitenant-connecting-to-cdb-and-pdb-12cr1
+
+-- show all pdbs
+show pdbs
+
+-- current contaiers in the DB
+
+col pdb for A30
+SELECT CON_ID,name, pdb FROM   v$services order by 1;
+
+-- show current container
+
+SHOW CON_NAME
+--or
+SELECT SYS_CONTEXT('USERENV', 'CON_NAME') FROM   dual;
+
+--set container
+
+ALTER SESSION SET CONTAINER=bwpdb; --pdb1
+
+--open PDB after CDB restart:
+
+ALTER database open;
+--or
+alter pluggable database all open;
+--for save state after open 
+alter pluggable database all save state;
+--check saved states
+select con_name, state from dba_pdb_saved_states;
+
+-- tnsnames.ora connection to the container DB example
+
+SQL> CONN system/password@pdb1
+
+The connection using a TNS alias requires an entry in the "$ORACLE_HOME/network/admin/tnsnames.ora" file, such as the one shown below.
+PDB1 =
+  (DESCRIPTION =
+    (ADDRESS = (PROTOCOL = TCP)(HOST = ol6-121.localdomain)(PORT = 1521))
+    (CONNECT_DATA =
+      (SERVER = DEDICATED)
+      (SERVICE_NAME = pdb1)
+    )
+  )
+  
+--JDBC Connections to PDBs
+--It has already been mentioned that you must connect to a PDB using a service. This means that by default many JDBC connect strings will be broken. 
+--Valid JDBC connect strings for Oracle use the following format.
+
+# Syntax
+jdbc:oracle:thin:@[HOST][:PORT]:SID
+jdbc:oracle:thin:@[HOST][:PORT]/SERVICE
+# Example
+jdbc:oracle:thin:@ol6-121:1521:pdb1
+jdbc:oracle:thin:@ol6-121:1521/pdb1
+
+When attempting to connect to a PDB using the SID format, you will receive the following error.
+ORA-12505, TNS:listener does not currently know of SID given in connect descriptor
+Ideally, you would correct the connect string to use services instead of SIDs, but if that is a problem the USE_SID_AS_SERVICE_listener_name listener parameter can be used.
+Edit the "$ORACLE_HOME/network/admin/listener.ora" file, adding the following entry, with the "listener" name matching that used by your listener.
+USE_SID_AS_SERVICE_listener=on
+Reload or restart the listener.
+$ lsnrctl reload
+
+-- data guard manager utility
+--connect as sys without password
+dgmgrl / 
+
+--check data guard apply/transport gap
+--https://franckpachot.medium.com/where-to-check-data-guard-gap-e1ccadc8f41
+--You must always check when the value was calculated (TIME_COMPUTED) and may add this to gap to estimate the gap from the current time
+
+select name||' '||value ||' '|| unit ||' computed at '||time_computed from v$dataguard_stats;
+
+--config transparent TNS services for primary/standby:
+
+1) add local listener for each DB
+*.local_listener='(ADDRESS=(PROTOCOL=TCP)(HOST=xx.2xx.100.52)(PORT=1561))'
+2) add DB in CW (if was not added before)
+3) configure services for both DB (primary/standby) for both roles:
+
+primary side example:
+srvctl add service -d way4dwhp -service way4dwhp_primary -role PRIMARY 
+srvctl add service -d way4dwhp -service way4dwhp_standby -role PHYSICAL_STANDBY
+
+Standby side example:
+srvctl add service -d way4dwhpSTBY -service way4dwhp_primary -role PRIMARY
+srvctl add service -d way4dwhpSTBY -service way4dwhp_standby -role PHYSICAL_STANDBY
+
+4) TNS descriptor look like this (for each service)
+
+way4dwhp_standby =
+  (DESCRIPTION =
+     (ADDRESS_LIST =
+       (FAILOVER = ON)
+       (LOAD_BALANCE = OFF)
+       (ADDRESS = (PROTOCOL = TCP)(HOST = xx.2xx.100.52)(PORT = 1561))
+       (ADDRESS = (PROTOCOL = TCP)(HOST = xx.1xx.100.52)(PORT = 1561))
+     )
+    (CONNECT_DATA =
+       (SERVICE_NAME = way4dwhp_standby)
+    )
+  )
+  
+-- DOP downgrade reasons (doc ID for tracing is 444164.1):
+
+SELECT
+  indx
+  ,qksxareasons
+FROM
+  x$qksxa_reason
+WHERE
+  qksxareasons like '%DOP downgrade%';
+
+--find in AWR for particular SQL_ID  
+  
+ select SID,sql_id,sql_exec_id, sql_exec_start,
+    case otherstat_2_value
+    when 350 then 'DOP downgrade due to adaptive DOP'
+    when 351 then 'DOP downgrade due to resource manager max DOP'
+    when 352 then 'DOP downgrade due to insufficient number of processes'
+    when 353 then 'DOP downgrade because slaves failed to join'
+    end reason_for_downgrade
+   from GV$SQL_PLAN_MONITOR
+   where sql_id = '3f3f4gfzdwwe'
+     and plan_operation='PX COORDINATOR'
+     and  otherstat_2_id=59
+   order by sql_exec_id;
+
+350 DOP downgrade due to adaptive DOP
+351 DOP downgrade due to resource manager max DOP
+352 DOP downgrade due to insufficient number of processes
+353 DOP downgrade because slaves failed to join
+
+Optimizer environment parameter views are based on fixed table views
+V$SYS_OPTIMIZER_ENV	X$QKSCESYS
+V$SES_OPTIMIZER_ENV	X$QKSCESES
+V$SQL_OPTIMIZER_ENV	X$KQLFSQCE
+--list unsupported optimizer parameters (internal sys view):
+
+SELECT pname_qkscesyrow,PVALUE_QKSCESYROW,FID_QKSCESYROW FROM x$qkscesys WHERE SUBSTR (pname_qkscesyrow,1,1) = '_' ORDER BY 1;
+
+-- ASM instance related activities
+
+discover mounted DG stats (for GI owner, ASM instance profile)
+
+asmcmd lsdg -g --discovery
+
+--mount ASM DG in force mode (to find missing disks when the error ORA-15040 appeared while mounting the ASM DG)
+
+sqlplus / as sysasm
+alter diskgroup W4PRF01_DATA_DG mount force;
+
+--now we can query all the disks of this diskgroup that are either available or unavailable
+
+select name,path,state,header_status from v$asm_disk where group_number=0;
+
+
