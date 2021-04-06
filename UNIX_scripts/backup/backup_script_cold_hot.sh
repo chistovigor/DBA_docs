@@ -1,27 +1,41 @@
 #!/bin/bash
 
-#backup DB script, ver 2.1, created by Igor Chistov
+#backup/restore preprod DB script, created by Igor Chistov
+#documentation available here: https://jira.network.ae/confluence/display/DBA/Rman+backup-restore#Rmanbackup-restore-pp_backup_restore
+#bitbucket version: https://bitbucket.org/network-international/infrastructure/src/master/BAU_scripts/Backup_restore/backup_restore_script_preprod.sh
 
-#variables
+# crontab example backup (first number - minute, second number - hour, third number - day of months for start job)
+# 00 17 22 * * $HOME/scripts/preprod_backup_restore.sh way4db0 JIRA_EE3106 backup >> $HOME/logs/backup_JIRA_EE-3106.log 2>&1
 
-export script_ver="2.1"
+# crontab example restore
+# 30 09 22 * * $HOME/scripts/preprod_backup_restore.sh way4db0 JIRA_EE3106 restore >> $HOME/logs/restore_JIRA_EE-3106.log 2>&1
+
+# crontab example backup weekly
+#00 18 * * 5 /rbackup/scripts/preprod_backup_restore.sh way4db0 SCHEDULED backup >> $HOME/logs/backup_way4db0_SCHEDULED_`date +\%d\%m\%y_\%H_\%M`.log 2>&1
+
+# command line run example (remove hash from the beginning)
+#nohup $HOME/scripts/preprod_backup_restore.sh way4db0 JIRA_EE3106 backup >> $HOME/logs/backup_JIRA_EE-3106.log 2>&1
+
+#variables common
+export script_ver="2.6"
+export timestamp=`date '+%d%m%y_%H_%M_%S'`
+log_folder=$HOME/logs
+os_ver=`uname -o | cut -d '/' -f 2`
+script_name=`basename $0`
+username=`whoami`
+export NLS_DATE_FORMAT='DD-MM-YYYY HH24:MI:SS'
+
+#variables specific to the given script
 export ORACLE_SID=$1
 export jira_task=$2
-export parallel=$3
-export mode=$4
-export retention=$5
-export timestamp=`date '+%d%m%y_%H_%M'`
-export common_folder=/rbackup
-purge_command=`echo delete force noprompt backup of database completed before \"sysdate - $5\"`
-
-# crontab example cold (first number - minute, second number - hour, third number - day of months for start job)
-# 00 17 22 * * $HOME/scripts/backup_script_cold_hot.sh way4db0 JIRA_EE-3106 8 >> $HOME/logs/backup_JIRA_EE-3106.log 2>&1
-
-# crontab example hot
-# 30 09 22 * * $HOME/scripts/backup_script_cold_hot.sh way4db0 JIRA_EE-3106 8 hot >> $HOME/logs/backup_JIRA_EE-3106.log 2>&1
-
-# crontab example scheduled with delete old backups
-#00 18 * * 5 /rbackup/scripts/backup_script_cold_hot.sh way4db0 SCHEDULED 8 cold 6 >> $HOME/logs/backup_way4db0_SCHEDULED_`date +\%d\%m\%y_\%H_\%M`.log 2>&1
+export mode=$3
+export host_name=`hostname`
+export catalog_server="10.129.115.44:4420/ppctldb"
+export catalog_db="sys/ni123456@$catalog_server as sysdba"
+export catalog_tns=\"${host_name}_${jira_task}/${host_name}_${jira_task}@$catalog_server\"
+export SBT_PARMS="SBT_PARMS=(NSR_SERVER=lnibkpprd1,NSR_CLIENT=$host_name,NSR_RECOVER_POOL=Oracle)"
+export num_cpu="$(("`kstat -m cpu_info | grep -w core_id | wc -l`/8"))"
+export parallelism=$(($num_cpu*3/2))
 
 #functions
 
@@ -54,90 +68,160 @@ echo rman is `which rman`
 echo sqlplus is `which sqlplus`
 }
 
-function shrink_db {
-echo shrink DB $1
-sqlplus -s / as sysdba << EOF
-set serveroutput on feedback off termout on
-DECLARE
-    V_RESIZE_SQL   VARCHAR2 (3900);
-BEGIN
-    FOR REC_DF
-        IN (  SELECT    'alter database datafile '''
-                     || A.FILE_NAME
-                     || ''' resize '
-                     || B.RESIZE_TO
-                         AS RESIZE_SQL
-                FROM DBA_DATA_FILES A,
-                     (  SELECT FILE_ID,
-                               MAX (  (BLOCK_ID + BLOCKS - 1 + 10)
-                                    * (SELECT TO_NUMBER (VALUE)     AS BLOCK_SIZE
-                                         FROM V\$PARAMETER
-                                        WHERE NAME = 'db_block_size'))
-                                   AS RESIZE_TO
-                          FROM DBA_EXTENTS
-                      GROUP BY FILE_ID) B
-               WHERE A.FILE_ID = B.FILE_ID
-            ORDER BY A.TABLESPACE_NAME, A.FILE_NAME)
-    LOOP
-        V_RESIZE_SQL := REC_DF.RESIZE_SQL;
-
-        EXECUTE IMMEDIATE V_RESIZE_SQL;
-    END LOOP;
-
-    FOR REC_TEMP
-        IN (SELECT 'alter tablespace ' || TABLESPACE_NAME || ' shrink space'
-                       AS RESIZE_SQL
-              FROM DBA_TABLESPACES
-             WHERE CONTENTS = 'TEMPORARY' AND STATUS = 'ONLINE')
-    LOOP
-        V_RESIZE_SQL := REC_TEMP.RESIZE_SQL;
-
-        EXECUTE IMMEDIATE V_RESIZE_SQL;
-    END LOOP;
- EXCEPTION
-    WHEN OTHERS
-    THEN
-        RAISE_APPLICATION_ERROR (
-            -20999,
-            ' ERROR while shrinking database, DB size may remains the same');
-END;
-/
+function create_catalog {
+echo create catalog user ${host_name}_${jira_task} and catlog for DB $ORACLE_SID
+sqlplus -s $catalog_db << EOF
+set serveroutput on feedback off
+ create user ${host_name}_${jira_task} identified by ${host_name}_${jira_task};
+ grant recovery_catalog_owner to ${host_name}_${jira_task};
+ grant unlimited tablespace to  ${host_name}_${jira_task};
+exit;
 EOF
-echo shrink completed
+rman catalog ${host_name}_${jira_task}/${host_name}_${jira_task}@$catalog_server <<EOF
+create catalog;
+exit;
+EOF
 }
 
-#run script
-
-echo script version is: $script_ver
-echo
-echo start time: $timestamp
-echo variables given:
-echo ORACLE_SID: $1
-echo jira task: $2
-echo parallel: $3
-echo mode: $4
-echo expiry period: $5 days
-
-echo "Make backup folder $common_folder/${ORACLE_SID}_${timestamp}_${jira_task}"
-
-mkdir $common_folder/${ORACLE_SID}_${timestamp}_${jira_task}
+function check_catalog {
+echo check database status, exit if instance unreachable
+echo "exit" | rman catalog $catalog_tns | grep "connected to recovery catalog database" > /dev/null
 if [ $? -eq 0 ]
- then
-  echo "Make backup folder successfully"
- else
-  echo "Cannot create backup folder, EXIT!"
- exit 3
+then
+ echo "recovery catalog database connection OK"
+ echo
+export catloguser=`sqlplus -s  $catalog_db << EOF
+set  heading off feedback off termout off trim off
+select username from dba_users where username like '%${jira_task}';
+EOF`
+export DBID1=`sqlplus -s  $catalog_db << EOF
+set heading off feedback off termout off trim off
+select DBID from ${catloguser}.rc_database;
+EOF`
+export DBID=`echo $DBID1`
+echo DBID for the database $ORACLE_SID and recovery catalog owner ${host_name}_${jira_task} is $DBID
+else
+ echo "Unable to reach recovery catalog database, exit"
+ exit 2
 fi
+}
 
-echo "Find ORACLE_HOME for source instance"
-echo
-find_ora_home
-echo
+function check_catalog_restore {
+echo check database status, exit if instance unreachable
+export catloguser=`sqlplus -s  $catalog_db << EOF
+set  heading off feedback off termout off trim off
+select lower(username) from dba_users where upper(username) like upper('%${jira_task}') order by created desc fetch first 1 row only;
+EOF`
+export DBID1=`sqlplus -s  $catalog_db << EOF
+set heading off feedback off termout off trim off
+select DBID from ${catloguser}.rc_database;
+EOF`
+export DBID=`echo $DBID1`
+echo DBID for the database $ORACLE_SID and recovery catalog owner $catloguser is $DBID
+}
 
-shrink_db
+function register_catalog {
+echo register DB in recovery catalog
+rman target / catalog ${host_name}_${jira_task}/${host_name}_${jira_task}@$catalog_server <<EOF
+register database;
+exit;
+EOF
+}
 
-echo rman log: $common_folder/${ORACLE_SID}_${timestamp}_${jira_task}/backup_${ORACLE_SID}_${timestamp}.log
+function cold_backup {
+echo shutdown instance for cold backup
+sqlplus -S / as sysdba <<EOF
+ shutdown immediate;
+ startup mount;
+ exit;
+EOF
 
+export SBT_PARMS="SBT_PARMS=(NSR_SERVER=lnibkpprd1,NSR_CLIENT=$host_name,NSR_RECOVER_POOL=Oracle)"
+rman_channels=`for i in $(eval echo "{1..$parallelism}")
+do
+echo ALLOCATE AUXILIARY CHANNEL CH$i TYPE 'SBT_TAPE' PARMS \"$SBT_PARMS\"";"
+done`
+
+echo Backup the source database using ${host_name}_${jira_task} user as catalog owner
+rman target / catalog $catalog_tns << EOF
+spool log to ${log_folder}/${ORACLE_SID}_${timestamp}_${jira_task}.log
+run{
+ $rman_channels
+ BACKUP INCREMENTAL LEVEL 0 FILESPERSET 20 FORMAT '%d_%u_%s_%p' DATABASE INCLUDE CURRENT CONTROLFILE;
+}
+exit;
+EOF
+echo startup instance after cold backup
+sqlplus -S / as sysdba <<EOF
+ alter database open;
+ exit;
+EOF
+}
+
+function drop_aux_db {
+export ORACLE_SID=$ORACLE_SID
+sqlplus -s '/ as sysdba' <<EOF
+set pagesize 999 linesize 999 heading off feedback off
+prompt db name and open_mode
+select name, open_mode from v\$database;
+shutdown immediate;
+startup mount exclusive restrict;
+drop database;
+exit;
+EOF
+}
+
+function nomount_aux_db {
+export ORACLE_SID=$ORACLE_SID
+rman target / <<EOF
+startup force nomount pfile='$ORACLE_HOME/dbs/init${ORACLE_SID}.ora';
+exit;
+EOF
+}
+
+function dup_aux_db {
+export ORACLE_SID=$ORACLE_SID
+echo $ORACLE_SID
+export host_name=`echo $catloguser | cut -d '_' -f 1`
+echo Duplicate the source database using ${host_name}_$jira_task user as catalog owner
+echo " Database restoring from host: "$host_name "DB Name "$ORACLE_SID "DBID" $DBID
+export catalog_tns=${host_name}_$jira_task/${host_name}_$jira_task@$catalog_server
+
+echo connection string for recovery catalog is: $catalog_tns
+
+export SBT_PARMS="SBT_PARMS=(NSR_SERVER=lnibkpprd1,NSR_CLIENT=$host_name,NSR_RECOVER_POOL=Oracle)"
+rman_channels=`for i in $(eval echo "{1..$parallelism}")
+do
+echo ALLOCATE AUXILIARY CHANNEL CH$i TYPE 'SBT_TAPE' PARMS \"$SBT_PARMS\"";"
+done`
+
+rman catalog $catalog_tns AUXILIARY / <<EOF
+set echo on
+spool log to ${log_folder}/${ORACLE_SID}_${timestamp}_${jira_task}.log
+run {
+ $rman_channels
+ SET DBID $DBID;
+ DUPLICATE TARGET DATABASE TO $ORACLE_SID NOFILENAMECHECK NOREDO;
+}
+spool log off
+exit;
+EOF
+}
+
+function restart_aux_db_pfile {
+export ORACLE_SID=$ORACLE_SID
+sqlplus -s '/ as sysdba' <<EOF
+!rm $ORACLE_HOME/dbs/spfile${ORACLE_SID}.ora
+shutdown immediate;
+startup mount;
+alter database noarchivelog;
+alter database open;
+exit;
+EOF
+}
+
+function check_db_size {
+echo source DB backup size estimate
 sqlplus -s / as sysdba << EOF
 set serveroutput on feedback off
 declare
@@ -155,73 +239,92 @@ dbms_output.put_line('APPROX BACKUP SIZE WITH COMPRESSION WILL BE: '||v_size1||'
 end;
 /
 EOF
+}
 
-if [ "${mode}" == hot ]; then
-echo hot backup instance with rman
-#<<!
-rman target / << EOF
-spool log to $common_folder/${ORACLE_SID}_${timestamp}_${jira_task}/backup_hot_${ORACLE_SID}_${timestamp}.log
-CONFIGURE RETENTION POLICY TO NONE;
-SET COMPRESSION ALGORITHM 'MEDIUM';
-CONFIGURE DEVICE TYPE DISK PARALLELISM $3 BACKUP TYPE TO COMPRESSED BACKUPSET;
-backup full database tag FULL_DB_${timestamp} format '$common_folder/${ORACLE_SID}_${timestamp}_${jira_task}/db_${ORACLE_SID}_${timestamp}_%U';
-backup archivelog all tag ARCH_${timestamp} format '$common_folder/${ORACLE_SID}_${timestamp}_${jira_task}/arch_${ORACLE_SID}_${timestamp}_%U' delete all input;
-backup tag CTLFILE_${ORACLE_SID}_${timestamp} current controlfile format '$common_folder/${ORACLE_SID}_${timestamp}_${jira_task}/clt_${ORACLE_SID}_${timestamp}_%U';
-spool log off
-exit;
-EOF
-!
-else
-echo shutdown instance for cold backup
-#<<!
-sqlplus -S / as sysdba <<EOF
- shutdown immediate;
- startup mount;
- exit;
-EOF
-echo backup instance with rman
-rman target / << EOF
-spool log to $common_folder/${ORACLE_SID}_${timestamp}_${jira_task}/backup_${ORACLE_SID}_${timestamp}.log
-CONFIGURE RETENTION POLICY TO NONE;
-SET COMPRESSION ALGORITHM 'MEDIUM';
-CONFIGURE DEVICE TYPE DISK PARALLELISM $3 BACKUP TYPE TO COMPRESSED BACKUPSET;
-backup full database tag FULL_DB_$timestamp format '$common_folder/${ORACLE_SID}_${timestamp}_${jira_task}/db_${ORACLE_SID}_${timestamp}_%U';
-backup tag CTLFILE_${ORACLE_SID}_${timestamp} current controlfile format '$common_folder/${ORACLE_SID}_${timestamp}_${jira_task}/clt_${ORACLE_SID}_${timestamp}_%U';
-spool log off
-exit;
-EOF
-echo startup instance after cold backup
-sqlplus -S / as sysdba <<EOF
- alter database open;
- exit;
-EOF
-#!
+
+#run script
+
+echo script version is: $script_ver
+echo
+echo start time: $timestamp
+echo variables given:
+echo ORACLE_SID: $1
+echo jira task: $2
+echo mode: $3
+case $3 in
+   "backup" )
+   echo User for recovery catalog: ${host_name}_${jira_task}
+   ;;
+   "restore" )
+   echo
+esac   
+
+echo Find ORACLE_HOME for source instance
+echo
+find_ora_home
+echo
+
+echo rman log: ${log_folder}/${ORACLE_SID}_${timestamp}_${jira_task}.log
+
+if [ -n $3 ];then
+  case $3 in
+   "backup" )
+   echo backup mode execution start
+   echo
+   create_catalog
+   echo
+   register_catalog
+   echo
+   check_catalog
+   echo
+   check_db_size
+   echo
+   cold_backup
+   echo
+   ;;
+   "restore" )
+   echo restore mode execution start
+   echo
+   check_catalog_restore
+   echo
+   echo
+   echo rman channel params is: $SBT_PARMS
+   echo
+   echo "Drop target database"
+   echo
+   drop_aux_db
+   echo
+   echo "Start the auxiliary (target) database in FORCE NOMOUNT mode"
+   echo
+   nomount_aux_db
+   echo
+   dup_aux_db
+   echo
+   echo restart the target database with pfile
+   echo
+   restart_aux_db_pfile
+   echo
+  ;;
+   * )
+   echo "second parameter must be backup or restore, exit"
+   exit 2
+   ;;
+  esac
+ else
+  echo "second parameter (backup or restore) was not given, exit"
+  exit 3
 fi
 
-export backup_state=`cat $common_folder/${ORACLE_SID}_${timestamp}_${jira_task}/backup_${ORACLE_SID}_${timestamp}.log | egrep 'ORA-|RMAN-' | wc -l`
+export backup_state=`cat ${log_folder}/${ORACLE_SID}_${timestamp}_${jira_task}.log | egrep 'ORA-|RMAN-' | wc -l`
 
-if [[ ${backup_state} -eq 0 && -f $common_folder/${ORACLE_SID}_${timestamp}_${jira_task}/backup_${ORACLE_SID}_${timestamp}.log ]];then
- echo backup completed successfully
- echo check folder $common_folder/${ORACLE_SID}_${timestamp}_${jira_task}/, format ${ORACLE_SID}_${timestamp}
- chmod -R g+rw $common_folder/${ORACLE_SID}_${timestamp}_${jira_task}
- chmod -R o+rw $common_folder/${ORACLE_SID}_${timestamp}_${jira_task}
-if [ -n "$5" ];then
- echo delete expired backups, older than $retention days
- echo rman log for that is: $common_folder/${ORACLE_SID}_${timestamp}_${jira_task}/clean_backup_${ORACLE_SID}_${timestamp}.log
-rman target / << EOF
-spool log to $common_folder/${ORACLE_SID}_${timestamp}_${jira_task}/clean_backup_${ORACLE_SID}_${timestamp}.log
-$purge_command;
-spool log off
-exit;
-EOF
+if [[ ${backup_state} -eq 0 && -f ${log_folder}/${ORACLE_SID}_${timestamp}_${jira_task}.log ]];then
+ echo "backup/restore completed successfully"
  else
- echo "retention (fifth) argument was not given to the script, need to delete expired backups MANUALLY"
-fi
- else
- echo backup completed with errors
- echo check log file $common_folder/${ORACLE_SID}_${timestamp}_${jira_task}/backup_${ORACLE_SID}_${timestamp}.log
- chmod -R g+rw $common_folder/${ORACLE_SID}_${timestamp}_${jira_task}
- chmod -R o+rw $common_folder/${ORACLE_SID}_${timestamp}_${jira_task}
+ echo "backup/restore completed with errors"
+ echo check log file ${log_folder}/${ORACLE_SID}_${timestamp}_${jira_task}.log
+ echo
+ echo "check errors in the below rman log (25 last lines of the file):"
+ tail -25 ${log_folder}/${ORACLE_SID}_${timestamp}_${jira_task}.log
  echo end time: `date '+%d%m%y_%H_%M'`
  echo
  echo script finished in $SECONDS seconds or $(($SECONDS/60)) minutes
