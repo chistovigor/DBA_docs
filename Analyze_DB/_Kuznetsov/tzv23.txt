@@ -1,0 +1,152 @@
+
+prompt **** TZ SYSDATE+SYSTIMESTAMP
+col s_sysdate format a42
+col s_systimestamp format a42
+select to_char(sysdate, 'DD.MM.YYYY HH24:MI:SS') as s_sysdate, 
+       to_char(systimestamp, 'DD.MM.YYYY HH24:MI:SS TZR') as s_systimestamp
+from dual;
+
+
+prompt 
+prompt
+prompt
+prompt
+prompt ****************************
+prompt **** TZ Run change.....
+prompt ****************************
+
+begin
+
+execute immediate 'alter session set nls_timestamp_format=''DD.MM.RR HH24:MI:SSXFF''';
+execute immediate 'alter session set nls_timestamp_tz_format=''DD.MM.RR HH24:MI:SSXFF TZR''';
+
+
+for l_s in (select filename, 
+                   to_char(version) as version, 
+                   ( select VALUE from dba_scheduler_global_attribute where ATTRIBUTE_NAME='DEFAULT_TIMEZONE') as old_default_time_zone, 
+                   decode(version,23,'Europe/Moscow','+03:00') new_default_time_zone 
+                   from v$timezone_file)
+loop
+ dbms_output.put_line('tz_version=>'||l_s.version);
+ dbms_output.put_line('tz_filename=>'||l_s.filename);
+ dbms_output.put_line('...old_default_time_zone=>'||l_s.old_default_time_zone);
+ dbms_output.put_line('...new_default_time_zone=>'||l_s.new_default_time_zone);
+ dbms_scheduler.set_scheduler_attribute('DEFAULT_TIMEZONE', l_s.new_default_time_zone);
+ dbms_output.put_line('done...');
+ dbms_output.put_line(' ');
+end loop;
+
+execute immediate 'alter session set nls_timestamp_format=''DD.MM.RR HH24:MI:SSXFF''';
+execute immediate 'alter session set nls_timestamp_tz_format=''DD.MM.RR HH24:MI:SSXFF TZR''';
+
+
+for l_q in (select job_name,
+                   tz_version,
+                   old_start_date,
+                   decode(tz_version,'23',new1_start_date,new2_start_date) new_start_date
+            from (select OWNER||'.'||JOB_NAME as job_name,
+                        (select to_char(version) as tz_version from v$timezone_file) as tz_version, 
+                         START_DATE as old_start_date,
+                         to_char(START_DATE,'DD.MM.RR HH24:MI:SSXFF')||' Europe/Moscow' as new1_start_date,
+                         to_char(START_DATE,'DD.MM.RR HH24:MI:SSXFF')||' +03:00' as new2_start_date,
+                         NEXT_RUN_DATE 
+                         from dba_scheduler_jobs 
+                         where START_DATE is not null 
+                           --and job_name in ('DELETE_AUDIT_ROWS_JOB','DELETE_ADMCON_ROWS_JOB') 
+                 )
+           ) 
+loop
+begin
+ dbms_output.put_line('job_name=>'||l_q.job_name);
+ dbms_output.put_line('...tz_version=>'||l_q.tz_version);
+ dbms_output.put_line('...old_start_date=>'||l_q.old_start_date);
+ dbms_output.put_line('...new_start_date=>'||l_q.new_start_date);
+ dbms_scheduler.set_attribute(l_q.job_name,'start_date',to_timestamp_tz(l_q.new_start_date));
+ dbms_output.put_line('done...');
+ dbms_output.put_line(' ');
+exception  
+   when others then 
+    begin
+      NULL;
+    end;
+end;
+end loop;
+
+
+execute immediate 'alter session set nls_timestamp_format=''DD.MM.RR HH24:MI:SSXFF''';
+execute immediate 'alter session set nls_timestamp_tz_format=''DD.MM.RR HH24:MI:SSXFF TZR''';
+
+
+for l_m in (select schedule_name,
+                   tz_version,
+                   old_start_date,
+                   decode(tz_version,'23',new1_start_date,new2_start_date) new_start_date
+            from (select owner||'.'||schedule_name as schedule_name, 
+                         (select to_char(version) as tz_version from v$timezone_file) as tz_version,
+                         start_date as old_start_date,
+                         to_char(START_DATE,'DD.MM.RR HH24:MI:SSXFF')||' Europe/Moscow' as new1_start_date,
+                         to_char(START_DATE,'DD.MM.RR HH24:MI:SSXFF')||' +03:00' as new2_start_date
+                  from DBA_SCHEDULER_SCHEDULES where start_date is not null
+                 )
+           ) 
+loop
+begin
+ dbms_output.put_line('schedule_name=>'||l_m.schedule_name);
+ dbms_output.put_line('...tz_version=>'||l_m.tz_version);
+ dbms_output.put_line('...old_start_date=>'||l_m.old_start_date);
+ dbms_output.put_line('...new_start_date=>'||l_m.new_start_date);
+ dbms_scheduler.set_attribute(l_m.schedule_name,'start_date',to_timestamp_tz(l_m.new_start_date));
+ dbms_output.put_line('done...');
+ dbms_output.put_line(' ');
+exception  
+   when others then 
+    begin
+      NULL;
+    end;
+end;
+end loop;
+
+
+
+end;
+/
+
+prompt ****************************
+prompt **** TZ Change Done!
+prompt ****************************
+prompt 
+prompt
+prompt
+prompt
+
+
+
+
+
+
+prompt **** TZ DEFAULT_TIMEZONE
+col ATTRIBUTE_NAME format a20
+select * from dba_scheduler_global_attribute where ATTRIBUTE_NAME='DEFAULT_TIMEZONE' ;
+
+
+prompt **** TZ WINDOWS
+col WINDOW_NAME format a18
+col WINDOW_NEXT_TIME format a42
+col WINDOW_ACTIVE format a10
+col OPTIMIZER_STATS format a15
+
+select WINDOW_NAME, 
+       WINDOW_NEXT_TIME , 
+       WINDOW_ACTIVE,
+       OPTIMIZER_STATS, 
+       'Dbms_Scheduler.Set_Attribute('''||WINDOW_NAME||''',''FOLLOW_DEFAULT_TIMEZONE'',TRUE);' as l_cmd
+from DBA_AUTOTASK_WINDOW_CLIENTS order by WINDOW_NEXT_TIME ;
+
+
+prompt **** TZ JOBS
+col JOB_NAME format a32
+col ENABLED format a15
+col START_DATE format a42
+col NEXT_RUN_DATE format a42
+select OWNER,JOB_NAME, ENABLED, START_DATE,NEXT_RUN_DATE from dba_scheduler_jobs;
+

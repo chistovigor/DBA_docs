@@ -1,0 +1,4 @@
+select owner, table_name, object_type, num_rows, last_analyzed
+from dba_tab_statistics
+where stattype_locked is not null and owner not in ('SYS','SYSTEM','WMSYS')
+/
