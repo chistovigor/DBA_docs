@@ -1,7 +1,8 @@
 -- overall DB LOAD profile for last several days (instance load history)
 
 SELECT
-    sn.begin_interval_time snap_time
+    sn.begin_interval_time snap_begin,
+    sn.SNAP_ID
   , ROUND(SUM(CASE WHEN metric_name = 'Average Active Sessions'                       THEN value END)) aas
   , ROUND(AVG(CASE WHEN metric_name = 'Average Synchronous Single-Block Read Latency' THEN value END)) iolat
   , ROUND(SUM(CASE WHEN metric_name = 'CPU Usage Per Sec'                             THEN value END)) cpusec
@@ -31,11 +32,47 @@ WHERE
     sn.snap_id = m.snap_id
 AND sn.dbid    = m.dbid
 AND sn.instance_number = m.instance_number
-AND sn.begin_interval_time > SYSDATE - 7
+AND sn.begin_interval_time > SYSDATE - 4
+AND sn.INSTANCE_NUMBER = (select INSTANCE_NUMBER from v$instance)
+--and sn.SNAP_ID in (348933,349087,349244,349401)
 GROUP BY
-    sn.begin_interval_time
+    sn.begin_interval_time,
+    sn.SNAP_ID
 ORDER BY
     sn.begin_interval_time;
+    
+-- history for particular metric value
+
+  SELECT TO_CHAR(BEGIN_TIME,'DD-MON-YYYY HH24:MI:SS') BEGIN_TIME,
+         TO_CHAR(END_TIME,'DD-MON-YYYY HH24:MI:SS') END_TIME,
+         METRIC_NAME,
+         ROUND (VALUE)                                      VALUE,
+         METRIC_UNIT
+    FROM DBA_HIST_SYSMETRIC_HISTORY
+   WHERE     METRIC_NAME = 'Average Synchronous Single-Block Read Latency'
+         AND BEGIN_TIME >= SYSDATE - 60
+         AND ROUND (VALUE) > 2
+ORDER BY 1, VALUE DESC;
+
+-- history for particular metric value day to day analysis
+
+select trunc(BEGIN_TIME) monitoring_day,trunc(BEGIN_TIME,'hh') monitoring_hour, sum(VALUE) total_ms_waited from (
+  SELECT to_date(TO_CHAR(BEGIN_TIME,'DD-MON-YYYY HH24:MI:SS'),'DD-MON-YYYY HH24:MI:SS') BEGIN_TIME,
+         TO_CHAR(END_TIME,'DD-MON-YYYY HH24:MI:SS') END_TIME,
+         METRIC_NAME,
+         ROUND (VALUE)                                      VALUE,
+         METRIC_UNIT
+    FROM DBA_HIST_SYSMETRIC_HISTORY
+   WHERE     METRIC_NAME = 'Average Synchronous Single-Block Read Latency'
+         AND BEGIN_TIME >= SYSDATE - 7
+         AND ROUND (VALUE) > 0
+ORDER BY 1, VALUE DESC)
+group by trunc(BEGIN_TIME,'hh'),trunc(BEGIN_TIME) order by 1, 3 desc
+;
+	
+-- non default init parameters for the DB instance (in pfile)
+
+select name,value,display_value from v$parameter where ISDEFAULT = 'FALSE' order by name;
 	
 -- available OS resources at the DB server
 
@@ -197,10 +234,53 @@ SELECT * FROM MONITOR_TEMP                         -- WHERE STATUS = 'ACTIVE';
 
 select originating_timestamp,message_text from V$DIAG_ALERT_EXT where component_id in 
 (select distinct component_id from V$DIAG_ALERT_EXT order by 1 fetch first 1 rows only) order by originating_timestamp desc;
-
 select originating_timestamp,message_text from V$DIAG_ALERT_EXT order by originating_timestamp desc;
-
 SELECT * FROM V$DIAG_ALERT_EXT where originating_timestamp>=trunc(sysdate) order by  originating_timestamp desc;
+
+SELECT * FROM V$DIAG_ALERT_EXT where originating_timestamp>=trunc(sysdate-35) and 
+message_text like '%ORA-07445%' and component_id = 'rdbms' order by  originating_timestamp desc;
+
+-- analyze timing for instance shutdown / startup
+
+  SELECT *
+    FROM V$DIAG_ALERT_EXT
+   WHERE     ORIGINATING_TIMESTAMP BETWEEN TO_DATE ('09012021 00:00:00',
+                                                    'ddmmyyyy hh24:mi:ss')
+                                       AND TO_DATE ('13012021 00:00:00',
+                                                    'ddmmyyyy hh24:mi:ss')
+         AND COMPONENT_ID = 'rdbms'
+         AND (MESSAGE_TEXT like 'Shutting down instance (abort)%' 
+         or MESSAGE_TEXT like 'Starting ORACLE instance (normal)%'
+         or MESSAGE_TEXT like 'Clearing online redo logfile%'
+         or MESSAGE_TEXT like '%alter database open resetlogs%')
+ORDER BY ORIGINATING_TIMESTAMP;
+
+-- with hour when DB was started/shutted down
+
+  SELECT to_number(substr(to_char(ORIGINATING_TIMESTAMP,'ddmmyyyy hh24:mi:ss'),10,2)) "_hour",ORIGINATING_TIMESTAMP, MESSAGE_TEXT
+    FROM V$DIAG_ALERT_EXT
+   WHERE     ORIGINATING_TIMESTAMP BETWEEN TO_DATE ('09012021 00:00:00',
+                                                    'ddmmyyyy hh24:mi:ss')
+                                       AND TO_DATE ('13012021 00:00:00',
+                                                    'ddmmyyyy hh24:mi:ss')
+         AND COMPONENT_ID = 'rdbms'
+         AND (MESSAGE_TEXT like 'Shutting down instance (abort)%' 
+         or MESSAGE_TEXT like 'Starting ORACLE instance (normal)%'
+    --     or MESSAGE_TEXT like 'Clearing online redo logfile%'
+         or MESSAGE_TEXT like '%alter database open resetlogs%')
+         and to_number(substr(to_char(ORIGINATING_TIMESTAMP,'ddmmyyyy hh24:mi:ss'),10,2)) between 2 and 3
+ORDER BY ORIGINATING_TIMESTAMP;
+
+--from DB for PARTICULAR period (alertlog extract request)
+
+  SELECT ORIGINATING_TIMESTAMP, MESSAGE_TEXT
+    FROM V$DIAG_ALERT_EXT
+   WHERE     ORIGINATING_TIMESTAMP BETWEEN TO_DATE ('12092020 19:17:00',
+                                                    'ddmmyyyy hh24:mi:ss')
+                                       AND TO_DATE ('13092020 03:11:00',
+                                                    'ddmmyyyy hh24:mi:ss')
+         AND COMPONENT_ID = 'rdbms'
+ORDER BY ORIGINATING_TIMESTAMP;
 
 --with particular time
 
@@ -289,6 +369,22 @@ SELECT * FROM V$BACKUP_PIECE_DETAILS ORDER BY START_TIME;
 SELECT * FROM V$BACKUP_DATAFILE_DETAILS WHERE FILE# = 1;
 
 SELECT * FROM V$DATABASE;
+
+-- redo log switches analysis
+
+set feedback off newpage none termout on
+alter session set nls_date_format='YYYY/MM/DD HH24:MI:SS';
+select * from (
+select thread#,sequence#,first_time "LOG START TIME",(blocks*block_size/1024/1024)/((next_time-first_time)*86400) "REDO RATE(MB/s)", \
+(((blocks*block_size)/a.average)*100) pct_full
+from v\$archived_log, (select avg(bytes) average from v\$log) a
+where ((next_time-first_time)*86400<300)
+and first_time > (sysdate-90)
+and (((blocks*block_size)/a.average)*100)>80
+and dest_id=1
+order by 4 desc
+)
+where rownum<11;
 
 -- Analyze the growth of archivelogs in DB (DOC id 2265722.1) 
 
@@ -386,6 +482,17 @@ ORDER BY 1, 2;
     FROM V$LOG_HISTORY
 GROUP BY TO_CHAR (FIRST_TIME, 'YYYY-MON-DD'), TO_CHAR (FIRST_TIME, 'DY')
 ORDER BY TO_DATE (TO_CHAR (FIRST_TIME, 'YYYY-MON-DD'), 'YYYY-MON-DD');
+
+-- Calculate The Required Network Bandwidth Transfer Of Redo In Data Guard Environments (Doc ID 736755.1)
+
+The formula used (assuming a conservative TCP/IP network overhead of 30%) for calculating the network bandwidth is :
+Required bandwidth = ((Redo rate in Megabytes per sec. / 0.70) * 8)= bandwidth in Mbps
+
+  SELECT BEGIN_TIME, ROUND (((VALUE / 0.75) * 8) / 1000000) NETWORK_bandwidth_MBPS
+    FROM DBA_HIST_SYSMETRIC_HISTORY
+   WHERE METRIC_NAME = 'Redo Generated Per Sec' AND (VALUE / 1024 / 1024) > 50
+   AND BEGIN_TIME >= SYSDATE - 3
+ORDER BY BEGIN_TIME DESC;
 
 -- segments growth over period
 
@@ -583,6 +690,37 @@ GROUP BY PM.PID,
          S.EVENT
 ORDER BY MAX(PM.ALLOCATED) DESC;
 
+-- memory usage per instance per snap
+
+SELECT sn.INSTANCE_NUMBER,
+         sga.allo sga,
+         pga.allo pga,
+         (sga.allo + pga.allo) tot,
+         TRUNC (SN.END_INTERVAL_TIME, 'mi') time
+    FROM (  SELECT snap_id,
+                   INSTANCE_NUMBER,
+                   ROUND (SUM (bytes) / 1024 / 1024 / 1024, 3) allo
+              FROM DBA_HIST_SGASTAT
+          GROUP BY snap_id, INSTANCE_NUMBER) sga,
+         (  SELECT snap_id,
+                   INSTANCE_NUMBER,
+                   ROUND (SUM (VALUE) / 1024 / 1024 / 1024, 3) allo
+              FROM DBA_HIST_PGASTAT
+             WHERE name = 'total PGA allocated'
+          GROUP BY snap_id, INSTANCE_NUMBER) pga,
+         dba_hist_snapshot sn
+   WHERE     sn.snap_id = sga.snap_id
+         AND sn.INSTANCE_NUMBER = sga.INSTANCE_NUMBER
+         AND sn.snap_id = pga.snap_id
+         AND sn.INSTANCE_NUMBER = pga.INSTANCE_NUMBER
+ORDER BY sn.snap_id DESC, sn.INSTANCE_NUMBER;
+
+-- current usage is
+
+select bytes/1024/1024/1024 GB,name from V$SGAINFO where name = 'Maximum SGA Size'
+union all
+select round(value/1024/1024/1024) GB,name from V$PGASTAT where name = 'total PGA allocated';
+
 -- InMemory segments
 
 SELECT * FROM V$IM_SEGMENTS ORDER BY 1,2,3;
@@ -747,6 +885,16 @@ alter SESSION set events '10046 trace name context off';
 alter session set events '8103 trace name errorstack level 5';
 alter session set events '8103 trace name context off';
 
+--When you run :
+--SQL> alter system set events '8103 trace name errorstack level 3';
+--event will be enabled, the alert.log will show it.
+
+--If you want to check at any time what events are set you have to use oradebug
+
+SQL> oradebug setmypid
+SQL> oradebug eventdump system
+8103 trace name errorstack level 3 
+
 -- trace optimizer for the certain SQL_ID
 
 select child_number, plan_hash_value from v$sql where sql_id='9nq2ru1t84dsg'; -- find child number
@@ -764,6 +912,53 @@ EXEC DBMS_SUPPORT.stop_trace_in_session(sid=>123, serial=>1234);
 
 EXEC DBMS_MONITOR.session_trace_enable(123,1234,TRUE,TRUE);
 EXEC DBMS_MONITOR.session_trace_disable(123,1234);
+
+-- generate SQL for tracing enable / disable for a particular session in a DB:
+
+  SELECT    B.USERNAME
+         || '@'
+         || MACHINE
+         || '#'
+         || OSUSER
+         || '#'
+         || B.PROGRAM
+         || '#'
+         || B.SQL_TRACE
+             AS PROGRAM_INFO --,'exec  sys.dbms_system.set_sql_trace_in_session (' ||b.sid||',' ||b.serial#||',TRUE);' as enable_trace
+                            --,'exec  sys.dbms_support.start_trace_in_session ('||b.sid||','||b.serial#||',waits=>TRUE, binds=>FALSE);' as enable_trace2
+                            ,
+            'begin dbms_monitor.session_trace_enable(session_id=>'
+         || B.SID
+         || ',serial_num=>'
+         || B.SERIAL#
+         || ',waits=>true,binds=>true); end;'
+             AS ENABLE_TRACE3,
+            'begin dbms_monitor.session_trace_disable(session_id=>'
+         || B.SID
+         || ',serial_num=>'
+         || B.SERIAL#
+         || '); end;'
+             AS DISABLE_TRACE3,
+         B.SID
+             S,
+         B.SERIAL#
+             SR,
+         B.PROGRAM,
+         C.VALUE || '/' || D.INSTANCE_NAME || '_ora_' || A.SPID || '.trc'
+             TRACE_FILE_IS_HERE,
+         B.LOGON_TIME,
+         B.STATUS,
+         B.SQL_TRACE
+    FROM V$PROCESS  A,
+         V$SESSION  B,
+         V$PARAMETER C,
+         V$INSTANCE D
+   WHERE     A.ADDR = B.PADDR
+         AND C.NAME = 'user_dump_dest'
+         AND B.USERNAME IS NOT NULL
+         AND B.TYPE <> 'BACKGROUND'
+        --AND B.CLIENT_INFO LIKE 'unit #2# 4.Main_load%'
+ORDER BY B.LOGON_TIME DESC;
 
 -- identify the trace file for a specific session using the V$SESSION and V$PROCESS views.
 
@@ -1417,3 +1612,265 @@ alter system set undo_retention = 3600 scope = memory sid = '*';
 -- drop old undo TS
 
 --Drop tablespace UNDOTBS1 including contents and datafiles;
+
+-- recovery catalog information/query
+
+-- backup job details analysis (may purge after 2 months by default), see Doc ID 430601.1
+
+  SELECT DB_NAME,
+         STATUS,
+         START_TIME,
+         END_TIME,
+         OUTPUT_BYTES_DISPLAY,
+            FLOOR ((END_TIME - START_TIME) * 24)
+         || ':'
+         || MOD (FLOOR ((END_TIME - START_TIME) * 24 * 60), 60)
+         || ':'
+         || MOD (FLOOR ((END_TIME - START_TIME) * 24 * 60 * 60), 60)    DURATION
+    FROM RC_RMAN_BACKUP_SUBJOB_DETAILS
+   WHERE DB_NAME = 'WAY4DB' AND START_TIME >= SYSDATE - 8
+ORDER BY START_TIME ASC;
+
+select * from rc_database;
+
+select * from RC_BACKUP_SET_DETAILS where /*INPUT_TYPE like 'DB%' and*/ DB_NAME = 'WAY4DB' order by START_TIME;
+select * from rc_database;
+select * from RC_BACKUP_PIECE where db_id = 274344000;--way4db
+select * from RC_BACKUP_SET_SUMMARY order by oldest_backup_time desc;-- where db_id = 274344000;--way4db
+
+SELECT 'TO_DATE('''|| TO_CHAR (NEXT_TIME - 1 / 24 / 60 / 60,'DD-MM-YYYY HH24:MI:SS')|| ''',''DD-MM-YYYY HH24:MI:SS'')'
+  FROM RC_BACKUP_ARCHIVELOG_DETAILS  WHERE     DB_NAME = (SELECT NAME FROM RC_DATABASE  WHERE DBID = 3659532475)
+   AND FIRST_TIME BETWEEN      TO_DATE('09-08-2019 11:00:30','DD-MM-YYYY HH24:MI:SS') - 1  AND   TO_DATE('09-08-2019 11:00:30','DD-MM-YYYY HH24:MI:SS') + 1
+   ORDER BY abs(TO_DATE('09-08-2019 11:00:30','DD-MM-YYYY HH24:MI:SS') - NEXT_TIME)*24*60*60 ASC FETCH FIRST 1 ROWS ONLY;
+
+SELECT *
+  FROM RC_BACKUP_PIECE
+ WHERE     DB_ID = 274344000
+       AND START_TIME  BETWEEN      TO_DATE('09-08-2019 11:00:30','DD-MM-YYYY HH24:MI:SS') - 1  AND   TO_DATE('09-08-2019 11:00:30','DD-MM-YYYY HH24:MI:SS') + 1
+       AND BACKUP_TYPE = 'L'
+       AND STATUS = 'A';
+	   
+SELECT *
+  FROM RC_BACKUP_PIECE
+ WHERE     DB_ID = 274344000
+       AND START_TIME BETWEEN TO_DATE ('08-03-2020 00:00:00',
+                                       'DD-MM-YYYY HH24:MI:SS')
+                          AND TO_DATE ('08-03-2020 23:59:59',
+                                       'DD-MM-YYYY HH24:MI:SS');
+									   
+--selects for backup restoration of w4/dm
+
+SELECT 'TO_DATE('''
+              || TO_CHAR (END_TIME,
+                          'DD-MM-YYYY HH24:MI:SS')
+              || ''',''DD-MM-YYYY HH24:MI:SS'')'
+       FROM RC_RMAN_BACKUP_SUBJOB_DETAILS
+      WHERE     DB_NAME = (SELECT NAME
+                             FROM RC_DATABASE
+                            WHERE DBID = 274344000)--dm 3659532475 --w4 274344000
+            AND END_TIME BETWEEN to_date('09082020 08:00:00','ddmmyyyy hh24:mi:ss') - INTERVAL '2' HOUR
+                             AND to_date('09082020 08:00:00','ddmmyyyy hh24:mi:ss') + INTERVAL '2' HOUR
+  ORDER BY   ABS ( to_date('09082020 08:00:00','ddmmyyyy hh24:mi:ss') - END_TIME)
+            * 24
+            * 60
+            * 60 ASC
+FETCH FIRST 1 ROWS ONLY;
+
+                                       
+--analyze segment fragmentation using temporary table in the DB:
+
+drop table opt_segments_stats;
+create table opt_segments_stats (
+    stat_date                   date,
+    owner                       varchar2(255),
+    segment_name                varchar2(255),
+    segment_type                varchar2(255),
+    partition_name              varchar2(255),
+    tablespace_name             varchar2(255),
+    unformatted_blocks          number,
+    unformatted_bytes           number,
+    fs1_blocks                  number,
+    fs1_bytes                   number,
+    fs2_blocks                  number,
+    fs2_bytes                   number,
+    fs3_blocks                  number,
+    fs3_bytes                   number,
+    fs4_blocks                  number,
+    fs4_bytes                   number,
+    full_blocks                 number,
+    full_bytes                  number,
+    total_blocks                number,
+    total_bytes                 number,
+    unused_blocks               number,
+    unused_bytes                number,
+    last_used_extent_file_id    number,
+    last_used_extent_block_id   number,
+    last_used_block             number,
+    segment_fragmentation       number
+);
+
+-- fragmentation stats collection
+
+declare
+    segstat     opt_segments_stats  %rowtype;
+begin
+    segstat.stat_date := sysdate;
+    segstat.owner := 'OWS';
+    
+    for rec in(
+        select
+            segment_name,
+            partition_name,
+            segment_type,
+            tablespace_name
+        from dba_segments
+        where owner = segstat.owner
+            and (segment_type like 'TABLE%'
+            or segment_type like 'INDEX%')
+            and extents > 1
+        order by bytes desc
+    ) loop
+        segstat.segment_name := rec.segment_name;
+        segstat.partition_name := rec.partition_name;
+        segstat.segment_type := rec.segment_type;
+        segstat.tablespace_name := rec.tablespace_name;
+        
+        dbms_space.space_usage(
+            segstat.owner,
+            segstat.segment_name,
+            segstat.segment_type,
+            segstat.unformatted_blocks,
+            segstat.unformatted_bytes,
+            segstat.fs1_blocks,
+            segstat.fs1_bytes,
+            segstat.fs2_blocks,
+            segstat.fs2_bytes,
+            segstat.fs3_blocks,
+            segstat.fs3_bytes,
+            segstat.fs4_blocks,
+            segstat.fs4_bytes,
+            segstat.full_blocks,
+            segstat.full_bytes,
+            segstat.partition_name
+        );
+        
+        dbms_space.unused_space(
+            segstat.owner,
+            segstat.segment_name,
+            segstat.segment_type,
+            segstat.total_blocks,
+            segstat.total_bytes,
+            segstat.unused_blocks,
+            segstat.unused_bytes,
+            segstat.last_used_extent_file_id,
+            segstat.last_used_extent_block_id,
+            segstat.last_used_block,
+            segstat.partition_name
+        );
+        
+        segstat.segment_fragmentation := round((segstat.fs4_blocks*0.875 + segstat.fs3_blocks*0.625 + segstat.fs2_blocks*0.375 + 
+            segstat.fs1_blocks*0.125 + segstat.unformatted_blocks) / segstat.total_blocks * 100, 2);
+        
+        insert into opt_segments_stats values segstat;
+        
+        commit;
+    end loop;
+end;
+/
+
+
+--see results
+
+select stat_date, owner, segment_name, segment_type, partition_name, tablespace_name, round(total_bytes/1024/1024/1024, 2) gb, segment_fragmentation
+from opt_segments_stats
+where segment_type like 'TABLE%'
+order by stat_date desc, gb desc
+;                                      
+      
+
+-- privileges and grants analysis
+
+-- NON Default oracle users with DB ADMIN grants:
+
+SELECT DISTINCT GRANTEE DB_USER, GRANTED_ROLE
+  FROM DBA_ROLE_PRIVS
+ WHERE     GRANTED_ROLE IN ('DBA',
+                            'CDB_DBA',
+                            'PDB_DBA',
+                            'DBA_R')
+       AND GRANTEE NOT IN (SELECT USERNAME
+                             FROM DBA_USERS
+                            WHERE ORACLE_MAINTAINED = 'Y');
+
+-- NON Default oracle users with dangerous *ANY* grants:
+
+SELECT DISTINCT GRANTEE DB_USER, PRIVILEGE, ADMIN_OPTION
+  FROM DBA_SYS_PRIVS
+ WHERE     PRIVILEGE LIKE '% ANY %'
+       AND (    GRANTEE NOT IN (SELECT ROLE FROM DBA_ROLES)
+            AND GRANTEE NOT IN (SELECT USERNAME
+                                  FROM DBA_USERS
+                                 WHERE ORACLE_MAINTAINED = 'Y'));  
+
+-- NON Default oracle users with DB ADMIN grants for rdbms 11g version:
+
+SELECT DISTINCT GRANTEE DB_USER, GRANTED_ROLE
+  FROM DBA_ROLE_PRIVS
+ WHERE     GRANTED_ROLE IN ('DBA',
+                            'CDB_DBA',
+                            'PDB_DBA',
+                            'DBA_R')
+       AND GRANTEE NOT IN
+               (SELECT USERNAME
+                  FROM DBA_USERS
+                 WHERE CREATED <
+                       (SELECT MIN (CREATED) FROM DBA_USERS) + 2 / 24);
+
+-- NON Default oracle users with dangerous *ANY* grants for rdbms 11g version:
+
+SELECT DISTINCT GRANTEE DB_USER, PRIVILEGE, ADMIN_OPTION
+  FROM DBA_SYS_PRIVS
+ WHERE     PRIVILEGE LIKE '% ANY %'
+       AND (    GRANTEE NOT IN (SELECT ROLE FROM DBA_ROLES)
+            AND GRANTEE NOT IN
+                    (SELECT USERNAME
+                       FROM DBA_USERS
+                      WHERE CREATED <
+                            (SELECT MIN (CREATED) FROM DBA_USERS) + 2 / 24));	
+
+-- add monitoring for business operation in PL SQL code:
+
+v_oper_id number;
+
+begin
+
+select dbms_sql_monitor.begin_operation(dbop_name => 'OPERATION_1',forced_tracking => 'FORCE_TRACKING') into v_oper_id from dual;
+
+... monitored code
+
+dbms_sql_monitor.end_operation(v_oper_id);
+
+end;
+/
+
+--example:
+
+DECLARE
+    V_TIBCO_OPERATION_ID       NUMBER;
+    V_TIBCO_OPERATION_NUMBER   NUMBER DEFAULT 1; --use different numbers for different operations
+BEGIN
+
+execute immediate 'alter session set "_sqlmon_max_planlines" = 1000';
+
+dbms_application_info.set_module('TIBCO direct DB call','OPERATION name - from TIBCO app');
+
+    SELECT DBMS_SQL_MONITOR.BEGIN_OPERATION (
+               'OPERATION name - from TIBCO app',
+               V_TIBCO_OPERATION_NUMBER,
+               'Y')
+      INTO V_TIBCO_OPERATION_ID
+      FROM DUAL;
+
+    --your code
+    DBMS_SQL_MONITOR.END_OPERATION (V_TIBCO_OPERATION_ID);
+END;                          
