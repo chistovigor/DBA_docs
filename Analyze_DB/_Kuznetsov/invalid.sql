@@ -1,0 +1,35 @@
+--	This is to compile all invalid objects in the schema.
+--	Special intelligence build 
+set head off;
+set feedback off;
+spool inv.lst;
+select 'ALTER ' || object_type ||' "'|| object_name || '" compile;'
+from user_objects 
+where object_type in ('VIEW','TRIGGER','PROCEDURE','FUNCTION', 'PACKAGE', 'MATERIALIZED VIEW','SYNONYM', 'JAVA CLASS') 
+  and status = 'INVALID' 
+  and object_name not like '%BIN$%'
+order by object_type desc;
+select 'ALTER INDEX ' || index_name || ' rebuild;'
+from user_indexes 
+where status = 'UNUSABLE';
+spool off;
+@inv.lst;
+spool inv.lst;
+select 'ALTER PACKAGE '|| object_name || ' compile body;'
+from user_objects 
+where object_type in ('PACKAGE BODY', 'SYNONYM') 
+  and status = 'INVALID'
+order by object_type desc;
+spool off;
+@inv.lst;
+set head on;
+set feedback on;
+
+select nvl(object_type,'_TOTAL_NUMBER_') object_type, 
+       status, 
+       count(1) number_obj 
+from user_objects 
+where status='INVALID' 
+group by cube(object_type) , status 
+order by 1
+/
