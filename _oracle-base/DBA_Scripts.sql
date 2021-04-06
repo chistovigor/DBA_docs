@@ -1,5 +1,142 @@
 DBA Scripts
 
+-- Segments fragmentation analysis (see https://jira.network.ae/jira/browse/PRD-10173)
+
+create table opt_segments_stats (statstr varchar2(4000));
+
+DECLARE
+   log_str   dtype.name%TYPE;
+
+   PROCEDURE calc_space (p_segname           IN VARCHAR2,
+                         p_owner             IN VARCHAR2,
+                         p_type              IN VARCHAR2,
+                         p_partition         IN VARCHAR2,
+                         p_tablespace_name   IN VARCHAR2)
+   AS
+      l_free_blks            NUMBER;
+      l_total_blocks         NUMBER;
+      l_total_bytes          NUMBER;
+      l_unused_blocks        NUMBER;
+      l_unused_bytes         NUMBER;
+      l_LastUsedExtFileId    NUMBER;
+      l_LastUsedExtBlockId   NUMBER;
+      l_LAST_USED_BLOCK      NUMBER;
+      l_segment_space_mgmt   VARCHAR2 (255);
+      l_unformatted_blocks   NUMBER;
+      l_unformatted_bytes    NUMBER;
+      l_fs1_blocks           NUMBER;
+      l_fs1_bytes            NUMBER;
+      l_fs2_blocks           NUMBER;
+      l_fs2_bytes            NUMBER;
+      l_fs3_blocks           NUMBER;
+      l_fs3_bytes            NUMBER;
+      l_fs4_blocks           NUMBER;
+      l_fs4_bytes            NUMBER;
+      l_full_blocks          NUMBER;
+      l_full_bytes           NUMBER;
+
+      PROCEDURE LOG (p_num IN VARCHAR2)
+      IS
+      BEGIN
+         log_str := log_str||TRIM (p_num)||';';
+      END;
+   BEGIN
+      log_str := '';
+      LOG (p_segname);
+      LOG (p_type);
+      LOG (NVL (p_partition, ' '));
+      LOG (p_tablespace_name);
+      DBMS_SPACE.space_usage (p_owner,
+                              p_segname,
+                              p_type,
+                              l_unformatted_blocks,
+                              l_unformatted_bytes,
+                              l_fs1_blocks,
+                              l_fs1_bytes,
+                              l_fs2_blocks,
+                              l_fs2_bytes,
+                              l_fs3_blocks,
+                              l_fs3_bytes,
+                              l_fs4_blocks,
+                              l_fs4_bytes,
+                              l_full_blocks,
+                              l_full_bytes,
+                              p_partition);
+
+      LOG (l_unformatted_blocks);
+      LOG (l_fs1_blocks);
+      LOG (l_fs2_blocks);
+      LOG (l_fs3_blocks);
+      LOG (l_fs4_blocks);
+      LOG (l_full_blocks);
+
+      DBMS_SPACE.
+       unused_space (segment_owner               => p_owner,
+                     segment_name                => p_segname,
+                     segment_type                => p_type,
+                     partition_name              => p_partition,
+                     total_blocks                => l_total_blocks,
+                     total_bytes                 => l_total_bytes,
+                     unused_blocks               => l_unused_blocks,
+                     unused_bytes                => l_unused_bytes,
+                     LAST_USED_EXTENT_FILE_ID    => l_LastUsedExtFileId,
+                     LAST_USED_EXTENT_BLOCK_ID   => l_LastUsedExtBlockId,
+                     LAST_USED_BLOCK             => l_LAST_USED_BLOCK);
+
+      LOG (l_total_blocks);
+      LOG (l_total_bytes);
+      LOG (TRUNC (l_total_bytes / 1024 / 1024));
+      LOG (l_unused_blocks);
+      LOG (l_unused_bytes);
+      LOG (l_LastUsedExtFileId);
+      LOG (l_LastUsedExtBlockId);
+      LOG (l_LAST_USED_BLOCK);
+   END;
+BEGIN
+   FOR i
+      IN (SELECT segment_name, partition_name, segment_type,tablespace_name
+            FROM dba_segments
+           WHERE owner='OWS' and (segment_type like 'TABLE%' or segment_type like 'INDEX%') AND extents > 1)
+   LOOP
+      calc_space (i.segment_name,
+                  USER,
+                  i.segment_type,
+                  i.partition_name,
+                  i.tablespace_name);
+      insert into opt_segments_stats(trunc(sysdate)||': '||log_str);
+--      STND.PROCESS_MESSAGE ('$', trunc(sysdate)||': '||log_str);
+      commit;
+   END LOOP;
+END;
+/
+
+
+https://asktom.oracle.com/pls/apex/asktom.search?tag=block-level-info
+
+FS1 means 0-25% free space within a block
+FS2 means 25-50% free space within a block
+FS3 means 50-75% free space within a block
+FS4 means 75-100% free space within a block
+
+
+You may calculate fragmentation in percents using the following formulas:
+
+Segment fragmentation:
+N_seg=(fs4*0.875+fs3*0.625+fs2*0.375+fs1*0.125+unf_blocks)/total_blocks *100%
+where fs1...fs4 values from the report
+0.875, 0.625, 0.375, 0.125 the weight coefficients characterizing the influence of a particular fs group on fragmentation, are calculated as the average values of the intervals 75-100, 50-75, 25-50, 0-25, respectively;
+unf blocks - amount of unformatted blocks
+total blocks - amount of total blocks in a segment;
+Tablespace fragmentation
+N_tbs=100%*∑(i=m)^n▒〖N(seg_m )*Sseg_m/Stbs〗
+where N_seg - the fragmentation value of the segment calculated by the formula above;
+Sseg- segment size;
+Stbs- tablespace size
+
+-- Maximum resources utilization in the DB for AWR snaps
+
+select * from DBA_HIST_RESOURCE_LIMIT; 
+
 -- Licenced database features usage
 
 SET DEFINE OFF;
@@ -1259,11 +1396,11 @@ SPOOL OFF
 -- Call Syntax  : @hidden_parameters (parameter-name or all)
 -- Last Modified: 28-NOV-2006
 -- -----------------------------------------------------------------------------------
-SET VERIFY OFF
+SET VERIFY OFF linesize 300
 COLUMN parameter      FORMAT a37
 COLUMN description    FORMAT a30 WORD_WRAPPED
-COLUMN session_value  FORMAT a10
-COLUMN instance_value FORMAT a10
+COLUMN session_value  FORMAT a15
+COLUMN instance_value FORMAT a15
  
   SELECT a.ksppinm AS parameter,
          a.ksppdesc AS description,
@@ -1900,7 +2037,7 @@ SELECT s.sid,
           elapsed,
        ROUND (sl.time_remaining / 60) || ':' || MOD (sl.time_remaining, 60)
           remaining,
-       ROUND (sl.sofar / sl.totalwork * 100, 2) progress_pct
+       case when sl.totalwork <> 0 then ROUND (sl.sofar / sl.totalwork * 100, 2) else 0 end progress_pct
   FROM v$session s, v$session_longops sl
  WHERE s.sid = sl.sid AND s.serial# = sl.serial#;
 
@@ -2358,6 +2495,11 @@ SELECT p.name,
        p.isinstance_modifiable
 FROM   v$parameter p
 ORDER BY p.name;
+
+--list of given parameters in pfile or spfile
+
+select * from v$spparameter where ISSPECIFIED <> 'FALSE';
+select NAME,DISPLAY_VALUE,DEFAULT_VALUE from v$parameter where ISDEFAULT <> 'TRUE' order by 1;
  
   -- -----------------------------------------------------------------------------------
 -- File Name    : http://oracle-base.com/dba/monitoring/part_tables.sql
@@ -2488,6 +2630,26 @@ ORDER BY profile, resource_type, resource_name;
 
 CLEAR BREAKS
 SET LINESIZE 80 PAGESIZE 14 VERIFY ON
+
+--profiles password policy for active DB users
+
+SET LINESIZE 200 PAGESIZE 10000 heading on termout on serveroutput on
+COL PROFILE FOR A35
+COL RESOURCE_NAME FOR A35
+COL LIMIT FOR A40
+COL PROFILE HEADING PROFILE_NAME
+COL RESOURCE_NAME HEADING PASSWORD_SETTING
+COL LIMIT HEADING VALUE
+
+  SELECT PROFILE, RESOURCE_NAME, LIMIT
+    FROM DBA_PROFILES
+   WHERE     RESOURCE_TYPE = 'PASSWORD'
+         AND PROFILE IN
+                 (SELECT DISTINCT PROFILE
+                    FROM DBA_USERS
+                   WHERE ACCOUNT_STATUS IN ('EXPIRED(GRACE)', 'OPEN','EXPIRED'))
+ORDER BY PROFILE, RESOURCE_NAME;
+
  
 -- -----------------------------------------------------------------------------------
 -- File Name    : http://oracle-base.com/dba/monitoring/rbs_extents.sql
@@ -8038,6 +8200,90 @@ SET FEEDBACK ON
 
 --@temp.sql
 
+-- DDL for table and its dependencies:
+-- Igor Chistov v1.1
+
+SPO C:\TEMP\DDL_OBJECT.SQL
+SET LONG 200000 PAGES 0 LINES 200 FEEDBACK OFF SERVEROUTPUT ON TERMOUT ON
+
+DECLARE
+    V_OBJECT_TYPE    VARCHAR2 (20) DEFAULT 'TABLE';      --object type - TABLE
+    V_APP_USER       VARCHAR2 (20) DEFAULT 'OWS';                 --app schema
+    V_OBJECT         VARCHAR2 (20) DEFAULT 'ACCOUNT';         --app table name
+    V_DLL            CLOB;
+    V_OBJECT_COUNT   NUMBER;
+BEGIN
+    SELECT DBMS_METADATA.GET_DDL (V_OBJECT_TYPE, V_OBJECT, V_APP_USER)
+      INTO V_DLL
+      FROM DUAL;
+
+    DBMS_OUTPUT.PUT_LINE (V_DLL);
+    DBMS_OUTPUT.PUT_LINE (';');
+
+    SELECT COUNT (1)
+      INTO V_OBJECT_COUNT
+      FROM DBA_INDEXES
+     WHERE TABLE_NAME = V_OBJECT AND TABLE_OWNER = V_APP_USER;
+
+    DBMS_OUTPUT.PUT_LINE ('-- dependent indexes: ' || V_OBJECT_COUNT);
+
+    IF V_OBJECT_COUNT > 0
+    THEN
+        SELECT DBMS_METADATA.GET_DEPENDENT_DDL ('INDEX',
+                                                V_OBJECT,
+                                                V_APP_USER)
+          INTO V_DLL
+          FROM DUAL;
+
+        DBMS_OUTPUT.PUT_LINE (V_DLL);
+        DBMS_OUTPUT.PUT_LINE (';');
+    END IF;
+
+    V_OBJECT_COUNT := 0;
+
+    SELECT COUNT (1)
+      INTO V_OBJECT_COUNT
+      FROM DBA_TRIGGERS
+     WHERE TABLE_NAME = V_OBJECT AND TABLE_OWNER = V_APP_USER;
+
+    DBMS_OUTPUT.PUT_LINE ('-- dependent triggers: ' || V_OBJECT_COUNT);
+
+    IF V_OBJECT_COUNT > 0
+    THEN
+        SELECT DBMS_METADATA.GET_DEPENDENT_DDL ('TRIGGER',
+                                                V_OBJECT,
+                                                V_APP_USER)
+          INTO V_DLL
+          FROM DUAL;
+
+        DBMS_OUTPUT.PUT_LINE (V_DLL);
+        DBMS_OUTPUT.PUT_LINE (';');
+    END IF;
+
+    V_OBJECT_COUNT := 0;
+    DBMS_OUTPUT.PUT_LINE ('--' || V_OBJECT_TYPE || ' grants:');
+
+    FOR REC
+        IN (SELECT    'grant '
+                   || PRIVILEGE
+                   || ' on '
+                   || OWNER
+                   || '.'
+                   || TABLE_NAME
+                   || ' TO '
+                   || GRANTEE
+                   || ' ;'    GRANT_SQL
+              FROM DBA_TAB_PRIVS
+             WHERE TABLE_NAME = V_OBJECT AND OWNER = V_APP_USER)
+    LOOP
+        DBMS_OUTPUT.PUT_LINE (REC.GRANT_SQL);
+    END LOOP;
+END;
+/
+
+SPO OFF
+EXIT
+
 -- -----------------------------------------------------------------------------------
 -- File Name    : http://oracle-base.com/dba/script_creation/logon_as_user.sql
 -- Author       : Tim Hall
@@ -9083,4 +9329,74 @@ SPOOL OFF
 SET PAGESIZE 14
 SET FEEDBACK ON
 SET VERIFY ON
+
+-- -----------------------------------------------------------------------------------
+-- Block corruption / lologged block queries 
+-- -----------------------------------------------------------------------------------
+
+set lines 1000
+set pages 101
+alter session set nls_date_format='DD-MM-YYYY HH24:MI:SS';
+
+--fast
+select FILE#, BLOCK#, BLOCKS, to_char(NONLOGGED_START_CHANGE#, '999999999999999') NONLOGGED_START_CHANGE#,NONLOGGED_START_TIME,OBJECT# from V$NONLOGGED_BLOCK;
+
+--slow
+SELECT e.owner, e.segment_type, e.segment_name, e.partition_name, c.file#
+, greatest(e.block_id, c.block#) corr_start_block#
+, least(e.block_id+e.blocks-1, c.block#+c.blocks-1) corr_end_block#
+, least(e.block_id+e.blocks-1, c.block#+c.blocks-1)
+- greatest(e.block_id, c.block#) + 1 blocks_corrupted
+, null description
+FROM dba_extents e, v$nonlogged_block c
+WHERE e.file_id = c.file#
+AND e.block_id <= c.block# + c.blocks - 1
+AND e.block_id + e.blocks - 1 >= c.block#
+UNION
+SELECT null owner, null segment_type, null segment_name, null partition_name, c.file#
+, greatest(f.block_id, c.block#) corr_start_block#
+, least(f.block_id+f.blocks-1, c.block#+c.blocks-1) corr_end_block#
+, least(f.block_id+f.blocks-1, c.block#+c.blocks-1)
+- greatest(f.block_id, c.block#) + 1 blocks_corrupted
+, 'Free Block' description
+FROM dba_free_space f, v$nonlogged_block c
+WHERE f.file_id = c.file#
+AND f.block_id <= c.block# + c.blocks - 1
+AND f.block_id + f.blocks - 1 >= c.block#
+order by file#, corr_start_block#;
+
+-- -----------------------------------------------------------------------------------
+-- Get the estimated memory footprint of an existing database. 
+-- -----------------------------------------------------------------------------------
+
+---- Get the SGA footprint of a database instance:
+SELECT round(sum(value)/1024/1024) "current TOTAL SGA (MB)" FROM v$sga;
+
+---- Get the current PGA consumption of a database instance:
+select round(sum(PGA_MAX_MEM)/1024/1024) "current TOTAL MAX PGA (MB)" from v$process;
+
+-- TABLESPACE free space percent % (with AUTOEXTEND)
+
+ select tablespace_name,round(used_space*8192/1024/1024) used_MB,round(tablespace_size*8192/1024/1024) size_MB,round(USED_PERCENT,1) PERCENT_USED from DBA_TABLESPACE_USAGE_METRICS --where
+
+SELECT A.TABLESPACE_NAME,
+       ROUND (
+             (((A.TABLESPACE_SIZE * 8192)) - ((A.USED_SPACE * 8192)))
+           / 1024
+           / 1024,
+           0)                                                 MB_FREE,
+       ROUND ((A.TABLESPACE_SIZE * 8192) / 1024 / 1024, 1)    MB_TOTAL,
+         (ROUND (((A.TABLESPACE_SIZE - A.USED_SPACE) / A.TABLESPACE_SIZE), 3))
+       * 100                                                  PERCENT_FREE,
+         100
+       -   (ROUND (((A.TABLESPACE_SIZE - A.USED_SPACE) / A.TABLESPACE_SIZE),
+                   3))
+         * 100                                                PERCENT_USED
+  FROM DBA_TABLESPACE_USAGE_METRICS A, DBA_TABLESPACES B
+ WHERE A.TABLESPACE_NAME = B.TABLESPACE_NAME AND B.CONTENTS != 'TEMPORARY';
+ 
+ -- Checkpoint and change for all datafile headers (freezed after begin backup)
+ 
+ select file#,tablespace_name,CHECKPOINT_CHANGE#,CHECKPOINT_TIME from V$DATAFILE_HEADER order by 4 desc, 3 desc;
+
     
