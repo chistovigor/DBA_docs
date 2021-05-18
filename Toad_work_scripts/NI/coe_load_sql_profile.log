@@ -1,0 +1,93 @@
+SQL>SET SERVEROUT ON SIZE UNL;
+SQL>REM
+SQL>REM $Header: 215187.1 coe_load_sql_profile.sql 11.4.5.5 2013/03/01 carlos.sierra $
+SQL>REM
+SQL>REM Copyright (c) 2000-2013, Oracle Corporation. All rights reserved.
+SQL>REM
+SQL>REM AUTHOR
+SQL>REM   carlos.sierra@oracle.com
+SQL>REM
+SQL>REM SCRIPT
+SQL>REM   coe_load_sql_profile.sql
+SQL>REM
+SQL>REM DESCRIPTION
+SQL>REM   This script loads a plan from a modified SQL into a Custom SQL
+SQL>REM   Profile for the original SQL.
+SQL>REM   If a good performing plan only reproduces with CBO Hints
+SQL>REM   then you can load the plan of the modified version of the
+SQL>REM   SQL into a Custom SQL Profile for the orignal SQL.
+SQL>REM   In other words, the original SQL can use the plan that was
+SQL>REM   generated out of the SQL with hints.
+SQL>REM
+SQL>REM PRE-REQUISITES
+SQL>REM   1. Have in cache or AWR the text for the original SQL.
+SQL>REM   2. Have in cache or AWR the plan for the modified SQL
+SQL>REM      (usually with hints).
+SQL>REM
+SQL>REM PARAMETERS
+SQL>REM   1. ORIGINAL_SQL_ID (required)
+SQL>REM   2. MODIFIED_SQL_ID (required)
+SQL>REM   3. PLAN_HASH_VALUE (required)
+SQL>REM
+SQL>REM EXECUTION
+SQL>REM   1. Connect into SQL*Plus as user with access to data dictionary
+SQL>REM      and privileges to create SQL Profiles. Do not use SYS.
+SQL>REM   2. Execute script coe_load_sql_profile.sql passing first two
+SQL>REM      parameters inline or until requested by script.
+SQL>REM   3. Provide plan hash value of the modified SQL when asked.
+SQL>REM   4. Use a DBA user but not SYS. Do not connect as SYS as the staging
+SQL>REM      table cannot be created in SYS schema and you will receive an error:
+SQL>REM      ORA-19381: cannot create staging table in SYS schema
+SQL>REM
+SQL>REM EXAMPLE
+SQL>REM   # sqlplus system
+SQL>REM   SQL> START coe_load_sql_profile.sql gnjy0mn4y9pbm b8f3mbkd8bkgh
+SQL>REM   SQL> START coe_load_sql_profile.sql;
+SQL>REM
+SQL>REM NOTES
+SQL>REM   1. This script works on 10g or higher.
+SQL>REM   2. For a similar script for 11g use coe_load_sql_baseline.sql,
+SQL>REM      which uses SQL Plan Baselines instead of Custom SQL Profiles.
+SQL>REM   3. For possible errors see coe_load_sql_profile.log
+SQL>REM   4. If you get "ORA-06532: Subscript outside of limit, ORA-06512: at line 1"
+SQL>REM      Then you may consider this change (only in a test and disposable system):
+SQL>REM      create or replace TYPE sys.sqlprof_attr AS VARRAY(5000) of VARCHAR2(500);
+SQL>REM
+SQL>SET TERM ON ECHO OFF;
+
+Parameter 1:
+ORIGINAL_SQL_ID (required)
+
+
+Parameter 2:
+MODIFIED_SQL_ID (required)
+
+
+
+     PLAN_HASH_VALUE          AVG_ET_SECS
+-------------------- --------------------
+          1754490254              633.103
+
+Parameter 3:
+PLAN_HASH_VALUE (required)
+
+
+Values passed to coe_load_sql_profile:
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ORIGINAL_SQL_ID: "6m29d8rst35vb"
+MODIFIED_SQL_ID: "3835vy2njpgx8"
+PLAN_HASH_VALUE: "1754490254"
+
+SQL>
+SQL>-- trim parameters
+SQL>COL original_sql_id NEW_V original_sql_id FOR A30;
+SQL>COL modified_sql_id NEW_V modified_sql_id FOR A30;
+SQL>COL plan_hash_value NEW_V plan_hash_value FOR A30;
+SQL>SELECT TRIM('&&original_sql_id.') original_sql_id, TRIM('&&modified_sql_id.') modified_sql_id, TRIM('&&plan_hash_value.') plan_hash_value FROM DUAL;
+
+ORIGINAL_SQL_ID                MODIFIED_SQL_ID                PLAN_HASH_VALUE
+------------------------------ ------------------------------ ------------------------------
+6m29d8rst35vb                  3835vy2njpgx8                  1754490254
+SQL>
+SQL>-- open log file
+SQL>SPO coe_load_sql_profile_&&original_sql_id..log;

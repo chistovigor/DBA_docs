@@ -361,11 +361,26 @@ SELECT s.END_INTERVAL_TIME snap_end, h.*
  WHERE     S.SNAP_ID = H.SNAP_ID
        AND S.INSTANCE_NUMBER = H.INSTANCE_NUMBER
        AND EVENT_NAME = 'log file sync'
-       AND WAIT_TIME_MILLI > 1000
-       AND WAIT_COUNT > 10
+       AND WAIT_TIME_MILLI = 4096
+      -- AND WAIT_COUNT > 10
        AND H.INSTANCE_NUMBER = 1
+       AND s.END_INTERVAL_TIME >= sysdate - 90
        order by WAIT_TIME_MILLI*WAIT_COUNT desc)
 group by trunc(snap_end),WAIT_TIME_MILLI having trunc(snap_end) >= sysdate-90 order by 1,2 desc;
+
+select trunc(snap_end),WAIT_TIME_MILLI,sum(WAIT_COUNT) from (
+SELECT trunc(s.END_INTERVAL_TIME,'hh24') snap_end, h.WAIT_TIME_MILLI,sum(h.WAIT_COUNT) WAIT_COUNT
+  FROM DBA_HIST_EVENT_HISTOGRAM H, DBA_HIST_SNAPSHOT S
+ WHERE     S.SNAP_ID = H.SNAP_ID
+       AND S.INSTANCE_NUMBER = H.INSTANCE_NUMBER
+       AND EVENT_NAME = 'log file sync'
+       AND WAIT_TIME_MILLI = 4096
+    --   AND WAIT_COUNT > 10
+       AND H.INSTANCE_NUMBER = 1
+       AND s.END_INTERVAL_TIME >= sysdate - 3
+       group by trunc(s.END_INTERVAL_TIME,'hh24'), h.WAIT_TIME_MILLI
+       order by 1,sum(h.WAIT_COUNT) desc/*WAIT_TIME_MILLI*WAIT_COUNT desc*/)
+group by trunc(snap_end),WAIT_TIME_MILLI having trunc(snap_end) >= sysdate-95 order by 1,3 desc;
 
 -- histogram for i/o related wait events with the most difference:
 
@@ -770,6 +785,7 @@ select DBMS_SQL_MONITOR.REPORT_SQL_MONITOR('f381qj6qv32q6',type=>'TEXT') from du
 --active HTML report using the command line (same as in OEM)
 
 select DBMS_SQL_MONITOR.REPORT_SQL_MONITOR('an05rsj1up1k5',report_level =>'all',type=>'ACTIVE') report from dual;
+select DBMS_SQL_MONITOR.REPORT_SQL_MONITOR('0x6zwpwyr7nfx',sql_exec_id=>32156742,report_level =>'all',type=>'ACTIVE') report from dual; 
 --if NOT avaialble we can force query monitoring
 select /*+ MONITOR */ ... --monitor report will be avaialble post that
 
@@ -797,6 +813,7 @@ SET FEEDBACK OFF
 SPOOL /host/report_sql_monitor.htm
 SELECT DBMS_SQLTUNE.report_sql_monitor(sql_id=> '526mvccm5nfy4',type=> 'HTML',report_level => 'ALL') AS report FROM dual;
 SPOOL OFF
+exit
 
 SET LONG 1000000
 SET LONGCHUNKSIZE 1000000
@@ -1200,6 +1217,9 @@ SELECT dbms_stats.get_stats_history_retention FROM dual;
 --if available can be compared (clob output as report)
 select  * from table(dbms_stats.diff_table_stats_in_history('OWS','DOC',systimestamp-2,systimestamp));
 
+--change retention period for the stats
+
+exec dbms_stats.alter_stats_history_retention(31); --The default is 31 days
 
 -- bind variables for sql cursor cache
 
@@ -1313,6 +1333,7 @@ SELECT * FROM TABLE(DBMS_XPLAN.DISPLAY_CURSOR(NULL,TO_NUMBER(NULL),'ADVANCED RUN
 SPO OFF;
 
 -- SQL plan management and consistency (automatic capture/evolve of SQL plan baselines)
+-- Master Note: Plan Stability Features (Including SQL Plan Management (SPM)) (Doc ID 1359841.1)
 -- SQL Management Base will be in the SYSAUX tablespace (!), Managing the SQL Management Base
 
 SELECT PARAMETER_NAME, PARAMETER_VALUE AS "%_LIMIT",
@@ -1332,6 +1353,11 @@ exec exec DBMS_SPM.CONFIGURE('SPACE_BUDGET_PERCENT',25); --configure space % ins
 
 -- init parameters related to that functionality
 select NAME,VALUE,ISDEFAULT,ISSES_MODIFIABLE,ISSYS_MODIFIABLE,ISINSTANCE_MODIFIABLE,DESCRIPTION from v$parameter where NAME like '%sql_plan_baselines';
+
+SPM is controlled by the use of the following parameters:
+
+Document 567104.1 Init.ora Parameter "OPTIMIZER_CAPTURE_SQL_PLAN_BASELINES" Reference Note
+Document 567107.1 Init.ora Parameter "OPTIMIZER_USE_SQL_PLAN_BASELINES" Reference Note
 
 -- change parameter:
 alter system set optimizer_capture_sql_plan_baselines = TRUE COMMENT='changed from FALSE 25.01.2019' scope = BOTH sid = '*';

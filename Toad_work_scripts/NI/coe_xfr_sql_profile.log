@@ -1,0 +1,143 @@
+SQL>SET SERVEROUT ON SIZE UNL;
+SQL>REM
+SQL>REM $Header: 215187.1 coe_xfr_sql_profile.sql 11.4.5.5 2013/03/01 carlos.sierra $
+SQL>REM
+SQL>REM Copyright (c) 2000-2013, Oracle Corporation. All rights reserved.
+SQL>REM
+SQL>REM AUTHOR
+SQL>REM   carlos.sierra@oracle.com
+SQL>REM
+SQL>REM SCRIPT
+SQL>REM   coe_xfr_sql_profile.sql
+SQL>REM
+SQL>REM DESCRIPTION
+SQL>REM   This script generates another that contains the commands to
+SQL>REM   create a manual custom SQL Profile out of a known plan from
+SQL>REM   memory or AWR. The manual custom profile can be implemented
+SQL>REM   into the same SOURCE system where the plan was retrieved,
+SQL>REM   or into another similar TARGET system that has same schema
+SQL>REM   objects referenced by the SQL that generated the known plan.
+SQL>REM
+SQL>REM PRE-REQUISITES
+SQL>REM   1. Oracle Tuning Pack license.
+SQL>REM
+SQL>REM PARAMETERS
+SQL>REM   1. SQL_ID (required)
+SQL>REM   2. Plan Hash Value for which a manual custom SQL Profile is
+SQL>REM      needed (required). A list of known plans is presented.
+SQL>REM      You may choose from list provided or enter a valid phv
+SQL>REM      from a version of the SQL modified with Hints.
+SQL>REM
+SQL>REM EXECUTION
+SQL>REM   1. Connect into SQL*Plus as user with access to data dictionary.
+SQL>REM      Do not use SYS.
+SQL>REM   2. Execute script coe_xfr_sql_profile.sql passing SQL_ID and
+SQL>REM      plan hash value (parameters can be passed inline or until
+SQL>REM      requested).
+SQL>REM
+SQL>REM EXAMPLE
+SQL>REM   # sqlplus system
+SQL>REM   SQL> START coe_xfr_sql_profile.sql [SQL_ID] [PLAN_HASH_VALUE];
+SQL>REM   SQL> START coe_xfr_sql_profile.sql gnjy0mn4y9pbm 2055843663;
+SQL>REM   SQL> START coe_xfr_sql_profile.sql gnjy0mn4y9pbm;
+SQL>REM   SQL> START coe_xfr_sql_profile.sql;
+SQL>REM
+SQL>REM NOTES
+SQL>REM   1. For possible errors see coe_xfr_sql_profile.log
+SQL>REM   2. If SQLT is installed in SOURCE, you can use instead:
+SQL>REM      sqlt/utl/sqltprofile.sql
+SQL>REM   3. Be aware that using DBMS_SQLTUNE requires a license for
+SQL>REM      Oracle Tuning Pack.
+SQL>REM   4. Use a DBA user but not SYS.
+SQL>REM   5. If you get "ORA-06532: Subscript outside of limit, ORA-06512: at line 1"
+SQL>REM      Then you may consider this change (only in a test and disposable system):
+SQL>REM      create or replace TYPE sys.sqlprof_attr AS VARRAY(5000) of VARCHAR2(500);
+SQL>REM
+SQL>SET TERM ON ECHO OFF;
+
+Parameter 1:
+SQL_ID (required)
+
+
+
+PLAN_HASH_VALUE AVG_ET_SECS
+--------------- -----------
+     3138885904    1122.694
+     2000151800    1396.047
+
+Parameter 2:
+PLAN_HASH_VALUE (required)
+
+
+Values passed to coe_xfr_sql_profile:
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+SQL_ID         : "6jqysykx6fc5z"
+PLAN_HASH_VALUE: "3138885904"
+
+SQL>WHENEVER SQLERROR EXIT SQL.SQLCODE;
+SQL>
+SQL>-- trim parameters
+SQL>COL sql_id NEW_V sql_id FOR A30;
+SQL>COL plan_hash_value NEW_V plan_hash_value FOR A30;
+SQL>SELECT TRIM('&&sql_id.') sql_id, TRIM('&&plan_hash_value.') plan_hash_value FROM DUAL;
+
+SQL_ID                         PLAN_HASH_VALUE
+------------------------------ ------------------------------
+6jqysykx6fc5z                  3138885904
+SQL>
+SQL>VAR sql_text CLOB;
+SQL>VAR sql_text2 CLOB;
+SQL>VAR other_xml CLOB;
+SQL>EXEC :sql_text := NULL;
+SQL>EXEC :sql_text2 := NULL;
+SQL>EXEC :other_xml := NULL;
+SQL>
+SQL>-- get sql_text from memory
+SQL>DECLARE
+  2    l_sql_text VARCHAR2(32767);
+  3  BEGIN -- 10g see bug 5017909
+  4    FOR i IN (SELECT DISTINCT piece, sql_text
+  5  		   FROM gv$sqltext_with_newlines
+  6  		  WHERE sql_id = TRIM('&&sql_id.')
+  7  		  ORDER BY 1, 2)
+  8    LOOP
+  9  	 IF :sql_text IS NULL THEN
+ 10  	   DBMS_LOB.CREATETEMPORARY(:sql_text, TRUE);
+ 11  	   DBMS_LOB.OPEN(:sql_text, DBMS_LOB.LOB_READWRITE);
+ 12  	 END IF;
+ 13  	 -- removes NUL characters
+ 14  	 l_sql_text := REPLACE(i.sql_text, CHR(00), ' ');
+ 15  	 -- adds a NUL character at the end of each line
+ 16  	 DBMS_LOB.WRITEAPPEND(:sql_text, LENGTH(l_sql_text) + 1, l_sql_text||CHR(00));
+ 17    END LOOP;
+ 18    -- if found in memory then sql_text is not null
+ 19    IF :sql_text IS NOT NULL THEN
+ 20  	 DBMS_LOB.CLOSE(:sql_text);
+ 21    END IF;
+ 22  EXCEPTION
+ 23    WHEN OTHERS THEN
+ 24  	 DBMS_OUTPUT.PUT_LINE('getting sql_text from memory: '||SQLERRM);
+ 25  	 :sql_text := NULL;
+ 26  END;
+ 27  /
+      DBMS_LOB.CREATETEMPORARY(:sql_text, TRUE);
+      *
+ERROR at line 10:
+ORA-06550: line 10, column 7:
+PLS-00201: identifier 'DBMS_LOB' must be declared
+ORA-06550: line 10, column 7:
+PL/SQL: Statement ignored
+ORA-06550: line 11, column 32:
+PLS-00201: identifier 'DBMS_LOB' must be declared
+ORA-06550: line 11, column 7:
+PL/SQL: Statement ignored
+ORA-06550: line 16, column 5:
+PLS-00201: identifier 'DBMS_LOB' must be declared
+ORA-06550: line 16, column 5:
+PL/SQL: Statement ignored
+ORA-06550: line 20, column 5:
+PLS-00201: identifier 'DBMS_LOB' must be declared
+ORA-06550: line 20, column 5:
+PL/SQL: Statement ignored
+
+

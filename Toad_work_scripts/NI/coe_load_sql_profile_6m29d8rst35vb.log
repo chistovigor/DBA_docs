@@ -1,0 +1,583 @@
+SQL>GET coe_load_sql_profile.log;
+  1  SQL>SET SERVEROUT ON SIZE UNL;
+  2  SQL>REM
+  3  SQL>REM $Header: 215187.1 coe_load_sql_profile.sql 11.4.5.5 2013/03/01 carlos.sierra $
+  4  SQL>REM
+  5  SQL>REM Copyright (c) 2000-2013, Oracle Corporation. All rights reserved.
+  6  SQL>REM
+  7  SQL>REM AUTHOR
+  8  SQL>REM   carlos.sierra@oracle.com
+  9  SQL>REM
+ 10  SQL>REM SCRIPT
+ 11  SQL>REM   coe_load_sql_profile.sql
+ 12  SQL>REM
+ 13  SQL>REM DESCRIPTION
+ 14  SQL>REM   This script loads a plan from a modified SQL into a Custom SQL
+ 15  SQL>REM   Profile for the original SQL.
+ 16  SQL>REM   If a good performing plan only reproduces with CBO Hints
+ 17  SQL>REM   then you can load the plan of the modified version of the
+ 18  SQL>REM   SQL into a Custom SQL Profile for the orignal SQL.
+ 19  SQL>REM   In other words, the original SQL can use the plan that was
+ 20  SQL>REM   generated out of the SQL with hints.
+ 21  SQL>REM
+ 22  SQL>REM PRE-REQUISITES
+ 23  SQL>REM   1. Have in cache or AWR the text for the original SQL.
+ 24  SQL>REM   2. Have in cache or AWR the plan for the modified SQL
+ 25  SQL>REM      (usually with hints).
+ 26  SQL>REM
+ 27  SQL>REM PARAMETERS
+ 28  SQL>REM   1. ORIGINAL_SQL_ID (required)
+ 29  SQL>REM   2. MODIFIED_SQL_ID (required)
+ 30  SQL>REM   3. PLAN_HASH_VALUE (required)
+ 31  SQL>REM
+ 32  SQL>REM EXECUTION
+ 33  SQL>REM   1. Connect into SQL*Plus as user with access to data dictionary
+ 34  SQL>REM      and privileges to create SQL Profiles. Do not use SYS.
+ 35  SQL>REM   2. Execute script coe_load_sql_profile.sql passing first two
+ 36  SQL>REM      parameters inline or until requested by script.
+ 37  SQL>REM   3. Provide plan hash value of the modified SQL when asked.
+ 38  SQL>REM   4. Use a DBA user but not SYS. Do not connect as SYS as the staging
+ 39  SQL>REM      table cannot be created in SYS schema and you will receive an error:
+ 40  SQL>REM      ORA-19381: cannot create staging table in SYS schema
+ 41  SQL>REM
+ 42  SQL>REM EXAMPLE
+ 43  SQL>REM   # sqlplus system
+ 44  SQL>REM   SQL> START coe_load_sql_profile.sql gnjy0mn4y9pbm b8f3mbkd8bkgh
+ 45  SQL>REM   SQL> START coe_load_sql_profile.sql;
+ 46  SQL>REM
+ 47  SQL>REM NOTES
+ 48  SQL>REM   1. This script works on 10g or higher.
+ 49  SQL>REM   2. For a similar script for 11g use coe_load_sql_baseline.sql,
+ 50  SQL>REM      which uses SQL Plan Baselines instead of Custom SQL Profiles.
+ 51  SQL>REM   3. For possible errors see coe_load_sql_profile.log
+ 52  SQL>REM   4. If you get "ORA-06532: Subscript outside of limit, ORA-06512: at line 1"
+ 53  SQL>REM      Then you may consider this change (only in a test and disposable system):
+ 54  SQL>REM      create or replace TYPE sys.sqlprof_attr AS VARRAY(5000) of VARCHAR2(500);
+ 55  SQL>REM
+ 56  SQL>SET TERM ON ECHO OFF;
+ 57  Parameter 1:
+ 58  ORIGINAL_SQL_ID (required)
+ 59  Parameter 2:
+ 60  MODIFIED_SQL_ID (required)
+ 61       PLAN_HASH_VALUE          AVG_ET_SECS
+ 62  -------------------- --------------------
+ 63            1754490254              633.103
+ 64  Parameter 3:
+ 65  PLAN_HASH_VALUE (required)
+ 66  Values passed to coe_load_sql_profile:
+ 67  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 68  ORIGINAL_SQL_ID: "6m29d8rst35vb"
+ 69  MODIFIED_SQL_ID: "3835vy2njpgx8"
+ 70  PLAN_HASH_VALUE: "1754490254"
+ 71  SQL>
+ 72  SQL>-- trim parameters
+ 73  SQL>COL original_sql_id NEW_V original_sql_id FOR A30;
+ 74  SQL>COL modified_sql_id NEW_V modified_sql_id FOR A30;
+ 75  SQL>COL plan_hash_value NEW_V plan_hash_value FOR A30;
+ 76  SQL>SELECT TRIM('&&original_sql_id.') original_sql_id, TRIM('&&modified_sql_id.') modified_sql_id, TRIM('&&plan_hash_value.') plan_hash_value FROM DUAL;
+ 77  ORIGINAL_SQL_ID                MODIFIED_SQL_ID                PLAN_HASH_VALUE
+ 78  ------------------------------ ------------------------------ ------------------------------
+ 79  6m29d8rst35vb                  3835vy2njpgx8                  1754490254
+ 80  SQL>
+ 81  SQL>-- open log file
+ 82* SQL>SPO coe_load_sql_profile_&&original_sql_id..log;
+ 83  .
+SQL>
+SQL>-- get user
+SQL>COL connected_user NEW_V connected_user FOR A30;
+SQL>SELECT USER connected_user FROM DUAL;
+
+CONNECTED_USER
+------------------------------
+IGOR_OEM
+SQL>
+SQL>VAR sql_text CLOB;
+SQL>VAR other_xml CLOB;
+SQL>VAR signature NUMBER;
+SQL>VAR name VARCHAR2(30);
+SQL>
+SQL>EXEC :sql_text := NULL;
+SQL>EXEC :other_xml := NULL;
+SQL>EXEC :signature := NULL;
+SQL>EXEC :name := NULL;
+SQL>
+SQL>-- get sql_text from memory
+SQL>DECLARE
+  2    l_sql_text VARCHAR2(32767);
+  3  BEGIN -- 10g see bug 5017909
+  4    FOR i IN (SELECT DISTINCT piece, sql_text
+  5  		   FROM gv$sqltext_with_newlines
+  6  		  WHERE sql_id = TRIM('&&original_sql_id.')
+  7  		  ORDER BY 1, 2)
+  8    LOOP
+  9  	 IF :sql_text IS NULL THEN
+ 10  	   DBMS_LOB.CREATETEMPORARY(:sql_text, TRUE);
+ 11  	   DBMS_LOB.OPEN(:sql_text, DBMS_LOB.LOB_READWRITE);
+ 12  	 END IF;
+ 13  	 l_sql_text := REPLACE(i.sql_text, CHR(00), ' ');
+ 14  	 DBMS_LOB.WRITEAPPEND(:sql_text, LENGTH(l_sql_text), l_sql_text);
+ 15    END LOOP;
+ 16    IF :sql_text IS NOT NULL THEN
+ 17  	 DBMS_LOB.CLOSE(:sql_text);
+ 18    END IF;
+ 19  EXCEPTION
+ 20    WHEN OTHERS THEN
+ 21  	 DBMS_OUTPUT.PUT_LINE('getting original sql_text from memory: '||SQLERRM);
+ 22  	 :sql_text := NULL;
+ 23  END;
+ 24  /
+SQL>
+SQL>-- get sql_text from awr
+SQL>BEGIN
+  2    IF :sql_text IS NULL OR NVL(DBMS_LOB.GETLENGTH(:sql_text), 0) = 0 THEN
+  3  	 SELECT REPLACE(sql_text, CHR(00), ' ')
+  4  	   INTO :sql_text
+  5  	   FROM dba_hist_sqltext
+  6  	  WHERE sql_id = TRIM('&&original_sql_id.')
+  7  	    AND sql_text IS NOT NULL
+  8  	    AND ROWNUM = 1;
+  9    END IF;
+ 10  EXCEPTION
+ 11    WHEN OTHERS THEN
+ 12  	 DBMS_OUTPUT.PUT_LINE('getting original sql_text from awr: '||SQLERRM);
+ 13  	 :sql_text := NULL;
+ 14  END;
+ 15  /
+SQL>
+SQL>-- sql_text as found
+SQL>SELECT :sql_text FROM DUAL;
+
+:SQL_TEXT
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+WITH oper AS    (SELECT      /*+ NO_MERGE MATERIALIZE */      op.operation_type_id,      op.code,      CASE        WHEN op.code IN ('RETAIL','RETAIL_REV','REFUND','REFUND_REV','CASH','CASH_REV','DCC_RETAIL','DCC_CREDIT','DCC_RETAIL_REV','DCC_CREDIT_REV')        THEN 'TRAN'        WHEN op.code IN ('R_COMM','CR_COMM','R_COMM_REV','CR_COMM_REV','CASH_COMM','CASH_COMM_REV'                          ,'DCC_RETAIL_COMM','DCC_CREDIT_COMM'                          ,'DCC_RETAIL_COMM_REV','DCC_CREDIT_COMM_REV')        THEN 'COMM'        WHEN op.code IN ('VAT','VAT_ON_FEE')        THEN 'VAT'        WHEN op.code IN ('COMMISSION','COMMISSION_REV')        THEN 'TRANS_FEE'      END AS type    FROM v_dwr_operation_type op    WHERE op.class_code = 'BASE_REPORTS'      AND op.type_code    = 'ACQ_TRANSACTIONS'      AND op.code        IN ('RETAIL','RETAIL_REV','REFUND','REFUND_REV','CASH','CASH_REV','DCC_RETAIL','DCC_CREDIT','DCC_RETAIL_REV','DCC_CREDIT_REV'                              ,'R_COMM','CR_COMM','R_COMM_REV','CR_COMM_REV','CASH_COMM','CASH_COMM_REV'                              ,'DCC_RETAIL_COMM','DCC_CREDIT_COMM','DCC_RETAIL_COMM_REV','DCC_CREDIT_COMM_REV'                              ,'VAT','VAT_ON_FEE'                              ,'COMMISSION','COMMISSION_REV'                              )    ),    comm_sql AS    (SELECT      /*+ MERGE */      entr.primary_doc_idt,      SUM (decode(op.type,'COMM',credit-debit,0)) comm,      SUM (decode(op.type,'TRANS_FEE',credit-debit,0)) trans_fee,      SUM (decode(op.code,'VAT',credit-debit,0)) vat,      SUM (decode(op.code,'VAT_ON_FEE',credit-debit,0)) vat_on_fee        FROM dwf_account_entry entr    JOIN dwd_institution inst      ON inst.id            = entr.institution_id      AND inst.record_state = 'A'      AND inst.CODE         = '120'    JOIN oper op      ON op.operation_type_id = entr.operation_type_id      AND op.type in ('COMM','VAT','TRANS_FEE')    WHERE entr.banking_date = to_date('25-05-2019','dd-mm-yyyy')    GROUP BY entr.p
+rimary_doc_idt    ),    chains AS    (SELECT dach1.contract_idt,      dc1.ident_number,      dft1.code    FROM dwd_affiliation dach1    JOIN dwd_affiliation_type dft1      ON dach1.affiliation_type_id = dft1.id      AND dft1.code               IN ('CHAINID1','CHAINID2')      AND dach1.record_state       ='A'      AND to_date('25-05-2019','dd-mm-yyyy') BETWEEN dft1.record_date_from AND dft1.record_date_to    JOIN dwd_client dc1      ON dc1.record_idt = dach1.affiliated_client_idt      AND to_date('25-05-2019','dd-mm-yyyy') BETWEEN dc1.record_date_from AND dc1.record_date_to    JOIN dwd_institution inst      ON inst.id            = dc1.institution_id      AND inst.id           = dach1.institution_id      AND inst.record_state = 'A'      AND inst.CODE         = '120'    ),    addr AS    (SELECT COALESCE(merch_addr.CITY,merch_addr.ADDRESS_LINE_1,merch_addr.ADDRESS_LINE_2,'NA') AS location1,      COALESCE(merch_addr.phone,merch_addr.phone_home,merch_addr.phone_mobile,'NA')            AS telephone,      merch_addr.contract_idt,      merch_addr.e_mail as email    FROM opt_v_address merch_addr    WHERE merch_addr.record_state    ='A'      AND merch_addr.address_type_code = 'STMT_ADDR'      AND to_date('25-05-2019','dd-mm-yyyy') BETWEEN merch_addr.record_date_from AND merch_addr.record_date_to    ),  all_items as (SELECT          /*+ PARALLEL(tr, 4) NO_MERGE(tr) */          row_number() over (order by cntr.record_idt) as seq,          cntr.personal_account        AS merchant_id,          cntr.record_idt              AS contract_idt,          chain_level.personal_account AS Chain_ID,          cntr.name                    AS Merchant_Name,          merch_addr.location1,          merch_addr.telephone,          merch_addr.email,          device.personal_account                            AS terminal_id,          tr.TRANS_RRN                                       AS Txn_Seq_No,          tr.TRANS_CURRENCY                                  AS Txn_Curr,          TO_CHAR(tr.trans_date
+,'yyyy-mm-dd')                AS Txn_Date,          br.PAYMENT_SCHEME                                  AS card_type,          tr.CONTRA_NUMBER                                   AS card_no,          tr.AUTH_CODE                                       AS AUTH_CODE,          tr.transaction_name                                AS txn_type,          tr.TRANS_AMOUNT                                    AS txn_amount,          NVL(comm_sql.comm ,0)                              AS COMMISSION,          tr.trans_amount +           NVL(comm_sql.comm, 0) +           NVL(comm_sql.trans_fee, 0) +           NVL(comm_sql.vat, 0) +           NVL(comm_sql.vat_on_fee, 0) AS NET_AMOUNT,          replace(replace(sy_convert.get_tag_value(tr.add_info,'ACQDAT'), chr(10)), chr(13))     AS ACQUIRER_DATA,          tr.TRANS_RRN                                       AS Ret_Ref_No,          replace(replace(sy_convert.get_tag_value(tr.add_info,'MERCH_TYPE'), chr(10)), chr(13)) AS Store_Type,          replace(replace(sy_convert.get_tag_value(tr.add_info,'CREDITACCT'), chr(10)), chr(13)) AS BANK_ACCOUNT,          TO_CHAR(tr.trans_date, 'HH')                       AS Time_Hour,          TO_CHAR(tr.trans_date, 'MI')                       AS Time_min,          TO_CHAR(tr.trans_date, 'SS')                       AS Time_Sec,          replace(replace(sy_convert.get_tag_value(tr.add_info,'CREDITACCT'), chr(10)), chr(13)) AS IBAN_Acct_No ,          CASE            WHEN tr.trans_arn IS NULL            THEN ' '            WHEN (sy_convert.get_tag_value(tr.add_info, 'TDE') ='Y'            AND tr.posting_status                             != 'C')            OR (sy_convert.get_tag_value(tr.add_info, 'TDE')   ='Y'            AND tr.posting_status                              = 'C')            THEN 'MANL'            WHEN tr.posting_status                                  = 'C'            AND sy_convert.get_tag_value(tr.add_info, 'DEPT_CODE') IS NOT NULL            THEN sy_convert.get_tag_value(tr.add_info, 'DEPT_CODE
+')            WHEN tr.posting_status                                 != 'C'            AND sy_convert.get_tag_value(tr.add_info, 'DEPT_CODE') IS NOT NULL            THEN sy_convert.get_tag_value(tr.add_info, 'DEPT_CODE')            ELSE ' '          END                                                          AS desc_type,          chain1.ident_number                                          AS MASTER_CHAIN1,          chain2.ident_number                                          AS MASTER_CHAIN2,          replace(replace(sy_convert.get_tag_value(tr.ADD_INFO, 'RI_TIP_AMOUNT'), chr(10)), chr(13))       AS TIP_AMOUNT,          replace(replace(sy_convert.get_tag_value(tr.ADD_INFO, 'RI_TAG_ID'), chr(10)), chr(13))          AS TAG_ID,          replace(replace(sy_convert.get_tag_value(tr.ADD_INFO, 'RI_DRIVER_ID'), chr(10)), chr(13))        AS DRIVER_ID,          nvl(sy_convert.get_tag_value(tr.add_info,'TCASHBACK_AMOUNT'),0)/100 AS PWCB_CASHBACK,          CASE            WHEN tr.DIRECTION='-1'            THEN 'D'            WHEN tr.DIRECTION='1'            THEN 'C'            ELSE 'D'          END AS Transacion_indicator,          CASE            WHEN tr.DIRECTION='-1'            THEN 'C'            WHEN tr.DIRECTION='1'            THEN 'D'            ELSE 'C'          END AS Commission_Indicator ,          CASE            WHEN sy_convert.get_tag_value(tr.ADD_INFO, 'PTLF')='Y'            THEN 'PTL'            WHEN sy_convert.get_tag_value(tr.ADD_INFO, 'FROM_CYBERSOURCE')='FROM_CYBERSOURCE'            THEN 'CYB'            WHEN sy_convert.get_tag_value(tr.ADD_INFO, 'MIGS')='Y'            THEN 'MIG'            WHEN sy_convert.get_tag_value(tr.ADD_INFO, 'DCC=FEXCO')='DCC=FEXCO'            THEN 'FEXCO'            WHEN sy_convert.get_tag_value(tr.ADD_INFO, 'DCC=PP')='DCC=PP'            THEN 'PP'            WHEN sy_convert.get_tag_value(tr.ADD_INFO, 'TDE')='Y'            THEN 'TDE'          END AS transaction_source,          NVL(comm_sql.trans_fee, 0) AS TRANS_FEE,          NVL(
+comm_sql.vat, 0) AS VAT,          NVL(comm_sql.vat_on_fee, 0) as VAT_ON_FEE,          case            when sy_convert.get_tag_value (tr.add_info, 'DOMESTIC') = 'Y' and trcond.CONDITION_LIST like '%,KEY_ENTRY,%' and nvl(vcb.code,' ') in ('PREMIUM_MC', 'PREMIUM_VISA','PREMIUM_MER') then 'Manual/Premium'            when sy_convert.get_tag_value (tr.add_info, 'DOMESTIC') = 'Y' and trcond.CONDITION_LIST like '%,KEY_ENTRY,%' and nvl(vcb.code,' ') not in ('PREMIUM_MC', 'PREMIUM_VISA','PREMIUM_MER') then 'Manual/Non Premium'            when sy_convert.get_tag_value (tr.add_info, 'DOMESTIC') = 'Y' and trcond.CONDITION_LIST not like '%,KEY_ENTRY,%' and nvl(vcb.code,' ') in ('PREMIUM_MC', 'PREMIUM_VISA','PREMIUM_MER') then 'Elec/Premium'            when sy_convert.get_tag_value (tr.add_info, 'DOMESTIC') = 'Y' and trcond.CONDITION_LIST not like '%,KEY_ENTRY,%' and nvl(vcb.code,' ') not in ('PREMIUM_MC', 'PREMIUM_VISA','PREMIUM_MER') then 'Elec/Non Premium'            when nvl(sy_convert.get_tag_value (tr.add_info, 'DOMESTIC'),'N') <> 'Y' and trcond.CONDITION_LIST like '%,KEY_ENTRY,%'  then 'Manual/International'            when nvl(sy_convert.get_tag_value (tr.add_info, 'DOMESTIC'),'N') <> 'Y' and trcond.CONDITION_LIST not like '%,KEY_ENTRY,%' then 'Elec/International'          end as trn_typ        FROM dwd_contract cntr        JOIN dwa_contract_attribute          ON cntr.record_idt = dwa_contract_attribute.contract_idt          AND to_date('25-05-2019','dd-mm-yyyy') BETWEEN cntr.record_date_from AND cntr.record_date_to          AND to_date('25-05-2019','dd-mm-yyyy') BETWEEN dwa_contract_attribute.attr_date_from AND dwa_contract_attribute.attr_date_to        JOIN dwd_attribute          ON dwd_attribute.id = dwa_contract_attribute.attr_id          AND to_date('25-05-2019','dd-mm-yyyy') BETWEEN dwd_attribute.record_date_from AND dwd_attribute.record_date_to          AND dwd_attribute.type_code = 'ACQ_LVL'          AND dwd_attribute.code      = 'MERCHANT'        LEFT JOIN dwd_con
+tract chain_level          ON cntr.parent_contract_idt = chain_level.record_idt          AND chain_level.record_state='A'          AND to_date('25-05-2019','dd-mm-yyyy') BETWEEN chain_level.record_date_from AND chain_level.record_date_to        JOIN dwd_contract device          ON device.parent_contract_idt= cntr.record_idt          AND to_date('25-05-2019','dd-mm-yyyy') BETWEEN device.record_date_from AND device.record_date_to        LEFT JOIN addr merch_addr          ON merch_addr.contract_idt= cntr.record_idt        JOIN opt_v_transaction_stmt tr          ON tr.contract_idt       =device.record_idt          AND tr.transaction_name IS NOT NULL        JOIN dwd_currency curr          ON curr.code         =tr.trans_currency          AND curr.record_state='A'        LEFT JOIN dwd_card_brand br          ON br.id=tr.card_brand_id        LEFT JOIN opt_v_dwr_card_brand vcb           ON vcb.card_brand_id = br.ID          AND vcb.class_code = 'ACQ_REPORTS'          AND vcb.type_code = 'IPS_CARD_TYPE'         LEFT JOIN dwd_trans_conditions trcond ON tr.trans_conditions_id = trcond.ID        LEFT JOIN comm_sql          ON comm_sql.primary_doc_idt = tr.doc_idt        LEFT JOIN chains chain1          ON cntr.record_idt = chain1.contract_idt          AND chain1.code    = 'CHAINID1'        LEFT JOIN chains chain2          ON cntr.record_idt = chain2.contract_idt          AND chain2.code    = 'CHAINID2'        JOIN dwf_account_entry trans_entr          ON tr.doc_idt = trans_entr.primary_doc_idt        JOIN dwd_institution inst           ON inst.id            = trans_entr.institution_id          AND inst.id           = cntr.institution_id          AND inst.record_state = 'A'          AND inst.CODE         = '120'        JOIN oper op          ON op.operation_type_id     = trans_entr.operation_type_id          AND op.type                 = 'TRAN'        WHERE tr.banking_date       = to_date('25-05-2019','dd-mm-yyyy')          AND trans_entr.banking_date = to_date('25-05-2019','dd-mm-
+yyyy')        ),  totals as (            select contract_idt, merchant_id,            sum(txn_amount) as txn_amount,            sum(COMMISSION) as COMMISSION,            sum(NET_AMOUNT) as NET_AMOUNT,            sum(TIP_AMOUNT) as TIP_AMOUNT,            count(1) as cnt            from all_items            group by contract_idt, merchant_id            )  select distinct contract_idt,  'SRL  ;MERCHANT ID ;CHAIN-ID    ;MERCHANT NAME                           ;LOCATION                                ;TELEPHONE      ;TERMINAL    ;SEQUENCE  ;TRAN ;TRAN      ;CARD           ;CREDIT CARD        ;AUTHORIZATION;TRAN    ;       SALES;COMMISSION;         NET;ACQUIRER DATA                                    ;REFERENCE NO;TY;BANK ACCOUNT   ;--TIME--;IBAN Acct No                  ;DISC TYPE; MASTER     ; MASTER     ;  TIP  ;    TAG   ;   DRIVER ;  PWCB  ;TXN;COMM;SOURCE;TRANSACTION ; VAT ON    ; VAT ON   ;        TRANS       ;' ||  '
+' ||  'NO.  ;            ;            ;                                        ;                                        ;               ;ID          ;NUMBER    ;CURR.;DATE      ;TYPE           ;NUMBER             ;CODE         ;TYPE    ;      AMOUNT;          ;      AMOUNT;                                                 ;            ;  ;               ;HH:MM:SS;                                        ;CHAIN-ID1   ;CHAIN-ID2   ;AMOUNT ;     ID   ;   ID     ;CASHBACK;IND;IND ;      ;   FEE      ;  FEE      ;COMMISSION;        TYPE        ;' as header_data,  1 as orderby  from all_items    union all     select contract_idt,  lpad(row_number() over (partition by contract_idt order by contract_idt),5, ' ') || ';' ||  rpad(nvl(substr(merchant_id,-12),' '),12,' ') || ';' ||  rpad(nvl(substr(Chain_ID,-12),' '),12,' ') || ';' ||  rpad(nvl(Merchant_Name,' '),40,' ') || ';' ||  rpad(nvl(location1,' '),40,' ') || ';' ||  rpad(nvl(telephone,' '),15,' ') || ';' ||  rpad(nvl(substr(terminal_id,1,12),' '),12,' ') || ';' ||  rpad(nvl(substr(Txn_Seq_No,1,10),' '),10,' ') || ';' ||  rpad(nvl(Txn_Curr,' '),5,' ') || ';' ||  rpad(nvl(Txn_Date,' '),10,' ') || ';' ||  rpad(nvl(substr(card_type,1,decode(instr(card_type,' ',1),0,length(card_type),instr(card_type,' ',1)-1)),' '),15,' ') || ';' ||  rpad(nvl(substr(card_no,1,19),' '),19,' ') || ';' ||  rpad(nvl(AUTH_CODE,' '),13,' ') || ';' ||  rpad(nvl(substr(txn_type,1,8),' '),8,' ') || ';' ||  lpad(trim(to_char(nvl(txn_amount,'0.00'), '999999999990.99')),12,' ') || ';' ||  lpad(trim(to_char(nvl(COMMISSION,'0.00'), '999999999990.99')),10,' ') || ';' ||  lpad(trim(to_char(nvl(NET_AMOUNT,'0.00'), '999999999990.99')),12,' ') || ';' ||  rpad(nvl(ACQUIRER_DATA,' '),49,' ') || ';' ||  rpad(nvl(Ret_Ref_No,' '),12,' ') || ';' ||  rpad(nvl(Store_Type,' '),2,' ') || ';' ||  rpad(nvl(substr(trim(BANK_ACCOUNT),1,15),' '),15,' ') || ';' ||  rpad(nvl(Time_Hour,' '),2,' ') || ':' ||  rpad(nvl(Time_min,' '),2,' ') || ':' ||  rpad(nvl(Time_Sec,' '),2,' ') |
+| ';' ||  rpad(nvl(trim(IBAN_Acct_No),' '),30,' ') || ';' ||  rpad(nvl(desc_type,' '),9,' ') || ';' ||  lpad(nvl(MASTER_CHAIN1,'0'),12,'0') || ';' ||  lpad(nvl(MASTER_CHAIN2,'0'),12,'0') || ';' ||  lpad(trim(to_char(nvl(TIP_AMOUNT,'0.00'), '999999999990.99')),7,'0') || ';' ||  rpad(nvl(TAG_ID,' '),10,' ') || ';' ||  rpad(nvl(DRIVER_ID,' '),10,' ') || ';' ||  lpad(trim(to_char(nvl(PWCB_CASHBACK,'0.00'), '999999999990.99')),8,' ') || ';' ||  rpad(nvl(Transacion_indicator,' '),3,' ') || ';' ||  rpad(nvl(Commission_Indicator,' '),4,' ') || ';' ||  rpad(nvl(transaction_source,' '),6,' ') || ';' ||  lpad(trim(to_char(nvl(trans_fee,'0.00'), '999999999990.99')),12,' ') || ';' ||  lpad(trim(to_char(nvl(vat_on_fee,'0.00'), '999999999990.99')),11,' ') || ';' ||  lpad(trim(to_char(nvl(vat,'0.00'), '999999999990.99')),10,' ') || ';'||  rpad(nvl(trn_typ,' '),20,' ') || ';' as body_data,  2 as orderby  from all_items    union all    select contract_idt,  lpad(cnt+1,5,' ') || ';' ||  rpad(substr(merchant_id,-12),12,' ') || ';' ||  rpad('000000000000',12,' ') || ';' ||  rpad('MERCHANT TOTALS >>>',40,' ') || ';' ||  rpad(' ',40,' ') || ';' ||  rpad(' ',15,' ') || ';' ||  rpad(' ',12,' ') || ';' ||  rpad(' ',10,' ') || ';' ||  rpad(' ',5,' ') || ';' ||  rpad(' ',10,' ') || ';' ||  rpad(' ',15,' ') || ';' ||  rpad(' ',19,' ') || ';' ||  rpad(' ',13,' ') || ';' ||  rpad(' ',8,' ') || ';' ||  lpad(txn_amount,12,' ') || ';' ||  lpad(COMMISSION,10,' ') || ';' ||  lpad(NET_AMOUNT,12,' ') || ';' ||  rpad(' ',49,' ') || ';' ||  rpad(' ',12,' ') || ';' ||  rpad(' ',2,' ') || ';' ||  rpad(' ',15,' ') || ';' ||  rpad(' ',8,' ') || ';' ||  rpad(' ',30,' ') || ';' ||  rpad(' ',9,' ') || ';' ||  lpad(' ',12,' ') || ';' ||  lpad(' ',12,' ') || ';' ||  lpad(trim(to_char(nvl(TIP_AMOUNT,'0.00'), '999999999990.99')),7,'0') || ';' ||  rpad(' ',10,' ') || ';' ||  rpad(' ',10,' ') || ';' ||  rpad(' ',8,' ') || ';' ||  rpad(' ',3,' ') || ';' ||  rpad(' ',4,' ') || ';' ||  rpad(' ',6,' ') || ';' ||  rpad(' '
+,12,' ') || ';' ||  rpad(' ',11,' ') || ';' ||  rpad(' ',10,' ') || ';' ||  rpad(' ',20,' ') || ';' as footer_data,  3 as orderby  from totals
+
+SQL>
+SQL>-- check is sql_text for original sql is available
+SQL>SET TERM ON;
+SQL>BEGIN
+  2    IF :sql_text IS NULL THEN
+  3  	 RAISE_APPLICATION_ERROR(-20100, 'SQL_TEXT for original SQL_ID &&original_sql_id. was not found in memory (gv$sqltext_with_newlines) or AWR (dba_hist_sqltext).');
+  4    END IF;
+  5  END;
+  6  /
+SQL>SET TERM OFF;
+SQL>
+SQL>-- get other_xml from memory
+SQL>BEGIN
+  2    FOR i IN (SELECT other_xml
+  3  		   FROM gv$sql_plan
+  4  		  WHERE sql_id = TRIM('&&modified_sql_id.')
+  5  		    AND plan_hash_value = TO_NUMBER(TRIM('&&plan_hash_value.'))
+  6  		    AND other_xml IS NOT NULL
+  7  		  ORDER BY
+  8  			child_number, id)
+  9    LOOP
+ 10  	 :other_xml := i.other_xml;
+ 11  	 EXIT; -- 1st
+ 12    END LOOP;
+ 13  EXCEPTION
+ 14    WHEN OTHERS THEN
+ 15  	 DBMS_OUTPUT.PUT_LINE('getting modified other_xml from memory: '||SQLERRM);
+ 16  	 :other_xml := NULL;
+ 17  END;
+ 18  /
+SQL>
+SQL>-- get other_xml from awr
+SQL>BEGIN
+  2    IF :other_xml IS NULL OR NVL(DBMS_LOB.GETLENGTH(:other_xml), 0) = 0 THEN
+  3  	 FOR i IN (SELECT other_xml
+  4  		     FROM dba_hist_sql_plan
+  5  		    WHERE sql_id = TRIM('&&modified_sql_id.')
+  6  		      AND plan_hash_value = TO_NUMBER(TRIM('&&plan_hash_value.'))
+  7  		      AND other_xml IS NOT NULL
+  8  		    ORDER BY
+  9  			  id)
+ 10  	 LOOP
+ 11  	   :other_xml := i.other_xml;
+ 12  	   EXIT; -- 1st
+ 13  	 END LOOP;
+ 14    END IF;
+ 15  EXCEPTION
+ 16    WHEN OTHERS THEN
+ 17  	 DBMS_OUTPUT.PUT_LINE('getting modified other_xml from awr: '||SQLERRM);
+ 18  	 :other_xml := NULL;
+ 19  END;
+ 20  /
+SQL>
+SQL>-- other_xml as found
+SQL>SELECT :other_xml FROM DUAL;
+
+:OTHER_XML
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+<other_xml><info type="nodeid/pflags">000123000001</info><info type="nodeid/pflags">000116000001</info><info type="nodeid/pflags">000112000001</info><info type="nodeid/pflags">000101000001</info><info type="nodeid/pflags">000100000129</info><info type="nodeid/pflags">000099000129</info><info type="nodeid/pflags">000098000129</info><info type="nodeid/pflags">000097000129</info><info type="nodeid/pflags">000095000001</info><info type="nodeid/pflags">000077000001</info><info type="nodeid/pflags">000062000001</info><info type="nodeid/pflags">000061000001</info><info type="nodeid/pflags">000061000001</info><info type="nodeid/pflags">000060000017</info><info type="nodeid/pflags">000041000001</info><info type="nodeid/pflags">000040000001</info><info type="nodeid/pflags">000039000129</info><info type="nodeid/pflags">000037000129</info><info type="derived_cpu_dop" id="1">0</info><info type="derived_io_dop" id="1">0</info><info type="dop_reason" note="y">table property</info><info type="dop" note="y">4</info><info type="px_in_memory_imc" note="y">no</info><info type="px_in_memory" note="y">no</info><info type="db_version">12.1.0.2</info><info type="parse_schema"><![CDATA["DWH"]]></info><info type="dynamic_sampling" note="y">11</info><info type="plan_hash_full">2843024853</info><info type="plan_hash">1754490254</info><info type="plan_hash_2">2843024853</info><outline_data><hint><![CDATA[IGNORE_OPTIM_EMBEDDED_HINTS]]></hint><hint><![CDATA[OPTIMIZER_FEATURES_ENABLE('12.1.0.2')]]></hint><hint><![CDATA[DB_VERSION('12.1.0.2')]]></hint><hint><![CDATA[OPT_PARAM('_optim_peek_user_binds' 'false')]]></hint><hint><![CDATA[OPT_PARAM('_optimizer_use_feedback' 'false')]]></hint><hint><![CDATA[OPT_PARAM('_px_adaptive_dist_method' 'off')]]></hint><hint><![CDATA[OPT_PARAM('_optimizer_strans_adaptive_pruning' 'false')]]></hint><hint><![CDATA[OPT_PARAM('_optimizer_gather_feedback' 'false')]]></hint><hint><![CDATA[OPT_PARAM('_optimizer_nlj_hj_adaptive_join' 'false')]]></hint><hint><![CDATA[OPT_PA
+RAM('optimizer_dynamic_sampling' 11)]]></hint><hint><![CDATA[ALL_ROWS]]></hint><hint><![CDATA[OUTLINE_LEAF(@"SEL$32")]]></hint><hint><![CDATA[OUTLINE_LEAF(@"SEL$FFDF4924")]]></hint><hint><![CDATA[MERGE(@"SEL$668A19F0")]]></hint><hint><![CDATA[OUTLINE_LEAF(@"SEL$8559D40C")]]></hint><hint><![CDATA[MERGE(@"SEL$9E43CB6E")]]></hint><hint><![CDATA[OUTLINE_LEAF(@"SEL$93D198DE")]]></hint><hint><![CDATA[MERGE(@"SEL$37")]]></hint><hint><![CDATA[OUTLINE_LEAF(@"SEL$99959799")]]></hint><hint><![CDATA[MERGE(@"SEL$39")]]></hint><hint><![CDATA[OUTLINE_LEAF(@"SET$2")]]></hint><hint><![CDATA[OUTLINE_LEAF(@"SEL$36")]]></hint><hint><![CDATA[OUTLINE_LEAF(@"SEL$11")]]></hint><hint><![CDATA[OUTLINE_LEAF(@"SEL$12")]]></hint><hint><![CDATA[OUTLINE_LEAF(@"SET$1")]]></hint><hint><![CDATA[OUTLINE_LEAF(@"SEL$78933E43")]]></hint><hint><![CDATA[OUTER_JOIN_TO_INNER(@"SEL$10" "TRT"@"SEL$10")]]></hint><hint><![CDATA[OUTLINE_LEAF(@"SEL$2C41BF3F")]]></hint><hint><![CDATA[PUSH_PRED(@"SEL$827FC9B0" "VCB"@"SEL$15" 15)]]></hint><hint><![CDATA[OUTLINE_LEAF(@"SEL$364E317E")]]></hint><hint><![CDATA[OUTLINE_LEAF(@"SEL$51273E9D")]]></hint><hint><![CDATA[PUSH_PRED(@"SEL$827FC9B0" "COMM_SQL"@"SEL$19" 13)]]></hint><hint><![CDATA[OUTLINE_LEAF(@"SEL$0EEE743D")]]></hint><hint><![CDATA[OUTLINE_LEAF(@"SEL$0EEE743E")]]></hint><hint><![CDATA[OUTLINE_LEAF(@"SEL$364E317D")]]></hint><hint><![CDATA[OUTLINE_LEAF(@"SEL$827FC9B0")]]></hint><hint><![CDATA[MERGE(@"SEL$93517ABB")]]></hint><hint><![CDATA[OUTLINE_LEAF(@"SEL$276EE9BD")]]></hint><hint><![CDATA[OUTLINE_LEAF(@"SEL$25")]]></hint><hint><![CDATA[OUTLINE_LEAF(@"SEL$276EE9BC")]]></hint><hint><![CDATA[OUTLINE_LEAF(@"SEL$43")]]></hint><hint><![CDATA[OUTLINE_LEAF(@"SEL$276EE9BE")]]></hint><hint><![CDATA[OUTLINE_LEAF(@"SEL$AB460A43")]]></hint><hint><![CDATA[MERGE(@"SEL$42")]]></hint><hint><![CDATA[OUTLINE_LEAF(@"SET$3")]]></hint><hint><![CDATA[OUTLINE(@"SEL$28")]]></hint><hint><![CDATA[OUTLINE(@"SEL$668A19F0")]]></hint><hint><![CDATA[MERGE(@"SEL$9FB00964")]]></hint><hint><![CDA
+TA[OUTLINE(@"SEL$35")]]></hint><hint><![CDATA[OUTLINE(@"SEL$9E43CB6E")]]></hint><hint><![CDATA[MERGE(@"SEL$58A6D7F6")]]></hint><hint><![CDATA[OUTLINE(@"SEL$38")]]></hint><hint><![CDATA[OUTLINE(@"SEL$37")]]></hint><hint><![CDATA[OUTLINE(@"SEL$40")]]></hint><hint><![CDATA[OUTLINE(@"SEL$39")]]></hint><hint><![CDATA[OUTLINE(@"SEL$10")]]></hint><hint><![CDATA[OUTLINE(@"SEL$97CCBC9E")]]></hint><hint><![CDATA[MERGE(@"SEL$17")]]></hint><hint><![CDATA[OUTLINE(@"SEL$827FC9B0")]]></hint><hint><![CDATA[MERGE(@"SEL$93517ABB")]]></hint><hint><![CDATA[OUTLINE(@"SEL$FFDF4924")]]></hint><hint><![CDATA[MERGE(@"SEL$668A19F0")]]></hint><hint><![CDATA[OUTLINE(@"SEL$245B113C")]]></hint><hint><![CDATA[MERGE(@"SEL$86FB5FDD")]]></hint><hint><![CDATA[OUTLINE(@"SEL$8559D40C")]]></hint><hint><![CDATA[MERGE(@"SEL$9E43CB6E")]]></hint><hint><![CDATA[OUTLINE(@"SEL$41")]]></hint><hint><![CDATA[OUTLINE(@"SEL$93517ABB")]]></hint><hint><![CDATA[MERGE(@"SEL$9608F68D")]]></hint><hint><![CDATA[OUTLINE(@"SEL$44")]]></hint><hint><![CDATA[OUTLINE(@"SEL$42")]]></hint><hint><![CDATA[OUTLINE(@"SEL$2B876C8A")]]></hint><hint><![CDATA[ANSI_REARCH(@"SEL$33")]]></hint><hint><![CDATA[OUTLINE(@"SEL$9FB00964")]]></hint><hint><![CDATA[MERGE(@"SEL$F7A62D4D")]]></hint><hint><![CDATA[OUTLINE(@"SEL$3")]]></hint><hint><![CDATA[OUTLINE(@"SEL$58A6D7F6")]]></hint><hint><![CDATA[MERGE(@"SEL$1")]]></hint><hint><![CDATA[OUTLINE(@"SEL$16")]]></hint><hint><![CDATA[OUTLINE(@"SEL$17")]]></hint><hint><![CDATA[OUTLINE(@"SEL$34")]]></hint><hint><![CDATA[OUTLINE(@"SEL$86FB5FDD")]]></hint><hint><![CDATA[MERGE(@"SEL$26")]]></hint><hint><![CDATA[OUTLINE(@"SEL$24")]]></hint><hint><![CDATA[OUTLINE(@"SEL$9608F68D")]]></hint><hint><![CDATA[MERGE(@"SEL$200E3A99")]]></hint><hint><![CDATA[OUTLINE(@"SEL$33")]]></hint><hint><![CDATA[OUTLINE(@"SEL$18822C4C")]]></hint><hint><![CDATA[ANSI_REARCH(@"SEL$31")]]></hint><hint><![CDATA[OUTLINE(@"SEL$F7A62D4D")]]></hint><hint><![CDATA[MERGE(@"SEL$30")]]></hint><hint><![CDATA[OUTLINE(@"SEL$2")]]></hint><hint><
+![CDATA[OUTLINE(@"SEL$1")]]></hint><hint><![CDATA[OUTLINE(@"SEL$27")]]></hint><hint><![CDATA[OUTLINE(@"SEL$26")]]></hint><hint><![CDATA[OUTLINE(@"SEL$23")]]></hint><hint><![CDATA[OUTLINE(@"SEL$200E3A99")]]></hint><hint><![CDATA[MERGE(@"SEL$885F5013")]]></hint><hint><![CDATA[OUTLINE(@"SEL$31")]]></hint><hint><![CDATA[OUTLINE(@"SEL$29")]]></hint><hint><![CDATA[OUTLINE(@"SEL$30")]]></hint><hint><![CDATA[OUTLINE(@"SEL$EF69779D")]]></hint><hint><![CDATA[ANSI_REARCH(@"SEL$22")]]></hint><hint><![CDATA[OUTLINE(@"SEL$885F5013")]]></hint><hint><![CDATA[MERGE(@"SEL$F0627823")]]></hint><hint><![CDATA[OUTLINE(@"SEL$22")]]></hint><hint><![CDATA[OUTLINE(@"SEL$924DD057")]]></hint><hint><![CDATA[ANSI_REARCH(@"SEL$DBDD5FB5")]]></hint><hint><![CDATA[OUTLINE(@"SEL$F0627823")]]></hint><hint><![CDATA[MERGE(@"SEL$3C9088CF")]]></hint><hint><![CDATA[OUTLINE(@"SEL$DBDD5FB5")]]></hint><hint><![CDATA[ANSI_REARCH(@"SEL$21")]]></hint><hint><![CDATA[OUTLINE(@"SEL$DFA0D15D")]]></hint><hint><![CDATA[ANSI_REARCH(@"SEL$A47351F7")]]></hint><hint><![CDATA[OUTLINE(@"SEL$3C9088CF")]]></hint><hint><![CDATA[MERGE(@"SEL$9566171C")]]></hint><hint><![CDATA[OUTLINE(@"SEL$21")]]></hint><hint><![CDATA[OUTLINE(@"SEL$A47351F7")]]></hint><hint><![CDATA[ANSI_REARCH(@"SEL$20")]]></hint><hint><![CDATA[OUTLINE(@"SEL$AB76A5F8")]]></hint><hint><![CDATA[ANSI_REARCH(@"SEL$2198EA76")]]></hint><hint><![CDATA[OUTLINE(@"SEL$9566171C")]]></hint><hint><![CDATA[MERGE(@"SEL$AB58F468")]]></hint><hint><![CDATA[OUTLINE(@"SEL$20")]]></hint><hint><![CDATA[OUTLINE(@"SEL$2198EA76")]]></hint><hint><![CDATA[ANSI_REARCH(@"SEL$19")]]></hint><hint><![CDATA[OUTLINE(@"SEL$15A0CEF3")]]></hint><hint><![CDATA[ANSI_REARCH(@"SEL$F8A7B820")]]></hint><hint><![CDATA[OUTLINE(@"SEL$AB58F468")]]></hint><hint><![CDATA[MERGE(@"SEL$F184EC7A")]]></hint><hint><![CDATA[OUTLINE(@"SEL$19")]]></hint><hint><![CDATA[OUTLINE(@"SEL$F8A7B820")]]></hint><hint><![CDATA[ANSI_REARCH(@"SEL$18")]]></hint><hint><![CDATA[OUTLINE(@"SEL$5E404C15")]]></hint><hint><![CDATA[ANSI_RE
+ARCH(@"SEL$7661CCD7")]]></hint><hint><![CDATA[OUTLINE(@"SEL$F184EC7A")]]></hint><hint><![CDATA[MERGE(@"SEL$BDB8B711")]]></hint><hint><![CDATA[OUTLINE(@"SEL$18")]]></hint><hint><![CDATA[OUTLINE(@"SEL$7661CCD7")]]></hint><hint><![CDATA[ANSI_REARCH(@"SEL$15")]]></hint><hint><![CDATA[OUTLINE(@"SEL$BAE900EA")]]></hint><hint><![CDATA[ANSI_REARCH(@"SEL$14")]]></hint><hint><![CDATA[OUTLINE(@"SEL$BDB8B711")]]></hint><hint><![CDATA[MERGE(@"SEL$00529FA6")]]></hint><hint><![CDATA[OUTLINE(@"SEL$15")]]></hint><hint><![CDATA[OUTLINE(@"SEL$14")]]></hint><hint><![CDATA[OUTLINE(@"SEL$13")]]></hint><hint><![CDATA[OUTLINE(@"SEL$00529FA6")]]></hint><hint><![CDATA[MERGE(@"SEL$00ABEE11")]]></hint><hint><![CDATA[OUTLINE(@"SEL$C4CE708E")]]></hint><hint><![CDATA[ANSI_REARCH(@"SEL$9")]]></hint><hint><![CDATA[OUTLINE(@"SEL$00ABEE11")]]></hint><hint><![CDATA[MERGE(@"SEL$85062C38")]]></hint><hint><![CDATA[OUTLINE(@"SEL$9")]]></hint><hint><![CDATA[OUTLINE(@"SEL$82B3A4B9")]]></hint><hint><![CDATA[ANSI_REARCH(@"SEL$8")]]></hint><hint><![CDATA[OUTLINE(@"SEL$85062C38")]]></hint><hint><![CDATA[MERGE(@"SEL$5188F0CF")]]></hint><hint><![CDATA[OUTLINE(@"SEL$8")]]></hint><hint><![CDATA[OUTLINE(@"SEL$463D4B3F")]]></hint><hint><![CDATA[ANSI_REARCH(@"SEL$7")]]></hint><hint><![CDATA[OUTLINE(@"SEL$5188F0CF")]]></hint><hint><![CDATA[MERGE(@"SEL$9834E3F4")]]></hint><hint><![CDATA[OUTLINE(@"SEL$7")]]></hint><hint><![CDATA[OUTLINE(@"SEL$9430E53D")]]></hint><hint><![CDATA[ANSI_REARCH(@"SEL$6")]]></hint><hint><![CDATA[OUTLINE(@"SEL$9834E3F4")]]></hint><hint><![CDATA[MERGE(@"SEL$4")]]></hint><hint><![CDATA[OUTLINE(@"SEL$6")]]></hint><hint><![CDATA[OUTLINE(@"SEL$5")]]></hint><hint><![CDATA[OUTLINE(@"SEL$4")]]></hint><hint><![CDATA[NO_ACCESS(@"SEL$AB460A43" "ALL_ITEMS"@"SEL$42")]]></hint><hint><![CDATA[GBY_PUSHDOWN(@"SEL$AB460A43")]]></hint><hint><![CDATA[USE_HASH_AGGREGATION(@"SEL$AB460A43")]]></hint><hint><![CDATA[NO_ACCESS(@"SEL$43" "ALL_ITEMS"@"SEL$43")]]></hint><hint><![CDATA[PQ_DISTRIBUTE_WINDOW(@"SEL$43" 1)]]></h
+int><hint><![CDATA[NO_ACCESS(@"SEL$25" "ALL_ITEMS"@"SEL$25")]]></hint><hint><![CDATA[GBY_PUSHDOWN(@"SEL$25")]]></hint><hint><![CDATA[USE_HASH_AGGREGATION(@"SEL$25")]]></hint><hint><![CDATA[FULL(@"SEL$276EE9BD" "T1"@"SEL$276EE9BD")]]></hint><hint><![CDATA[FULL(@"SEL$276EE9BC" "T1"@"SEL$276EE9BC")]]></hint><hint><![CDATA[FULL(@"SEL$276EE9BE" "T1"@"SEL$276EE9BE")]]></hint><hint><![CDATA[INDEX_SS(@"SEL$827FC9B0" "INST"@"SEL$23" ("DWD_INSTITUTION"."RECORD_IDT" "DWD_INSTITUTION"."RECORD_STATE" "DWD_INSTITUTION"."RECORD_DATE_TO" "DWD_INSTITUTION"."ALTERNATE_IDN"))]]></hint><hint><![CDATA[BATCH_TABLE_ACCESS_BY_ROWID(@"SEL$827FC9B0" "INST"@"SEL$23")]]></hint><hint><![CDATA[BITMAP_TREE(@"SEL$827FC9B0" "TRANS_ENTR"@"SEL$22" AND(("DWF_ACCOUNT_ENTRY"."INSTITUTION_ID") MINUS_NULL(("DWF_ACCOUNT_ENTRY"."OPERATION_TYPE_ID"))))]]></hint><hint><![CDATA[NO_ACCESS(@"SEL$827FC9B0" "TR"@"SEL$9")]]></hint><hint><![CDATA[FULL(@"SEL$827FC9B0" "TRCOND"@"SEL$18")]]></hint><hint><![CDATA[FULL(@"SEL$827FC9B0" "BR"@"SEL$14")]]></hint><hint><![CDATA[INDEX_SS(@"SEL$827FC9B0" "CURR"@"SEL$13" ("DWD_CURRENCY"."CODE" "DWD_CURRENCY"."RECORD_STATE" "DWD_CURRENCY"."RECORD_DATE_TO"))]]></hint><hint><![CDATA[FULL(@"SEL$827FC9B0" "DEVICE"@"SEL$7")]]></hint><hint><![CDATA[FULL(@"SEL$827FC9B0" "CNTR"@"SEL$4")]]></hint><hint><![CDATA[FULL(@"SEL$827FC9B0" "DWA_CONTRACT_ATTRIBUTE"@"SEL$4")]]></hint><hint><![CDATA[INDEX_RS_ASC(@"SEL$827FC9B0" "DWD_ATTRIBUTE"@"SEL$5" ("DWD_ATTRIBUTE"."TYPE_CODE" "DWD_ATTRIBUTE"."CODE" "DWD_ATTRIBUTE"."RECORD_SOURCE" "DWD_ATTRIBUTE"."DIMENSION_CODE" "DWD_ATTRIBUTE"."RECORD_DATE_TO"))]]></hint><hint><![CDATA[BATCH_TABLE_ACCESS_BY_ROWID(@"SEL$827FC9B0" "DWD_ATTRIBUTE"@"SEL$5")]]></hint><hint><![CDATA[INDEX_RS_ASC(@"SEL$827FC9B0" "CHAIN_LEVEL"@"SEL$6" ("DWD_CONTRACT"."RECORD_IDT" "DWD_CONTRACT"."RECORD_DATE_TO"))]]></hint><hint><![CDATA[BATCH_TABLE_ACCESS_BY_ROWID(@"SEL$827FC9B0" "CHAIN_LEVEL"@"SEL$6")]]></hint><hint><![CDATA[NO_ACCESS(@"SEL$827FC9B0" "OP"@"SEL$24")]]></hint><hint><![C
+DATA[NO_ACCESS(@"SEL$827FC9B0" "CHAIN2"@"SEL$21")]]></hint><hint><![CDATA[NO_ACCESS(@"SEL$827FC9B0" "CHAIN1"@"SEL$20")]]></hint><hint><![CDATA[NO_ACCESS(@"SEL$827FC9B0" "MERCH_ADDR"@"SEL$8")]]></hint><hint><![CDATA[NO_ACCESS(@"SEL$827FC9B0" "COMM_SQL"@"SEL$19")]]></hint><hint><![CDATA[NO_ACCESS(@"SEL$827FC9B0" "VCB"@"SEL$15")]]></hint><hint><![CDATA[LEADING(@"SEL$827FC9B0" "INST"@"SEL$23" "TRANS_ENTR"@"SEL$22" "TR"@"SEL$9" "TRCOND"@"SEL$18" "BR"@"SEL$14" "CURR"@"SEL$13" "DEVICE"@"SEL$7" "CNTR"@"SEL$4" "DWA_CONTRACT_ATTRIBUTE"@"SEL$4" "DWD_ATTRIBUTE"@"SEL$5" "CHAIN_LEVEL"@"SEL$6" "OP"@"SEL$24" "CHAIN2"@"SEL$21" "CHAIN1"@"SEL$20" "MERCH_ADDR"@"SEL$8" "COMM_SQL"@"SEL$19" "VCB"@"SEL$15")]]></hint><hint><![CDATA[USE_NL(@"SEL$827FC9B0" "TRANS_ENTR"@"SEL$22")]]></hint><hint><![CDATA[NLJ_BATCHING(@"SEL$827FC9B0" "TRANS_ENTR"@"SEL$22")]]></hint><hint><![CDATA[USE_HASH(@"SEL$827FC9B0" "TR"@"SEL$9")]]></hint><hint><![CDATA[USE_HASH(@"SEL$827FC9B0" "TRCOND"@"SEL$18")]]></hint><hint><![CDATA[USE_HASH(@"SEL$827FC9B0" "BR"@"SEL$14")]]></hint><hint><![CDATA[USE_HASH(@"SEL$827FC9B0" "CURR"@"SEL$13")]]></hint><hint><![CDATA[USE_HASH(@"SEL$827FC9B0" "DEVICE"@"SEL$7")]]></hint><hint><![CDATA[USE_HASH(@"SEL$827FC9B0" "CNTR"@"SEL$4")]]></hint><hint><![CDATA[USE_HASH(@"SEL$827FC9B0" "DWA_CONTRACT_ATTRIBUTE"@"SEL$4")]]></hint><hint><![CDATA[USE_HASH(@"SEL$827FC9B0" "DWD_ATTRIBUTE"@"SEL$5")]]></hint><hint><![CDATA[USE_NL(@"SEL$827FC9B0" "CHAIN_LEVEL"@"SEL$6")]]></hint><hint><![CDATA[USE_HASH(@"SEL$827FC9B0" "OP"@"SEL$24")]]></hint><hint><![CDATA[USE_HASH(@"SEL$827FC9B0" "CHAIN2"@"SEL$21")]]></hint><hint><![CDATA[USE_HASH(@"SEL$827FC9B0" "CHAIN1"@"SEL$20")]]></hint><hint><![CDATA[USE_HASH(@"SEL$827FC9B0" "MERCH_ADDR"@"SEL$8")]]></hint><hint><![CDATA[USE_NL(@"SEL$827FC9B0" "COMM_SQL"@"SEL$19")]]></hint><hint><![CDATA[USE_NL(@"SEL$827FC9B0" "VCB"@"SEL$15")]]></hint><hint><![CDATA[PQ_DISTRIBUTE(@"SEL$827FC9B0" "TR"@"SEL$9" BROADCAST NONE)]]></hint><hint><![CDATA[PX_JOIN_FILTER(@"SEL$827FC9B0" "
+TR"@"SEL$9")]]></hint><hint><![CDATA[PQ_DISTRIBUTE(@"SEL$827FC9B0" "TRCOND"@"SEL$18" NONE BROADCAST)]]></hint><hint><![CDATA[PQ_DISTRIBUTE(@"SEL$827FC9B0" "BR"@"SEL$14" NONE BROADCAST)]]></hint><hint><![CDATA[PQ_DISTRIBUTE(@"SEL$827FC9B0" "CURR"@"SEL$13" NONE BROADCAST)]]></hint><hint><![CDATA[PQ_DISTRIBUTE(@"SEL$827FC9B0" "DEVICE"@"SEL$7" HASH HASH)]]></hint><hint><![CDATA[PQ_DISTRIBUTE(@"SEL$827FC9B0" "CNTR"@"SEL$4" HASH HASH)]]></hint><hint><![CDATA[PQ_DISTRIBUTE(@"SEL$827FC9B0" "DWA_CONTRACT_ATTRIBUTE"@"SEL$4" HASH HASH)]]></hint><hint><![CDATA[PQ_DISTRIBUTE(@"SEL$827FC9B0" "DWD_ATTRIBUTE"@"SEL$5" NONE BROADCAST)]]></hint><hint><![CDATA[PQ_DISTRIBUTE(@"SEL$827FC9B0" "CHAIN_LEVEL"@"SEL$6" NONE BROADCAST)]]></hint><hint><![CDATA[PQ_DISTRIBUTE(@"SEL$827FC9B0" "OP"@"SEL$24" NONE BROADCAST)]]></hint><hint><![CDATA[PQ_DISTRIBUTE(@"SEL$827FC9B0" "CHAIN2"@"SEL$21" NONE BROADCAST)]]></hint><hint><![CDATA[PQ_DISTRIBUTE(@"SEL$827FC9B0" "CHAIN1"@"SEL$20" NONE BROADCAST)]]></hint><hint><![CDATA[PQ_DISTRIBUTE(@"SEL$827FC9B0" "MERCH_ADDR"@"SEL$8" HASH HASH)]]></hint><hint><![CDATA[PQ_DISTRIBUTE(@"SEL$827FC9B0" "COMM_SQL"@"SEL$19" NONE BROADCAST)]]></hint><hint><![CDATA[PQ_DISTRIBUTE(@"SEL$827FC9B0" "VCB"@"SEL$15" NONE BROADCAST)]]></hint><hint><![CDATA[SWAP_JOIN_INPUTS(@"SEL$827FC9B0" "TRCOND"@"SEL$18")]]></hint><hint><![CDATA[SWAP_JOIN_INPUTS(@"SEL$827FC9B0" "BR"@"SEL$14")]]></hint><hint><![CDATA[SWAP_JOIN_INPUTS(@"SEL$827FC9B0" "CURR"@"SEL$13")]]></hint><hint><![CDATA[SWAP_JOIN_INPUTS(@"SEL$827FC9B0" "DWA_CONTRACT_ATTRIBUTE"@"SEL$4")]]></hint><hint><![CDATA[SWAP_JOIN_INPUTS(@"SEL$827FC9B0" "DWD_ATTRIBUTE"@"SEL$5")]]></hint><hint><![CDATA[SWAP_JOIN_INPUTS(@"SEL$827FC9B0" "CHAIN2"@"SEL$21")]]></hint><hint><![CDATA[SWAP_JOIN_INPUTS(@"SEL$827FC9B0" "CHAIN1"@"SEL$20")]]></hint><hint><![CDATA[PQ_DISTRIBUTE_WINDOW(@"SEL$827FC9B0" 1)]]></hint><hint><![CDATA[INDEX_SS(@"SEL$8559D40C" "INST"@"SEL$3" ("DWD_INSTITUTION"."RECORD_IDT" "DWD_INSTITUTION"."RECORD_STATE" "DWD_INSTITUTION"."REC
+ORD_DATE_TO" "DWD_INSTITUTION"."ALTERNATE_IDN"))]]></hint><hint><![CDATA[BATCH_TABLE_ACCESS_BY_ROWID(@"SEL$8559D40C" "INST"@"SEL$3")]]></hint><hint><![CDATA[BITMAP_TREE(@"SEL$8559D40C" "DC1"@"SEL$2" AND(("DWD_CLIENT"."INSTITUTION_ID")))]]></hint><hint><![CDATA[FULL(@"SEL$8559D40C" "DACH1"@"SEL$1")]]></hint><hint><![CDATA[INDEX_SS(@"SEL$8559D40C" "DFT1"@"SEL$1" ("DWD_AFFILIATION_TYPE"."RECORD_IDT" "DWD_AFFILIATION_TYPE"."RECORD_STATE" "DWD_AFFILIATION_TYPE"."RECORD_DATE_TO"))]]></hint><hint><![CDATA[BATCH_TABLE_ACCESS_BY_ROWID(@"SEL$8559D40C" "DFT1"@"SEL$1")]]></hint><hint><![CDATA[LEADING(@"SEL$8559D40C" "INST"@"SEL$3" "DC1"@"SEL$2" "DACH1"@"SEL$1" "DFT1"@"SEL$1")]]></hint><hint><![CDATA[USE_NL(@"SEL$8559D40C" "DC1"@"SEL$2")]]></hint><hint><![CDATA[NLJ_BATCHING(@"SEL$8559D40C" "DC1"@"SEL$2")]]></hint><hint><![CDATA[USE_HASH(@"SEL$8559D40C" "DACH1"@"SEL$1")]]></hint><hint><![CDATA[USE_HASH(@"SEL$8559D40C" "DFT1"@"SEL$1")]]></hint><hint><![CDATA[SWAP_JOIN_INPUTS(@"SEL$8559D40C" "DFT1"@"SEL$1")]]></hint><hint><![CDATA[INDEX(@"SEL$FFDF4924" "GG"@"SEL$30" ("SY_CONF_GROUP_GROUP"."SCOPE" "SY_CONF_GROUP_GROUP"."CODE" "SY_CONF_GROUP_GROUP"."AMND_STATE" "SY_CONF_GROUP_GROUP"."ID"))]]></hint><hint><![CDATA[INDEX_RS_ASC(@"SEL$FFDF4924" "G"@"SEL$30" ("SY_CONF_GROUP"."SY_CONF_GROUP_GROUP__OID"))]]></hint><hint><![CDATA[BATCH_TABLE_ACCESS_BY_ROWID(@"SEL$FFDF4924" "G"@"SEL$30")]]></hint><hint><![CDATA[INDEX_RS_ASC(@"SEL$FFDF4924" "R"@"SEL$30" ("SY_CONF_GROUP_REC"."SY_CONF_GROUP__OID" "SY_CONF_GROUP_REC"."TABLE_REC_ID" "SY_CONF_GROUP_REC"."AMND_STATE" "SY_CONF_GROUP_REC"."ID"))]]></hint><hint><![CDATA[BATCH_TABLE_ACCESS_BY_ROWID(@"SEL$FFDF4924" "R"@"SEL$30")]]></hint><hint><![CDATA[INDEX_RS_ASC(@"SEL$FFDF4924" "OP"@"SEL$29" ("DWD_OPERATION_TYPE"."ID"))]]></hint><hint><![CDATA[INDEX(@"SEL$FFDF4924" "V"@"SEL$30" ("SY_CONF_GROUP_VAL"."ID"))]]></hint><hint><![CDATA[NO_ACCESS(@"SEL$FFDF4924" "V_FI"@"SEL$31")]]></hint><hint><![CDATA[LEADING(@"SEL$FFDF4924" "GG"@"SEL$30" "G"@"SEL$30" "R"@"
+SEL$30" "OP"@"SEL$29" "V"@"SEL$30" "V_FI"@"SEL$31")]]></hint><hint><![CDATA[USE_NL(@"SEL$FFDF4924" "G"@"SEL$30")]]></hint><hint><![CDATA[USE_NL(@"SEL$FFDF4924" "R"@"SEL$30")]]></hint><hint><![CDATA[USE_NL(@"SEL$FFDF4924" "OP"@"SEL$29")]]></hint><hint><![CDATA[USE_NL(@"SEL$FFDF4924" "V"@"SEL$30")]]></hint><hint><![CDATA[NLJ_BATCHING(@"SEL$FFDF4924" "V"@"SEL$30")]]></hint><hint><![CDATA[USE_HASH(@"SEL$FFDF4924" "V_FI"@"SEL$31")]]></hint><hint><![CDATA[FULL(@"SEL$32" "R"@"SEL$32")]]></hint><hint><![CDATA[FULL(@"SEL$32" "G"@"SEL$32")]]></hint><hint><![CDATA[INDEX(@"SEL$32" "GG"@"SEL$32" ("SY_CONF_GROUP_GROUP"."SCOPE" "SY_CONF_GROUP_GROUP"."CODE" "SY_CONF_GROUP_GROUP"."AMND_STATE" "SY_CONF_GROUP_GROUP"."ID"))]]></hint><hint><![CDATA[INDEX_FFS(@"SEL$32" "V"@"SEL$32" ("SY_CONF_GROUP_VAL"."SY_CONF_GROUP__OID" "SY_CONF_GROUP_VAL"."CODE" "SY_CONF_GROUP_VAL"."AMND_STATE" "SY_CONF_GROUP_VAL"."ID"))]]></hint><hint><![CDATA[LEADING(@"SEL$32" "R"@"SEL$32" "G"@"SEL$32" "GG"@"SEL$32" "V"@"SEL$32")]]></hint><hint><![CDATA[USE_HASH(@"SEL$32" "G"@"SEL$32")]]></hint><hint><![CDATA[USE_HASH(@"SEL$32" "GG"@"SEL$32")]]></hint><hint><![CDATA[USE_HASH(@"SEL$32" "V"@"SEL$32")]]></hint><hint><![CDATA[FULL(@"SEL$0EEE743E" "T1"@"SEL$0EEE743E")]]></hint><hint><![CDATA[FULL(@"SEL$0EEE743D" "T1"@"SEL$0EEE743D")]]></hint><hint><![CDATA[FULL(@"SEL$364E317D" "T1"@"SEL$364E317D")]]></hint><hint><![CDATA[NO_ACCESS(@"SEL$36" "MERCH_ADDR"@"SEL$36")]]></hint><hint><![CDATA[NO_ACCESS(@"SEL$78933E43" "D"@"SEL$10")]]></hint><hint><![CDATA[INDEX_FFS(@"SEL$78933E43" "I"@"SEL$10" ("DWD_INSTITUTION"."ID"))]]></hint><hint><![CDATA[FULL(@"SEL$78933E43" "T"@"SEL$10")]]></hint><hint><![CDATA[FULL(@"SEL$78933E43" "TRT"@"SEL$10")]]></hint><hint><![CDATA[LEADING(@"SEL$78933E43" "D"@"SEL$10" "I"@"SEL$10" "T"@"SEL$10" "TRT"@"SEL$10")]]></hint><hint><![CDATA[USE_MERGE_CARTESIAN(@"SEL$78933E43" "I"@"SEL$10")]]></hint><hint><![CDATA[USE_HASH(@"SEL$78933E43" "T"@"SEL$10")]]></hint><hint><![CDATA[USE_HASH(@"SEL$78933E43" "TRT"
+@"SEL$10")]]></hint><hint><![CDATA[PQ_DISTRIBUTE(@"SEL$78933E43" "T"@"SEL$10" BROADCAST NONE)]]></hint><hint><![CDATA[PQ_DISTRIBUTE(@"SEL$78933E43" "TRT"@"SEL$10" NONE BROADCAST)]]></hint><hint><![CDATA[PQ_REPLICATE(@"SEL$78933E43" "TRT"@"SEL$10")]]></hint><hint><![CDATA[SWAP_JOIN_INPUTS(@"SEL$78933E43" "TRT"@"SEL$10")]]></hint><hint><![CDATA[INDEX_RS_ASC(@"SEL$2C41BF3F" "CB"@"SEL$16" ("DWD_CARD_BRAND"."ID"))]]></hint><hint><![CDATA[INDEX_RS_ASC(@"SEL$2C41BF3F" "R"@"SEL$17" ("SY_CONF_GROUP_REC"."TABLE_CODE" "SY_CONF_GROUP_REC"."TABLE_REC_ID" "SY_CONF_GROUP_REC"."GROUP_CODE" "SY_CONF_GROUP_REC"."AMND_STATE" "SY_CONF_GROUP_REC"."VALUE_CODE"))]]></hint><hint><![CDATA[BATCH_TABLE_ACCESS_BY_ROWID(@"SEL$2C41BF3F" "R"@"SEL$17")]]></hint><hint><![CDATA[INDEX_RS_ASC(@"SEL$2C41BF3F" "V"@"SEL$17" ("SY_CONF_GROUP_VAL"."ID"))]]></hint><hint><![CDATA[INDEX_RS_ASC(@"SEL$2C41BF3F" "G"@"SEL$17" ("SY_CONF_GROUP"."ID"))]]></hint><hint><![CDATA[INDEX(@"SEL$2C41BF3F" "GG"@"SEL$17" ("SY_CONF_GROUP_GROUP"."ID"))]]></hint><hint><![CDATA[LEADING(@"SEL$2C41BF3F" "CB"@"SEL$16" "R"@"SEL$17" "V"@"SEL$17" "G"@"SEL$17" "GG"@"SEL$17")]]></hint><hint><![CDATA[USE_NL(@"SEL$2C41BF3F" "R"@"SEL$17")]]></hint><hint><![CDATA[USE_NL(@"SEL$2C41BF3F" "V"@"SEL$17")]]></hint><hint><![CDATA[USE_NL(@"SEL$2C41BF3F" "G"@"SEL$17")]]></hint><hint><![CDATA[USE_NL(@"SEL$2C41BF3F" "GG"@"SEL$17")]]></hint><hint><![CDATA[NLJ_BATCHING(@"SEL$2C41BF3F" "GG"@"SEL$17")]]></hint><hint><![CDATA[INDEX_RS_ASC(@"SEL$51273E9D" "ENTR"@"SEL$26" ("DWF_ACCOUNT_ENTRY"."PRIMARY_DOC_IDT"))]]></hint><hint><![CDATA[BATCH_TABLE_ACCESS_BY_ROWID(@"SEL$51273E9D" "ENTR"@"SEL$26")]]></hint><hint><![CDATA[INDEX(@"SEL$51273E9D" "INST"@"SEL$26" ("DWD_INSTITUTION"."ID"))]]></hint><hint><![CDATA[NO_ACCESS(@"SEL$51273E9D" "OP"@"SEL$27")]]></hint><hint><![CDATA[LEADING(@"SEL$51273E9D" "ENTR"@"SEL$26" "INST"@"SEL$26" "OP"@"SEL$27")]]></hint><hint><![CDATA[USE_NL(@"SEL$51273E9D" "INST"@"SEL$26")]]></hint><hint><![CDATA[NLJ_BATCHING(@"SEL$51273E9D" "INST"
+@"SEL$26")]]></hint><hint><![CDATA[USE_HASH(@"SEL$51273E9D" "OP"@"SEL$27")]]></hint><hint><![CDATA[FULL(@"SEL$364E317E" "T1"@"SEL$364E317E")]]></hint><hint><![CDATA[FULL(@"SEL$99959799" "DAT"@"SEL$39")]]></hint><hint><![CDATA[FULL(@"SEL$99959799" "DA"@"SEL$39")]]></hint><hint><![CDATA[LEADING(@"SEL$99959799" "DAT"@"SEL$39" "DA"@"SEL$39")]]></hint><hint><![CDATA[USE_HASH(@"SEL$99959799" "DA"@"SEL$39")]]></hint><hint><![CDATA[FULL(@"SEL$93D198DE" "DAT"@"SEL$37")]]></hint><hint><![CDATA[FULL(@"SEL$93D198DE" "DA"@"SEL$37")]]></hint><hint><![CDATA[LEADING(@"SEL$93D198DE" "DAT"@"SEL$37" "DA"@"SEL$37")]]></hint><hint><![CDATA[USE_HASH(@"SEL$93D198DE" "DA"@"SEL$37")]]></hint></outline_data></other_xml>
+
+SQL>
+SQL>-- validate other_xml
+SQL>SET TERM ON;
+SQL>BEGIN
+  2    IF :other_xml IS NULL THEN
+  3  	 RAISE_APPLICATION_ERROR(-20101, 'PLAN for modified SQL_ID &&modified_sql_id. and PHV &&plan_hash_value. was not found in memory (gv$sql_plan) or AWR (dba_hist_sql_plan).');
+  4    END IF;
+  5  END;
+  6  /
+SQL>
+SQL>SET ECHO OFF;
+0001 BEGIN_OUTLINE_DATA
+0002 IGNORE_OPTIM_EMBEDDED_HINTS
+0003 OPTIMIZER_FEATURES_ENABLE('12.1.0.2')
+0004 DB_VERSION('12.1.0.2')
+0005 OPT_PARAM('_optim_peek_user_binds' 'false')
+0006 OPT_PARAM('_optimizer_use_feedback' 'false')
+0007 OPT_PARAM('_px_adaptive_dist_method' 'off')
+0008 OPT_PARAM('_optimizer_strans_adaptive_pruning' 'false')
+0009 OPT_PARAM('_optimizer_gather_feedback' 'false')
+0010 OPT_PARAM('_optimizer_nlj_hj_adaptive_join' 'false')
+0011 OPT_PARAM('optimizer_dynamic_sampling' 11)
+0012 ALL_ROWS
+0013 OUTLINE_LEAF(@"SEL$32")
+0014 OUTLINE_LEAF(@"SEL$FFDF4924")
+0015 MERGE(@"SEL$668A19F0")
+0016 OUTLINE_LEAF(@"SEL$8559D40C")
+0017 MERGE(@"SEL$9E43CB6E")
+0018 OUTLINE_LEAF(@"SEL$93D198DE")
+0019 MERGE(@"SEL$37")
+0020 OUTLINE_LEAF(@"SEL$99959799")
+0021 MERGE(@"SEL$39")
+0022 OUTLINE_LEAF(@"SET$2")
+0023 OUTLINE_LEAF(@"SEL$36")
+0024 OUTLINE_LEAF(@"SEL$11")
+0025 OUTLINE_LEAF(@"SEL$12")
+0026 OUTLINE_LEAF(@"SET$1")
+0027 OUTLINE_LEAF(@"SEL$78933E43")
+0028 OUTER_JOIN_TO_INNER(@"SEL$10" "TRT"@"SEL$10")
+0029 OUTLINE_LEAF(@"SEL$2C41BF3F")
+0030 PUSH_PRED(@"SEL$827FC9B0" "VCB"@"SEL$15" 15)
+0031 OUTLINE_LEAF(@"SEL$364E317E")
+0032 OUTLINE_LEAF(@"SEL$51273E9D")
+0033 PUSH_PRED(@"SEL$827FC9B0" "COMM_SQL"@"SEL$19" 13)
+0034 OUTLINE_LEAF(@"SEL$0EEE743D")
+0035 OUTLINE_LEAF(@"SEL$0EEE743E")
+0036 OUTLINE_LEAF(@"SEL$364E317D")
+0037 OUTLINE_LEAF(@"SEL$827FC9B0")
+0038 MERGE(@"SEL$93517ABB")
+0039 OUTLINE_LEAF(@"SEL$276EE9BD")
+0040 OUTLINE_LEAF(@"SEL$25")
+0041 OUTLINE_LEAF(@"SEL$276EE9BC")
+0042 OUTLINE_LEAF(@"SEL$43")
+0043 OUTLINE_LEAF(@"SEL$276EE9BE")
+0044 OUTLINE_LEAF(@"SEL$AB460A43")
+0045 MERGE(@"SEL$42")
+0046 OUTLINE_LEAF(@"SET$3")
+0047 OUTLINE(@"SEL$28")
+0048 OUTLINE(@"SEL$668A19F0")
+0049 MERGE(@"SEL$9FB00964")
+0050 OUTLINE(@"SEL$35")
+0051 OUTLINE(@"SEL$9E43CB6E")
+0052 MERGE(@"SEL$58A6D7F6")
+0053 OUTLINE(@"SEL$38")
+0054 OUTLINE(@"SEL$37")
+0055 OUTLINE(@"SEL$40")
+0056 OUTLINE(@"SEL$39")
+0057 OUTLINE(@"SEL$10")
+0058 OUTLINE(@"SEL$97CCBC9E")
+0059 MERGE(@"SEL$17")
+0060 OUTLINE(@"SEL$827FC9B0")
+0061 MERGE(@"SEL$93517ABB")
+0062 OUTLINE(@"SEL$FFDF4924")
+0063 MERGE(@"SEL$668A19F0")
+0064 OUTLINE(@"SEL$245B113C")
+0065 MERGE(@"SEL$86FB5FDD")
+0066 OUTLINE(@"SEL$8559D40C")
+0067 MERGE(@"SEL$9E43CB6E")
+0068 OUTLINE(@"SEL$41")
+0069 OUTLINE(@"SEL$93517ABB")
+0070 MERGE(@"SEL$9608F68D")
+0071 OUTLINE(@"SEL$44")
+0072 OUTLINE(@"SEL$42")
+0073 OUTLINE(@"SEL$2B876C8A")
+0074 ANSI_REARCH(@"SEL$33")
+0075 OUTLINE(@"SEL$9FB00964")
+0076 MERGE(@"SEL$F7A62D4D")
+0077 OUTLINE(@"SEL$3")
+0078 OUTLINE(@"SEL$58A6D7F6")
+0079 MERGE(@"SEL$1")
+0080 OUTLINE(@"SEL$16")
+0081 OUTLINE(@"SEL$17")
+0082 OUTLINE(@"SEL$34")
+0083 OUTLINE(@"SEL$86FB5FDD")
+0084 MERGE(@"SEL$26")
+0085 OUTLINE(@"SEL$24")
+0086 OUTLINE(@"SEL$9608F68D")
+0087 MERGE(@"SEL$200E3A99")
+0088 OUTLINE(@"SEL$33")
+0089 OUTLINE(@"SEL$18822C4C")
+0090 ANSI_REARCH(@"SEL$31")
+0091 OUTLINE(@"SEL$F7A62D4D")
+0092 MERGE(@"SEL$30")
+0093 OUTLINE(@"SEL$2")
+0094 OUTLINE(@"SEL$1")
+0095 OUTLINE(@"SEL$27")
+0096 OUTLINE(@"SEL$26")
+0097 OUTLINE(@"SEL$23")
+0098 OUTLINE(@"SEL$200E3A99")
+0099 MERGE(@"SEL$885F5013")
+0100 OUTLINE(@"SEL$31")
+0101 OUTLINE(@"SEL$29")
+0102 OUTLINE(@"SEL$30")
+0103 OUTLINE(@"SEL$EF69779D")
+0104 ANSI_REARCH(@"SEL$22")
+0105 OUTLINE(@"SEL$885F5013")
+0106 MERGE(@"SEL$F0627823")
+0107 OUTLINE(@"SEL$22")
+0108 OUTLINE(@"SEL$924DD057")
+0109 ANSI_REARCH(@"SEL$DBDD5FB5")
+0110 OUTLINE(@"SEL$F0627823")
+0111 MERGE(@"SEL$3C9088CF")
+0112 OUTLINE(@"SEL$DBDD5FB5")
+0113 ANSI_REARCH(@"SEL$21")
+0114 OUTLINE(@"SEL$DFA0D15D")
+0115 ANSI_REARCH(@"SEL$A47351F7")
+0116 OUTLINE(@"SEL$3C9088CF")
+0117 MERGE(@"SEL$9566171C")
+0118 OUTLINE(@"SEL$21")
+0119 OUTLINE(@"SEL$A47351F7")
+0120 ANSI_REARCH(@"SEL$20")
+0121 OUTLINE(@"SEL$AB76A5F8")
+0122 ANSI_REARCH(@"SEL$2198EA76")
+0123 OUTLINE(@"SEL$9566171C")
+0124 MERGE(@"SEL$AB58F468")
+0125 OUTLINE(@"SEL$20")
+0126 OUTLINE(@"SEL$2198EA76")
+0127 ANSI_REARCH(@"SEL$19")
+0128 OUTLINE(@"SEL$15A0CEF3")
+0129 ANSI_REARCH(@"SEL$F8A7B820")
+0130 OUTLINE(@"SEL$AB58F468")
+0131 MERGE(@"SEL$F184EC7A")
+0132 OUTLINE(@"SEL$19")
+0133 OUTLINE(@"SEL$F8A7B820")
+0134 ANSI_REARCH(@"SEL$18")
+0135 OUTLINE(@"SEL$5E404C15")
+0136 ANSI_REARCH(@"SEL$7661CCD7")
+0137 OUTLINE(@"SEL$F184EC7A")
+0138 MERGE(@"SEL$BDB8B711")
+0139 OUTLINE(@"SEL$18")
+0140 OUTLINE(@"SEL$7661CCD7")
+0141 ANSI_REARCH(@"SEL$15")
+0142 OUTLINE(@"SEL$BAE900EA")
+0143 ANSI_REARCH(@"SEL$14")
+0144 OUTLINE(@"SEL$BDB8B711")
+0145 MERGE(@"SEL$00529FA6")
+0146 OUTLINE(@"SEL$15")
+0147 OUTLINE(@"SEL$14")
+0148 OUTLINE(@"SEL$13")
+0149 OUTLINE(@"SEL$00529FA6")
+0150 MERGE(@"SEL$00ABEE11")
+0151 OUTLINE(@"SEL$C4CE708E")
+0152 ANSI_REARCH(@"SEL$9")
+0153 OUTLINE(@"SEL$00ABEE11")
+0154 MERGE(@"SEL$85062C38")
+0155 OUTLINE(@"SEL$9")
+0156 OUTLINE(@"SEL$82B3A4B9")
+0157 ANSI_REARCH(@"SEL$8")
+0158 OUTLINE(@"SEL$85062C38")
+0159 MERGE(@"SEL$5188F0CF")
+0160 OUTLINE(@"SEL$8")
+0161 OUTLINE(@"SEL$463D4B3F")
+0162 ANSI_REARCH(@"SEL$7")
+0163 OUTLINE(@"SEL$5188F0CF")
+0164 MERGE(@"SEL$9834E3F4")
+0165 OUTLINE(@"SEL$7")
+0166 OUTLINE(@"SEL$9430E53D")
+0167 ANSI_REARCH(@"SEL$6")
+0168 OUTLINE(@"SEL$9834E3F4")
+0169 MERGE(@"SEL$4")
+0170 OUTLINE(@"SEL$6")
+0171 OUTLINE(@"SEL$5")
+0172 OUTLINE(@"SEL$4")
+0173 NO_ACCESS(@"SEL$AB460A43" "ALL_ITEMS"@"SEL$42")
+0174 GBY_PUSHDOWN(@"SEL$AB460A43")
+0175 USE_HASH_AGGREGATION(@"SEL$AB460A43")
+0176 NO_ACCESS(@"SEL$43" "ALL_ITEMS"@"SEL$43")
+0177 PQ_DISTRIBUTE_WINDOW(@"SEL$43" 1)
+0178 NO_ACCESS(@"SEL$25" "ALL_ITEMS"@"SEL$25")
+0179 GBY_PUSHDOWN(@"SEL$25")
+0180 USE_HASH_AGGREGATION(@"SEL$25")
+0181 FULL(@"SEL$276EE9BD" "T1"@"SEL$276EE9BD")
+0182 FULL(@"SEL$276EE9BC" "T1"@"SEL$276EE9BC")
+0183 FULL(@"SEL$276EE9BE" "T1"@"SEL$276EE9BE")
+0184 INDEX_SS(@"SEL$827FC9B0" "INST"@"SEL$23" ("DWD_INSTITUTION"."RECORD_IDT" "DWD_INSTITUTION"."RECORD_STATE" "DWD_INSTITUTION"."RECORD_DATE_TO" "DWD_INSTITUTION"."ALTERNATE_IDN"))
+0185 BATCH_TABLE_ACCESS_BY_ROWID(@"SEL$827FC9B0" "INST"@"SEL$23")
+0186 BITMAP_TREE(@"SEL$827FC9B0" "TRANS_ENTR"@"SEL$22" AND(("DWF_ACCOUNT_ENTRY"."INSTITUTION_ID") MINUS_NULL(("DWF_ACCOUNT_ENTRY"."OPERATION_TYPE_ID"))))
+0187 NO_ACCESS(@"SEL$827FC9B0" "TR"@"SEL$9")
+0188 FULL(@"SEL$827FC9B0" "TRCOND"@"SEL$18")
+0189 FULL(@"SEL$827FC9B0" "BR"@"SEL$14")
+0190 INDEX_SS(@"SEL$827FC9B0" "CURR"@"SEL$13" ("DWD_CURRENCY"."CODE" "DWD_CURRENCY"."RECORD_STATE" "DWD_CURRENCY"."RECORD_DATE_TO"))
+0191 FULL(@"SEL$827FC9B0" "DEVICE"@"SEL$7")
+0192 FULL(@"SEL$827FC9B0" "CNTR"@"SEL$4")
+0193 FULL(@"SEL$827FC9B0" "DWA_CONTRACT_ATTRIBUTE"@"SEL$4")
+0194 INDEX_RS_ASC(@"SEL$827FC9B0" "DWD_ATTRIBUTE"@"SEL$5" ("DWD_ATTRIBUTE"."TYPE_CODE" "DWD_ATTRIBUTE"."CODE" "DWD_ATTRIBUTE"."RECORD_SOURCE" "DWD_ATTRIBUTE"."DIMENSION_CODE" "DWD_ATTRIBUTE"."RECORD_DATE_TO"))
+0195 BATCH_TABLE_ACCESS_BY_ROWID(@"SEL$827FC9B0" "DWD_ATTRIBUTE"@"SEL$5")
+0196 INDEX_RS_ASC(@"SEL$827FC9B0" "CHAIN_LEVEL"@"SEL$6" ("DWD_CONTRACT"."RECORD_IDT" "DWD_CONTRACT"."RECORD_DATE_TO"))
+0197 BATCH_TABLE_ACCESS_BY_ROWID(@"SEL$827FC9B0" "CHAIN_LEVEL"@"SEL$6")
+0198 NO_ACCESS(@"SEL$827FC9B0" "OP"@"SEL$24")
+0199 NO_ACCESS(@"SEL$827FC9B0" "CHAIN2"@"SEL$21")
+0200 NO_ACCESS(@"SEL$827FC9B0" "CHAIN1"@"SEL$20")
+0201 NO_ACCESS(@"SEL$827FC9B0" "MERCH_ADDR"@"SEL$8")
+0202 NO_ACCESS(@"SEL$827FC9B0" "COMM_SQL"@"SEL$19")
+0203 NO_ACCESS(@"SEL$827FC9B0" "VCB"@"SEL$15")
+0204 LEADING(@"SEL$827FC9B0" "INST"@"SEL$23" "TRANS_ENTR"@"SEL$22" "TR"@"SEL$9" "TRCOND"@"SEL$18" "BR"@"SEL$14" "CURR"@"SEL$13" "DEVICE"@"SEL$7" "CNTR"@"SEL$4" "DWA_CONTRACT_ATTRIBUTE"@"SEL$4" "DWD_ATTRIBUTE"@"SEL$5" "CHAIN_LEVEL"@"SEL$6" "OP"@"SEL$24" "CHAIN2"@"SEL$21" "CHAIN1"@"SEL$20" "MERCH_ADDR"@"SEL$8" "COMM_SQL"@"SEL$19" "VCB"@"SEL$15")
+0205 USE_NL(@"SEL$827FC9B0" "TRANS_ENTR"@"SEL$22")
+0206 NLJ_BATCHING(@"SEL$827FC9B0" "TRANS_ENTR"@"SEL$22")
+0207 USE_HASH(@"SEL$827FC9B0" "TR"@"SEL$9")
+0208 USE_HASH(@"SEL$827FC9B0" "TRCOND"@"SEL$18")
+0209 USE_HASH(@"SEL$827FC9B0" "BR"@"SEL$14")
+0210 USE_HASH(@"SEL$827FC9B0" "CURR"@"SEL$13")
+0211 USE_HASH(@"SEL$827FC9B0" "DEVICE"@"SEL$7")
+0212 USE_HASH(@"SEL$827FC9B0" "CNTR"@"SEL$4")
+0213 USE_HASH(@"SEL$827FC9B0" "DWA_CONTRACT_ATTRIBUTE"@"SEL$4")
+0214 USE_HASH(@"SEL$827FC9B0" "DWD_ATTRIBUTE"@"SEL$5")
+0215 USE_NL(@"SEL$827FC9B0" "CHAIN_LEVEL"@"SEL$6")
+0216 USE_HASH(@"SEL$827FC9B0" "OP"@"SEL$24")
+0217 USE_HASH(@"SEL$827FC9B0" "CHAIN2"@"SEL$21")
+0218 USE_HASH(@"SEL$827FC9B0" "CHAIN1"@"SEL$20")
+0219 USE_HASH(@"SEL$827FC9B0" "MERCH_ADDR"@"SEL$8")
+0220 USE_NL(@"SEL$827FC9B0" "COMM_SQL"@"SEL$19")
+0221 USE_NL(@"SEL$827FC9B0" "VCB"@"SEL$15")
+0222 PQ_DISTRIBUTE(@"SEL$827FC9B0" "TR"@"SEL$9" BROADCAST NONE)
+0223 PX_JOIN_FILTER(@"SEL$827FC9B0" "TR"@"SEL$9")
+0224 PQ_DISTRIBUTE(@"SEL$827FC9B0" "TRCOND"@"SEL$18" NONE BROADCAST)
+0225 PQ_DISTRIBUTE(@"SEL$827FC9B0" "BR"@"SEL$14" NONE BROADCAST)
+0226 PQ_DISTRIBUTE(@"SEL$827FC9B0" "CURR"@"SEL$13" NONE BROADCAST)
+0227 PQ_DISTRIBUTE(@"SEL$827FC9B0" "DEVICE"@"SEL$7" HASH HASH)
+0228 PQ_DISTRIBUTE(@"SEL$827FC9B0" "CNTR"@"SEL$4" HASH HASH)
+0229 PQ_DISTRIBUTE(@"SEL$827FC9B0" "DWA_CONTRACT_ATTRIBUTE"@"SEL$4" HASH HASH)
+0230 PQ_DISTRIBUTE(@"SEL$827FC9B0" "DWD_ATTRIBUTE"@"SEL$5" NONE BROADCAST)
+0231 PQ_DISTRIBUTE(@"SEL$827FC9B0" "CHAIN_LEVEL"@"SEL$6" NONE BROADCAST)
+0232 PQ_DISTRIBUTE(@"SEL$827FC9B0" "OP"@"SEL$24" NONE BROADCAST)
+0233 PQ_DISTRIBUTE(@"SEL$827FC9B0" "CHAIN2"@"SEL$21" NONE BROADCAST)
+0234 PQ_DISTRIBUTE(@"SEL$827FC9B0" "CHAIN1"@"SEL$20" NONE BROADCAST)
+0235 PQ_DISTRIBUTE(@"SEL$827FC9B0" "MERCH_ADDR"@"SEL$8" HASH HASH)
+0236 PQ_DISTRIBUTE(@"SEL$827FC9B0" "COMM_SQL"@"SEL$19" NONE BROADCAST)
+0237 PQ_DISTRIBUTE(@"SEL$827FC9B0" "VCB"@"SEL$15" NONE BROADCAST)
+0238 SWAP_JOIN_INPUTS(@"SEL$827FC9B0" "TRCOND"@"SEL$18")
+0239 SWAP_JOIN_INPUTS(@"SEL$827FC9B0" "BR"@"SEL$14")
+0240 SWAP_JOIN_INPUTS(@"SEL$827FC9B0" "CURR"@"SEL$13")
+0241 SWAP_JOIN_INPUTS(@"SEL$827FC9B0" "DWA_CONTRACT_ATTRIBUTE"@"SEL$4")
+0242 SWAP_JOIN_INPUTS(@"SEL$827FC9B0" "DWD_ATTRIBUTE"@"SEL$5")
+0243 SWAP_JOIN_INPUTS(@"SEL$827FC9B0" "CHAIN2"@"SEL$21")
+0244 SWAP_JOIN_INPUTS(@"SEL$827FC9B0" "CHAIN1"@"SEL$20")
+0245 PQ_DISTRIBUTE_WINDOW(@"SEL$827FC9B0" 1)
+0246 INDEX_SS(@"SEL$8559D40C" "INST"@"SEL$3" ("DWD_INSTITUTION"."RECORD_IDT" "DWD_INSTITUTION"."RECORD_STATE" "DWD_INSTITUTION"."RECORD_DATE_TO" "DWD_INSTITUTION"."ALTERNATE_IDN"))
+0247 BATCH_TABLE_ACCESS_BY_ROWID(@"SEL$8559D40C" "INST"@"SEL$3")
+0248 BITMAP_TREE(@"SEL$8559D40C" "DC1"@"SEL$2" AND(("DWD_CLIENT"."INSTITUTION_ID")))
+0249 FULL(@"SEL$8559D40C" "DACH1"@"SEL$1")
+0250 INDEX_SS(@"SEL$8559D40C" "DFT1"@"SEL$1" ("DWD_AFFILIATION_TYPE"."RECORD_IDT" "DWD_AFFILIATION_TYPE"."RECORD_STATE" "DWD_AFFILIATION_TYPE"."RECORD_DATE_TO"))
+0251 BATCH_TABLE_ACCESS_BY_ROWID(@"SEL$8559D40C" "DFT1"@"SEL$1")
+0252 LEADING(@"SEL$8559D40C" "INST"@"SEL$3" "DC1"@"SEL$2" "DACH1"@"SEL$1" "DFT1"@"SEL$1")
+0253 USE_NL(@"SEL$8559D40C" "DC1"@"SEL$2")
+0254 NLJ_BATCHING(@"SEL$8559D40C" "DC1"@"SEL$2")
+0255 USE_HASH(@"SEL$8559D40C" "DACH1"@"SEL$1")
+0256 USE_HASH(@"SEL$8559D40C" "DFT1"@"SEL$1")
+0257 SWAP_JOIN_INPUTS(@"SEL$8559D40C" "DFT1"@"SEL$1")
+0258 INDEX(@"SEL$FFDF4924" "GG"@"SEL$30" ("SY_CONF_GROUP_GROUP"."SCOPE" "SY_CONF_GROUP_GROUP"."CODE" "SY_CONF_GROUP_GROUP"."AMND_STATE" "SY_CONF_GROUP_GROUP"."ID"))
+0259 INDEX_RS_ASC(@"SEL$FFDF4924" "G"@"SEL$30" ("SY_CONF_GROUP"."SY_CONF_GROUP_GROUP__OID"))
+0260 BATCH_TABLE_ACCESS_BY_ROWID(@"SEL$FFDF4924" "G"@"SEL$30")
+0261 INDEX_RS_ASC(@"SEL$FFDF4924" "R"@"SEL$30" ("SY_CONF_GROUP_REC"."SY_CONF_GROUP__OID" "SY_CONF_GROUP_REC"."TABLE_REC_ID" "SY_CONF_GROUP_REC"."AMND_STATE" "SY_CONF_GROUP_REC"."ID"))
+0262 BATCH_TABLE_ACCESS_BY_ROWID(@"SEL$FFDF4924" "R"@"SEL$30")
+0263 INDEX_RS_ASC(@"SEL$FFDF4924" "OP"@"SEL$29" ("DWD_OPERATION_TYPE"."ID"))
+0264 INDEX(@"SEL$FFDF4924" "V"@"SEL$30" ("SY_CONF_GROUP_VAL"."ID"))
+0265 NO_ACCESS(@"SEL$FFDF4924" "V_FI"@"SEL$31")
+0266 LEADING(@"SEL$FFDF4924" "GG"@"SEL$30" "G"@"SEL$30" "R"@"SEL$30" "OP"@"SEL$29" "V"@"SEL$30" "V_FI"@"SEL$31")
+0267 USE_NL(@"SEL$FFDF4924" "G"@"SEL$30")
+0268 USE_NL(@"SEL$FFDF4924" "R"@"SEL$30")
+0269 USE_NL(@"SEL$FFDF4924" "OP"@"SEL$29")
+0270 USE_NL(@"SEL$FFDF4924" "V"@"SEL$30")
+0271 NLJ_BATCHING(@"SEL$FFDF4924" "V"@"SEL$30")
+0272 USE_HASH(@"SEL$FFDF4924" "V_FI"@"SEL$31")
+0273 FULL(@"SEL$32" "R"@"SEL$32")
+0274 FULL(@"SEL$32" "G"@"SEL$32")
+0275 INDEX(@"SEL$32" "GG"@"SEL$32" ("SY_CONF_GROUP_GROUP"."SCOPE" "SY_CONF_GROUP_GROUP"."CODE" "SY_CONF_GROUP_GROUP"."AMND_STATE" "SY_CONF_GROUP_GROUP"."ID"))
+0276 INDEX_FFS(@"SEL$32" "V"@"SEL$32" ("SY_CONF_GROUP_VAL"."SY_CONF_GROUP__OID" "SY_CONF_GROUP_VAL"."CODE" "SY_CONF_GROUP_VAL"."AMND_STATE" "SY_CONF_GROUP_VAL"."ID"))
+0277 LEADING(@"SEL$32" "R"@"SEL$32" "G"@"SEL$32" "GG"@"SEL$32" "V"@"SEL$32")
+0278 USE_HASH(@"SEL$32" "G"@"SEL$32")
+0279 USE_HASH(@"SEL$32" "GG"@"SEL$32")
+0280 USE_HASH(@"SEL$32" "V"@"SEL$32")
+0281 FULL(@"SEL$0EEE743E" "T1"@"SEL$0EEE743E")
+0282 FULL(@"SEL$0EEE743D" "T1"@"SEL$0EEE743D")
+0283 FULL(@"SEL$364E317D" "T1"@"SEL$364E317D")
+0284 NO_ACCESS(@"SEL$36" "MERCH_ADDR"@"SEL$36")
+0285 NO_ACCESS(@"SEL$78933E43" "D"@"SEL$10")
+0286 INDEX_FFS(@"SEL$78933E43" "I"@"SEL$10" ("DWD_INSTITUTION"."ID"))
+0287 FULL(@"SEL$78933E43" "T"@"SEL$10")
+0288 FULL(@"SEL$78933E43" "TRT"@"SEL$10")
+0289 LEADING(@"SEL$78933E43" "D"@"SEL$10" "I"@"SEL$10" "T"@"SEL$10" "TRT"@"SEL$10")
+0290 USE_MERGE_CARTESIAN(@"SEL$78933E43" "I"@"SEL$10")
+0291 USE_HASH(@"SEL$78933E43" "T"@"SEL$10")
+0292 USE_HASH(@"SEL$78933E43" "TRT"@"SEL$10")
+0293 PQ_DISTRIBUTE(@"SEL$78933E43" "T"@"SEL$10" BROADCAST NONE)
+0294 PQ_DISTRIBUTE(@"SEL$78933E43" "TRT"@"SEL$10" NONE BROADCAST)
+0295 PQ_REPLICATE(@"SEL$78933E43" "TRT"@"SEL$10")
+0296 SWAP_JOIN_INPUTS(@"SEL$78933E43" "TRT"@"SEL$10")
+0297 INDEX_RS_ASC(@"SEL$2C41BF3F" "CB"@"SEL$16" ("DWD_CARD_BRAND"."ID"))
+0298 INDEX_RS_ASC(@"SEL$2C41BF3F" "R"@"SEL$17" ("SY_CONF_GROUP_REC"."TABLE_CODE" "SY_CONF_GROUP_REC"."TABLE_REC_ID" "SY_CONF_GROUP_REC"."GROUP_CODE" "SY_CONF_GROUP_REC"."AMND_STATE" "SY_CONF_GROUP_REC"."VALUE_CODE"))
+0299 BATCH_TABLE_ACCESS_BY_ROWID(@"SEL$2C41BF3F" "R"@"SEL$17")
+0300 INDEX_RS_ASC(@"SEL$2C41BF3F" "V"@"SEL$17" ("SY_CONF_GROUP_VAL"."ID"))
+0301 INDEX_RS_ASC(@"SEL$2C41BF3F" "G"@"SEL$17" ("SY_CONF_GROUP"."ID"))
+0302 INDEX(@"SEL$2C41BF3F" "GG"@"SEL$17" ("SY_CONF_GROUP_GROUP"."ID"))
+0303 LEADING(@"SEL$2C41BF3F" "CB"@"SEL$16" "R"@"SEL$17" "V"@"SEL$17" "G"@"SEL$17" "GG"@"SEL$17")
+0304 USE_NL(@"SEL$2C41BF3F" "R"@"SEL$17")
+0305 USE_NL(@"SEL$2C41BF3F" "V"@"SEL$17")
+0306 USE_NL(@"SEL$2C41BF3F" "G"@"SEL$17")
+0307 USE_NL(@"SEL$2C41BF3F" "GG"@"SEL$17")
+0308 NLJ_BATCHING(@"SEL$2C41BF3F" "GG"@"SEL$17")
+0309 INDEX_RS_ASC(@"SEL$51273E9D" "ENTR"@"SEL$26" ("DWF_ACCOUNT_ENTRY"."PRIMARY_DOC_IDT"))
+0310 BATCH_TABLE_ACCESS_BY_ROWID(@"SEL$51273E9D" "ENTR"@"SEL$26")
+0311 INDEX(@"SEL$51273E9D" "INST"@"SEL$26" ("DWD_INSTITUTION"."ID"))
+0312 NO_ACCESS(@"SEL$51273E9D" "OP"@"SEL$27")
+0313 LEADING(@"SEL$51273E9D" "ENTR"@"SEL$26" "INST"@"SEL$26" "OP"@"SEL$27")
+0314 USE_NL(@"SEL$51273E9D" "INST"@"SEL$26")
+0315 NLJ_BATCHING(@"SEL$51273E9D" "INST"@"SEL$26")
+0316 USE_HASH(@"SEL$51273E9D" "OP"@"SEL$27")
+0317 FULL(@"SEL$364E317E" "T1"@"SEL$364E317E")
+0318 FULL(@"SEL$99959799" "DAT"@"SEL$39")
+0319 FULL(@"SEL$99959799" "DA"@"SEL$39")
+0320 LEADING(@"SEL$99959799" "DAT"@"SEL$39" "DA"@"SEL$39")
+0321 USE_HASH(@"SEL$99959799" "DA"@"SEL$39")
+0322 FULL(@"SEL$93D198DE" "DAT"@"SEL$37")
+0323 FULL(@"SEL$93D198DE" "DA"@"SEL$37")
+0324 LEADING(@"SEL$93D198DE" "DAT"@"SEL$37" "DA"@"SEL$37")
+0325 USE_HASH(@"SEL$93D198DE" "DA"@"SEL$37")
+0326 END_OUTLINE_DATA
+dropping staging table "STGTAB_SQLPROF_6M29D8RST35VB"
+staging table "STGTAB_SQLPROF_6M29D8RST35VB" did not exist
+creating staging table "STGTAB_SQLPROF_6M29D8RST35VB"
+DECLARE
+*
+ERROR at line 1:
+ORA-19375: no CREATE TABLE privilege on schema "IGOR_OEM"
+ORA-06512: at "SYS.DBMS_SYS_ERROR", line 86
+ORA-06512: at "SYS.DBMS_SMB", line 342
+ORA-06512: at "SYS.DBMS_SQLTUNE", line 7404
+ORA-06512: at line 64
+
+

@@ -74,7 +74,7 @@ group by trunc(BEGIN_TIME,'hh'),trunc(BEGIN_TIME) order by 1, 3 desc
 
 select name,value,display_value from v$parameter where ISDEFAULT = 'FALSE' order by name;
 	
--- available OS resources at the DB server
+-- available OS resources at the DB server (CPU / RAM )
 
 select STAT_NAME,VALUE,COMMENTS from v$osstat where (STAT_NAME like '%CPU%' or STAT_NAME like '%MEM%') and CUMULATIVE = 'NO' order by 1;
 
@@ -693,18 +693,18 @@ ORDER BY MAX(PM.ALLOCATED) DESC;
 -- memory usage per instance per snap
 
 SELECT sn.INSTANCE_NUMBER,
-         sga.allo sga,
-         pga.allo pga,
-         (sga.allo + pga.allo) tot,
+         sga.allo sga_GB,
+         pga.allo pga_GB,
+         (sga.allo + pga.allo) total_GB,
          TRUNC (SN.END_INTERVAL_TIME, 'mi') time
     FROM (  SELECT snap_id,
                    INSTANCE_NUMBER,
-                   ROUND (SUM (bytes) / 1024 / 1024 / 1024, 3) allo
+                   ROUND (SUM (bytes) / 1024 / 1024 / 1024, 2) allo
               FROM DBA_HIST_SGASTAT
           GROUP BY snap_id, INSTANCE_NUMBER) sga,
          (  SELECT snap_id,
                    INSTANCE_NUMBER,
-                   ROUND (SUM (VALUE) / 1024 / 1024 / 1024, 3) allo
+                   ROUND (SUM (VALUE) / 1024 / 1024 / 1024, 2) allo
               FROM DBA_HIST_PGASTAT
              WHERE name = 'total PGA allocated'
           GROUP BY snap_id, INSTANCE_NUMBER) pga,
@@ -713,13 +713,14 @@ SELECT sn.INSTANCE_NUMBER,
          AND sn.INSTANCE_NUMBER = sga.INSTANCE_NUMBER
          AND sn.snap_id = pga.snap_id
          AND sn.INSTANCE_NUMBER = pga.INSTANCE_NUMBER
-ORDER BY sn.snap_id DESC, sn.INSTANCE_NUMBER;
+--ORDER BY sn.snap_id DESC, sn.INSTANCE_NUMBER;
+ORDER BY 1,3 DESC;
 
 -- current usage is
 
-select bytes/1024/1024/1024 GB,name from V$SGAINFO where name = 'Maximum SGA Size'
+select round(bytes/1024/1024/1024,1) GB,name from V$SGAINFO where name = 'Maximum SGA Size'
 union all
-select round(value/1024/1024/1024) GB,name from V$PGASTAT where name = 'total PGA allocated';
+select round(value/1024/1024/1024,1) GB,name from V$PGASTAT where name = 'total PGA allocated';
 
 -- InMemory segments
 
@@ -1563,6 +1564,9 @@ col sum_bytes for 999,999,999,999,999
 select to_char(sysdate,'dd-mm-yyyy hh24:mi:ss') from dual;
 SELECT DISTINCT STATUS, SUM(BYTES) sum_bytes, COUNT(*),TABLESPACE_NAME FROM DBA_UNDO_EXTENTS GROUP BY TABLESPACE_NAME,STATUS;
 select tablespace_name , status , count(*) from dba_rollback_segs group by tablespace_name , status;
+
+select avg(maxquerylen) from v$UNDOSTAT;
+SELECT * FROM DBA_HIST_UNDOSTAT;
 
 select file_id from dba_data_files where tablespace_name='UNDOTBS2';
 select begin_time, end_time, UNDOBLKS,MAXQUERYLEN,ACTIVEBLKS,UNEXPIREDBLKS,EXPIREDBLKS,TUNED_UNDORETENTION from v$undostat order by begin_time;

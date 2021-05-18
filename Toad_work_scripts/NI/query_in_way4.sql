@@ -1,3 +1,47 @@
+--Handle long running queries from way4manager in way4 prod DB (https://jira.network.ae/jira/browse/PRD-10098)
+
+SELECT
+    substr(message_name,instr(message_name,'=',1,1)+1,instr(message_name,';',1,2)-instr(message_name,'=',1,1)-1) sid,
+    substr(message_name,instr(message_name,'=',1,4)+1,instr(message_name,';',1,5)-instr(message_name,'=',1,4)-1) sql_id,
+    TO_CHAR(message_date, 'dd/mm/yyyy hh24:mi:ss') time
+FROM
+    process_log JOIN process_mess
+    ON process_mess.process_log__oid = process_log.id
+WHERE
+    process_log.process_name = 'OPT_SESSION_MONITOR'
+    AND process_mess.message_date > SYSDATE - 30 -- can be changed as per required
+    AND process_mess.object_type = 'KILL_SESSION';
+
+-- ControlM clone JOB duration analysis
+
+select * from (
+  SELECT JOB_MEM_NAME,
+         case when ENDED_STATUS = '16' then 'SUCCESS' ELSE 'FAILURE' END JOB_STATUS,
+         (END_TIME - START_TIME)*24*60*60 DURATION_SECONDS,
+         START_TIME,
+         END_TIME,
+         APPLICATION,
+         GROUP_NAME,
+         ORDER_DATE
+    FROM EMUSER.RUNINFO_HISTORY
+   WHERE     SCHED_TABLE IN
+                 ('NETWORK1_TZ2_W4_DAILY',
+                  'PRD_WAY4ETL_DAILY',
+                  'NETWORK1_TZ11_W4_DAILY')
+                  AND START_TIME > ADD_MONTHS(sysdate,-1)
+         AND JOB_MEM_NAME IN (SELECT JOB_NAME
+                                FROM EMUSER.DEF_JOB
+                               WHERE CYCLIC = '0')
+                               and END_TIME > START_TIME
+                               AND JOB_MEM_NAME not like '%_ETL%'
+                               AND JOB_MEM_NAME not like 'EMSP_TZ11_CLN_START_SLEEP'
+ORDER BY (END_TIME - START_TIME) desc)
+ where JOB_MEM_NAME = ''
+ ;
+ 
+ EMSY_N1_DM_W4_SLEEP - ?
+
+
 -- TALEND related sessions AWR info:
 
   SELECT count(1),MACHINE,PROGRAM,MODULE,ACTION
