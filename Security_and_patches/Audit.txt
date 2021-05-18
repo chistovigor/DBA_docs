@@ -1,0 +1,134 @@
+1) Информация о последних патчах Oracle
+
+Oracle support note 
+821263.1
+
+$ORACLE_HOME/OPatch/opatch lsinventory -detail
+$ORACLE_HOME/OPatch/opatch lsinventory -bugs_fixed | grep MOLECULE
+
+Смотреть в БД
+
+select * from DBA_REGISTRY_HISTORY;
+select * from REGISTRY$HISTORY;
+
+set linesize 150
+set wrap off
+column COMP_NAME format a30
+column VERSION   format a15
+column status    format a8
+column modified  format a20
+column SCHEMA    format a10
+column procedure format a25
+
+select COMP_NAME,version,status,modified,schema,procedure from DBA_REGISTRY;
+
+2) Информация о защите LISTENER
+
+lsnrctl status
+
+cat listener.ora
+
+3) Проверяем наличие зашифрованных ТП в БД
+
+col TS#       format 99999
+col TSNAME    format a20
+col ENCRYPTED format a10
+col ALGORITM  format a10
+
+select ts.TS#,
+       ts.NAME              as TSNAME, 
+       enc_ts.ENCRYPTEDTS   as ENCRYPTED, 
+       enc_ts.ENCRYPTIONALG as ALGORITM,
+       enc_ts.MASTERKEYID
+from v$encrypted_tablespaces enc_ts,
+     v$tablespace ts
+where enc_ts.TS#(+) = ts.TS#
+order by 1;
+
+проверка, что данные записываются и считываются из TS
+
+SELECT NAME,
+       BIGFILE,
+       ENCRYPTEDTS,
+       ENCRYPTIONALG,
+       ENCRYTPEDKEY,
+       BLOCKS_ENCRYPTED,
+       BLOCKS_DECRYPTED
+  FROM V$ENCRYPTED_TABLESPACES a, V$TABLESPACE b
+ WHERE a.TS# = b.TS#;
+ 
+4) Проверяем атрибуты файла контейнера
+cd $ORACLE_BASE/admin/$ORACLE_UNQNAME/wallet
+lsattr cwallet.sso ewallet.p12
+stat cwallet.sso ewallet.p12
+
+5) Посмотреть данные в поле BDATA таблиц CBxxxxxx (как они записаны, в них не должно быть TRAC2)
+
+В CBxxxxxx в поле BDATA хранится коммуникационное сообщение, замаскированное * без возможности восстановления.
+Правила маскирования задаются в настройках эквайера.
+
+6) В таблице APxxxxxx маскированные данные в поле SZJOURNAL (нужны во всех таблица AB,AI,AC,IB)
+
+7) Аудит системных пользователей
+
+sqlplus
+
+show parameters audit
+
+NAME                                |TYPE           |VALUE
+------------------------------------|---------------|------------------------------
+audit_file_dest                     |string         |/opt/oracle/app/oracle/admin/O
+                                    |               |NLINEFT_S_MSK_V_PRO_DB012/adum
+                                    |               |p
+audit_sys_operations                |boolean        |TRUE
+audit_syslog_level                  |string         |LOCAL1.WARNING
+audit_trail                         |string         |DB
+
+
+cat /etc/rsyslog.d/oracle_pcidss.conf
+
+local1.warning  @10.243.128.239
+
+8) Аудит доступа к карточным данным
+
+SELECT 'AUDIT SELECT TABLE, UPDATE TABLE BY ' || USERNAME || ' BY ACCESS;'
+  FROM DBA_USERS
+ WHERE ACCOUNT_STATUS = 'OPEN' AND PROFILE = 'XXX_USERS_PROFILE';
+
+AUDIT ALL BY RUACII2,RUAFAA1, RUAGOV3, RUAKGD5, RUAMAAH BY ACCESS;
+
+AUDIT SELECT TABLE, UPDATE TABLE BY RUACII2,RUAFAA1, RUAGOV3, RUAKGD5, RUAMAAH BY ACCESS;
+
+NOAUDIT SELECT ANY DICTIONARY BY RUACII2,RUAFAA1, RUAGOV3, RUAKGD5, RUAMAAH;
+
+  SELECT *
+    FROM DBA_AUDIT_TRAIL
+   WHERE USERNAME = 'RUACII2' AND OWNER <> 'SYS'
+ORDER BY TIMESTAMP DESC;
+
+ SELECT *
+  FROM AUD$
+ WHERE UPPER (USERID) = 'RUACII2' AND OBJ$CREATOR <> 'SYS';
+ 
+SELECT COUNT (1) FROM AUD$;
+
+SELECT *
+  FROM USER_AUDIT_OBJECT
+ WHERE USERNAME = 'RUACII2';
+
+SELECT COUNT (1) FROM DBA_AUDIT_TRAIL;
+
+  SELECT *
+    FROM DBA_COMMON_AUDIT_TRAIL
+   WHERE DB_USER = 'RUACII2' AND OBJECT_SCHEMA <> 'SYS'
+ORDER BY EXTENDED_TIMESTAMP;
+
+9) Конфигурация PAM (LDAP) ! - как показывать на RHEL:
+
+cat /etc/sysconfig/authconfig | grep LDAP
+
+cat /etc/openldap/ldap.conf
+
+10) netstat -ant | grep -v 10050
+11) FIM - ossec, антивирус - AVP
+12) Сделать отдельный файл только с паролями для меня для keepass

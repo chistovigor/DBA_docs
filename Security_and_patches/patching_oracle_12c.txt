@@ -1,0 +1,16 @@
+http://docs.oracle.com/database/121/ARPLS/d_qopatch.htm#ARPLS74834
+https://www.pythian.com/blog/oracle-database-12c-patching-dbms_qopatch-opatch_xml_inv-and-datapatch/
+
+--select patches with sql from DB 
+
+WITH A AS (SELECT SYS.DBMS_QOPATCH.GET_OPATCH_LSINVENTORY PATCH_OUTPUT FROM DUAL)
+SELECT X.*
+  FROM A,
+       XMLTABLE ('InventoryInstance/patches/*'
+                 PASSING A.PATCH_OUTPUT
+                 COLUMNS PATCH_ID NUMBER PATH 'patchID',
+                         PATCH_UID NUMBER PATH 'uniquePatchID',
+                         DESCRIPTION VARCHAR2 (80) PATH 'patchDescription',
+                         APPLIED_DATE VARCHAR2 (30) PATH 'appliedDate',
+                         SQL_PATCH VARCHAR2 (8) PATH 'sqlPatch',
+                         ROLLBACKABLE VARCHAR2 (8) PATH 'rollbackable') X;

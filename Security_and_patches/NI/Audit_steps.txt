@@ -1,0 +1,96 @@
+1.check init.ora security parameters:
+audit_file_dest='/ora11g/app/ora11g/audit/EBNKSIT'
+os_authent_prefix=""
+sql92_security = true
+o7_dictionary_accessibility=FALSE
+AUDIT_SYS_OPERATIONS=TRUE
+remote_login_passwordfile=none
+REMOTE_OS_ROLES=false
+SEC_PROTOCOL_ERROR_FURTHER_ACTION=delay,3
+sec_return_server_release_banner=false
+_trace_files_public=false
+SEC_CASE_SENSITIVE_LOGON=TRUE
+os_roles=FALSE
+remote_listener=""
+SEC_MAX_FAILED_LOGIN_ATTEMPTS = 10
+SEC_PROTOCOL_ERROR_TRACE_ACTION=LOG
+db_securefile=ALWAYS
+audit_trail=OS
+global_names=true
+diagnostic_dest=/ora11g/app/ora11g/diag
+remote_os_authent=FALSE
+
+2.check profiles with parameters for application profile and default profile and check all have verify_function
+(For PRM ignore as old db is getting upgraded)
+
+3.change default passwords for Oracle default users.
+SELECT * FROM DBA_USERS_WITH_DEFPWD;
+select 'alter user '||username|| ' identified by ni12345#;' from DBA_USERS_WITH_DEFPWD;
+
+check any objects in system tablespace other than owned by sys and system
+
+select owner,count(1) from dba_segments where tablespace_name='SYSTEM' and owner not in ('SYS','SYSTEM') group by owner;
+
+
+4.grant dbms* privs as per hardening script to idividual users and revoke from public.compile all objects.
+
+
+
+5.put db in arch mode.
+
+6.check listener.ora and sqlnet.ora parameters:
+Listener.ora
+
+ADMIN_RESTRICTIONS_<listenername>=ON
+INBOUND_CONNECTION_TIMEOUT_<listenername>=3
+DYNAMIC_REGISTRATION_<listenername>=OFF
+EXTPROC_DLLS=ONLY
+
+sqlet.ora
+
+
+sqlnet.expire_time = 10
+sqlnet.inbound_connect_timeout=3
+
+7.check DBA_STMT_AUDIT_OPTS for audit options:
+AUDIT CREATE USER;
+AUDIT ALTER USER;
+AUDIT DROP USER;
+AUDIT SYSTEM GRANT;
+AUDIT CREATE PROFILE;
+AUDIT ALTER PROFILE;
+AUDIT DROP PROFILE;
+AUDIT GRANT DIRECTORY;
+AUDIT GRANT ANY OBJECT PRIVILEGE;
+AUDIT GRANT ANY PRIVILEGE;
+AUDIT CREATE PROCEDURE;
+AUDIT CREATE ANY PROCEDURE;
+AUDIT ALTER ANY PROCEDURE;
+AUDIT DROP ANY PROCEDURE;
+AUDIT CREATE ANY LIBRARY;
+AUDIT DROP ANY LIBRARY;
+AUDIT CREATE LIBRARY;
+AUDIT CREATE ANY TRIGGER;
+AUDIT ALTER ANY TRIGGER;
+AUDIT DROP ANY TRIGGER BY ACCESS;
+AUDIT ALL on SYS.AUD$;
+AUDIT ALTER SYSTEM;
+AUDIT PUBLIC SYNONYM;
+Audit all on AUD$;
+AUDIT GRANT ANY ROLE;
+AUDIT GRANT ANY PRIVILEGE;
+AUDIT DROP ANY TABLE;
+AUDIT DROP ANY PROCEDURE;
+AUDIt CREATE ROLE;
+
+8.Rename tkprof binary in $ORACLE_HOME/bin
+
+
+
+9.grant resource role to App user and disable auto gather stats.
+select client_name,status from dba_autotask_client;
+BEGIN
+DBMS_AUTO_TASK_ADMIN.DISABLE( client_name => 'auto optimizer stats collection', operation => NULL, window_name => NULL);
+END;
+
+/

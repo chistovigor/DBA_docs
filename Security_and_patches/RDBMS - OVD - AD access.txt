@@ -1,0 +1,225 @@
+Шаги по настройке нового пользвателя в OVD:
+
+Примечания:
+---
+  1) Шаги по конфигурации OVD с выполняются с рабочей станции Windows, с помощью утилиты eusm из клиентского ПО Oracle 11.2.
+  2) С рабочей станции нужен доступ к тестовому стенду OVD на 172.20.16.188 по порту 6502
+  3) Для конфигурации OVD используется пользователь cn=orcladmin с паролем q1q1q1q1.
+  4) Для выполнения команд, нужно запустить cmd.exe и перейти в подкаталог bin установленного ПО Oracle Client 11.2, например 
+      cmd.exe
+      c:
+      cd \oracle\11.2.0\client_1\BIN
+      dir eusm.bat
+  5) Внутреннее имя БД DHW: spur, имя инстанса spur1 - внутреннее именя используется при привязке etrerprise роли к глобальной роли.
+
+
+
+
+
+1) Создание глобального пользователя и глобальной роли в базе (делается при начальной настройке, не обязатльно делать для каждого пользователя):
+---
+В базе DWH:
+
+sqlplus "/as sysdba:
+---
+create user dev_user identified globally;
+
+-- пример добавления привилегий
+create role dev_role identified globally;
+grant connect to dev_role;
+grant create table to dev_role;
+grant create any view to dev_role;
+alter user dev_role quota 100m on users;
+
+grant create database link to dev_role;
+grant create view to dev_role;
+grant create synonym to dev_role;
+
+grant select_catalog_role to dev_role;
+grant select on v_$instance to dev_role;
+
+
+2) Создание Enterprise роли в OVD (делается при начальной настройке, не обязатльно делать для каждого пользователя):
+---
+eusm createRole enterprise_role="dev_user" domain_name="EXAdomain" realm_dn="dc=ovd1,dc=micex,dc=com" ldap_host="172.20.16.188" ldap_port=6502 ldap_user_dn="cn=orcladmin" ldap_user_password="q1q1q1q1"
+
+Привязка Enterprise роли к глобальной роли в базе:
+---
+   Данная команда требует доступ в базу! Нужен сетевой доступ в базу DWH по имени mr-scan.moex.com (или IP 10.63.140.3) и порту 1521
+   В базе должна уже быть глобальная роль dev_user
+eusm addGlobalRole enterprise_role="dev_user" domain_name="EXAdomain" realm_dn="dc=ovd1,dc=micex,dc=com" database_name="spur" global_role="dev_user" dbuser="system" dbuser_password="welcome1" dbconnect_string="10.63.140.3:1521:spur1" ldap_host="172.20.16.188" ldap_port=6502 ldap_user_dn="cn=orcladmin" ldap_user_password="q1q1q1q1"
+
+Проверка Enerprise роли
+---
+eusm listEnterpriseRoles domain_name="EXAdomain" realm_dn="dc=ovd1,dc=micex,dc=com" ldap_host="172.20.16.188" ldap_port=6502 ldap_user_dn="cn=orcladmin" ldap_user_password="q1q1q1q1"
+eusm listEnterpriseRoleInfo enterprise_role="dev_user" domain_name="EXAdomain" realm_dn="dc=ovd1,dc=micex,dc=com" ldap_host="172.20.16.188" ldap_port=6502 ldap_user_dn="cn=orcladmin" ldap_user_password="q1q1q1q1"
+
+
+
+
+3) Добавление нового пользователя: маппинг пользователя AD и глобальной схемы и назначение Enterprise роли в базе DWH:
+Нужно делать для каждого нового пользователя!
+---
+После создания нового пользователя в AD нужно запустить процедуру IDM_AUTH_ARC.sync_users в базе spur, чтобы новый пользователь попал в таблицу
+
+eusm createMapping database_name="spur" realm_dn="dc=ovd1,dc=micex,dc=com" map_type="ENTRY" map_dn="cn=Сидор Сидоров,cn=moex_arc_users,dc=ovd1,dc=micex,dc=com" schema="global_user" ldap_host="172.20.16.188" ldap_port=6502 ldap_user_dn="cn=orcladmin" ldap_user_password="q1q1q1q1"
+
+
+Назначение пользователю Enterprise Role:
+---
+eusm grantRole enterprise_role="dev_user" domain_name="EXAdomain" realm_dn="dc=ovd1,dc=micex,dc=com" user_dn="cn=Сидор Сидоров,cn=moex_arc_users,dc=ovd1,dc=micex,dc=com" ldap_host="172.20.16.188" ldap_port=6502 ldap_user_dn="cn=orcladmin" ldap_user_password="q1q1q1q1"
+Проверка существующих маппингов:
+---
+eusm listMappings database_name="spur" realm_dn="dc=ovd1,dc=micex,dc=com" ldap_host="172.20.16.188" ldap_port=6502 ldap_user_dn="cn=orcladmin" ldap_user_password="q1q1q1q1"
+
+LIST OF DATABASE SCHEMA MAPPINGS::
+------------------------------------
+Mapping Name:  MAPPING0
+Mapping Type:  ENTRY
+Mapping DN:    cn=Test EUS1,cn=moex_arc_users,dc=ovd1,dc=micex,dc=com
+Mapping schema:global_user
+Mapping Level :DATABASE
+
+Mapping Name:  MAPPING1
+Mapping Type:  ENTRY
+Mapping DN:    cn=Николай Труничкин,cn=moex_arc_users,dc=ovd1,dc=micex,dc=com
+Mapping schema:global_user
+Mapping Level :DATABASE
+
+Mapping Name:  MAPPING2
+Mapping Type:  ENTRY
+Mapping DN:    cn=Иван Иванов,cn=Users,dc=ovd1,dc=micex,dc=com
+Mapping schema:global_ivanov
+Mapping Level :DATABASE
+
+Mapping Name:  MAPPING3
+Mapping Type:  ENTRY
+Mapping DN:    cn=Петр Петров,cn=Users,dc=ovd1,dc=micex,dc=com
+Mapping schema:global_user
+Mapping Level :DATABASE
+
+Mapping Name:  MAPPING4
+Mapping Type:  ENTRY
+Mapping DN:    cn=Сидор Сидоров,cn=moex_arc_users,dc=ovd1,dc=micex,dc=com
+Mapping schema:global_user
+Mapping Level :DATABASE
+
+Mapping Name:  MAPPING5
+Mapping Type:  ENTRY
+Mapping DN:    CN=Н Труничкин,DC=moex_arc,DC=micex,DC=com
+Mapping schema:global_read
+Mapping Level :DATABASE
+
+Mapping Name:  MAPPING6
+Mapping Type:  ENTRY
+Mapping DN:    cn=Олег Дюкель,cn=moex_arc_users,dc=ovd1,dc=micex,dc=com
+Mapping schema:global_read
+Mapping Level :DATABASE
+
+Проверка Enterprise Role:
+---
+eusm listEnterpriseRoleInfo enterprise_role="dev_user" domain_name="EXAdomain" realm_dn="dc=ovd1,dc=micex,dc=com" ldap_host="172.20.16.188" ldap_port=6502 ldap_user_dn="cn=orcladmin" ldap_user_password="q1q1q1q1"
+
+
+Для удаления маппинга нужно указать Mapping Name, например для удаления маппинга MAPPING0:
+---
+eusm deleteMapping database_name="spur" realm_dn="dc=ovd1,dc=micex,dc=com" mapping_name="MAPPING0" ldap_host="172.20.16.188" ldap_port=6502 ldap_user_dn="cn=orcladmin" ldap_user_password="q1q1q1q1"
+
+
+
+По результатам сегодняшнего обсуждения вырисовывается такая схема взаимодействия:
+
+Структура стенда аутентификации Oracle - AD
+--------------------------------------------
+1 - MS AD 2008 (172.20.30.210)
+2 - OVD 11.1.1.9 
+    IP: 172.20.16.188
+    порты 6502, 7502
+    http://172.20.16.188:7006/odsm
+3 - БД пользователей
+    таблица idm_auth_arc.MV_OVD_USERS_GROUPS, база SPUR, сервер resspur, порт 1521
+4 - БД Exadata SPUR
+
+Дополнительный ресурс:
+---
+  Рабочая станция с клиентом Oracle 11.2, с которой есть доступ к OVD по портам 6502 и 7502.
+  Нужна для запуска утилиты конфигурации EUSM, т.к. EUSM от БД 12.1 не работает с OVD.
+
+
+
+Информационные компоненты и место их хранения:
+--------------------------------------------
+Enterprise Role                            - 2
+Grants                                     - 4
+User                                       - 1,3
+Group                                      - 2,3
+Role                                       - 4
+Global Role                                - 4
+Маппинг User        -> Schema              - 2,4
+Маппинг User        -> База данных         - 2
+Маппинг Global Role -> Enterprise Role     - 2
+Маппинг Grant       -> Role                - 4
+Маппинг Grant       -> Global Role         - 4
+Маппинг Role        -> Global Role         - 4
+Маппинг Global Role -> Enterprise Role     - 2
+Маппинг User        -> Group               - 1,3
+Маппинг Group       -> Enterprise Role     - 2
+Маппинг AD Group    -> Enterprise Role     - 2
+Маппинг User        -> Enterprise Role     - 4
+
+
+
+
+В OVD хранятся следующие информационные компоненты:
+---
+Enterprise Role
+Маппинг User        -> Schema
+Маппинг User        -> База данных
+Маппинг Global Role -> Enterprose Role
+Маппинг AD Group    -> Enterprise Role
+Маппинг User        -> Enterprise Role
+
+
+Участники процесса:
+--------------------------------------------
+1) Администратор MS AD
+  - заведение нового пользователя
+  - смена пароля
+  - блокировка и разблокировка
+  - удаление
+2) Администратор OVD
+  - создание маппинга пользователя AD к глобальной схеме БД
+  - создание маппинга пользователя AD к Eterprise Role
+3) Администратор БД
+  - изменение прав для глобальных групп
+  - изменение прав для глобальных пользователей
+
+
+Процесс первоначальной настройки:
+--------------------------------------------
+1) Создание глобальной роли (БД)
+2) Назначение привилегий, грантов и локальный ролей -> глобальной роли (БД)
+3) Создание глобального пользователя в БД  (БД)
+4) Создание Enterpise Role (OVD c помощью eusm или OEM)
+5) Маппинг глобальной роли БД к Enterpise Role (OVD с помощью eusm или OEM)
+6) Маппинг Enterprise Role к global user (OVD c помощью eusm или OEM)
+
+
+Процесс заведения нового пользователя в БД:
+--------------------------------------------
+1) создание пользователя в AD
+2) маппинг пользователя к глобальной схеме в конкретной БД (OVD c помощью eusm или OEM)
+3) маппинг пользователя к Enerprise Role (OVD c помощью eusm или OEM)
+
+
+Примечание:
+---
+1)	Есть возможность назначения Enterprise Role группе AD, 
+что может упростить процесс и избавить от необходимости вручную настраивать маппинг пользователя к глобальной схеме и маппинг к Enerprise Role,
+Но данная возможность на текущий момент не работает, открыт SR в Oracle под CSI Джета.
+
+2)	Работа OEM и OVD на текущий момент не возможна, открыт SR под CSI Биржи.
+
+3)	Сохраняется возможность заведения пользователей напрямую в БД
+
+4)	Есть возможность назначания прав в БД напрямую глобальной схеме, минуя Enterprise Role.
