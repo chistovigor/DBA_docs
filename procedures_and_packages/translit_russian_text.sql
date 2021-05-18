@@ -1,0 +1,145 @@
+CREATE OR REPLACE FUNCTION TRANSLIT (sVal varchar2)
+return varchar2 is
+
+sRes varchar2(50) :='' ;
+begin
+
+for i in 1..length( sVal ) loop
+if substr( sVal, i, 1 ) = 'а' then
+sRes := sRes || 'a';
+elsif substr( sVal, i, 1 ) = 'б' then
+sRes := sRes || 'b';
+elsif substr( sVal, i, 1 ) = 'в' then
+sRes := sRes || 'v';
+elsif substr( sVal, i, 1 ) = 'г' then
+sRes := sRes || 'g';
+elsif substr( sVal, i, 1 ) = 'д' then
+sRes := sRes || 'd';
+elsif substr( sVal, i, 1 ) = 'е' then
+sRes := sRes || 'e';
+elsif substr( sVal, i, 1 ) = 'ё' then
+sRes := sRes || 'jo';
+elsif substr( sVal, i, 1 ) = 'ж' then
+sRes := sRes || 'zh';
+elsif substr( sVal, i, 1 ) = 'з' then
+sRes := sRes || 'z';
+elsif substr( sVal, i, 1 ) = 'и' then
+sRes := sRes || 'i';
+elsif substr( sVal, i, 1 ) = 'й' then
+sRes := sRes || 'j';
+elsif substr( sVal, i, 1 ) = 'к' then
+sRes := sRes || 'k';
+elsif substr( sVal, i, 1 ) = 'л' then
+sRes := sRes || 'l';
+elsif substr( sVal, i, 1 ) = 'м' then
+sRes := sRes || 'm';
+elsif substr( sVal, i, 1 ) = 'н' then
+sRes := sRes || 'n';
+elsif substr( sVal, i, 1 ) = 'о' then
+sRes := sRes || 'o';
+elsif substr( sVal, i, 1 ) = 'п' then
+sRes := sRes || 'p';
+elsif substr( sVal, i, 1 ) = 'р' then
+sRes := sRes || 'r';
+elsif substr( sVal, i, 1 ) = 'с' then
+sRes := sRes || 's';
+elsif substr( sVal, i, 1 ) = 'т' then
+sRes := sRes || 't';
+elsif substr( sVal, i, 1 ) = 'у' then
+sRes := sRes || 'u';
+elsif substr( sVal, i, 1 ) = 'ф' then
+sRes := sRes || 'f';
+elsif substr( sVal, i, 1 ) = 'х' then
+sRes := sRes || 'h';
+elsif substr( sVal, i, 1 ) = 'ц' then
+sRes := sRes || 'c';
+elsif substr( sVal, i, 1 ) = 'ч' then
+sRes := sRes || 'ch';
+elsif substr( sVal, i, 1 ) = 'ш' then
+sRes := sRes || 'sh';
+elsif substr( sVal, i, 1 ) = 'щ' then
+sRes := sRes || 'shh';
+elsif substr( sVal, i, 1 ) = 'ъ' then
+sRes := sRes || '#';
+elsif substr( sVal, i, 1 ) = 'ы' then
+sRes := sRes || 'y';
+elsif substr( sVal, i, 1 ) = 'ь' then
+sRes := sRes || chr(39);
+elsif substr( sVal, i, 1 ) = 'э' then
+sRes := sRes || 'je';
+elsif substr( sVal, i, 1 ) = 'ю' then
+sRes := sRes || 'yu';
+elsif substr( sVal, i, 1 ) = 'я' then
+sRes := sRes || 'ya';
+elsif substr( sVal, i, 1 ) = 'А' then
+sRes := sRes || 'A';
+elsif substr( sVal, i, 1 ) = 'Б' then
+sRes := sRes || 'B';
+elsif substr( sVal, i, 1 ) = 'В' then
+sRes := sRes || 'V';
+elsif substr( sVal, i, 1 ) = 'Г' then
+sRes := sRes || 'G';
+elsif substr( sVal, i, 1 ) = 'Д' then
+sRes := sRes || 'D';
+elsif substr( sVal, i, 1 ) = 'Е' then
+sRes := sRes || 'E';
+elsif substr( sVal, i, 1 ) = 'Ё' then
+sRes := sRes || 'Jo';
+elsif substr( sVal, i, 1 ) = 'Ж' then
+sRes := sRes || 'Zh';
+elsif substr( sVal, i, 1 ) = 'З' then
+sRes := sRes || 'Z';
+elsif substr( sVal, i, 1 ) = 'И' then
+sRes := sRes || 'I';
+elsif substr( sVal, i, 1 ) = 'Й' then
+sRes := sRes || 'J';
+elsif substr( sVal, i, 1 ) = 'К' then
+sRes := sRes || 'K';
+elsif substr( sVal, i, 1 ) = 'Л' then
+sRes := sRes || 'L';
+elsif substr( sVal, i, 1 ) = 'М' then
+sRes := sRes || 'M';
+elsif substr( sVal, i, 1 ) = 'Н' then
+sRes := sRes || 'N';
+elsif substr( sVal, i, 1 ) = 'О' then
+sRes := sRes || 'O';
+elsif substr( sVal, i, 1 ) = 'П' then
+sRes := sRes || 'P';
+elsif substr( sVal, i, 1 ) = 'Р' then
+sRes := sRes || 'R';
+elsif substr( sVal, i, 1 ) = 'С' then
+sRes := sRes || 'S';
+elsif substr( sVal, i, 1 ) = 'Т' then
+sRes := sRes || 'T';
+elsif substr( sVal, i, 1 ) = 'У' then
+sRes := sRes || 'U';
+elsif substr( sVal, i, 1 ) = 'Ф' then
+sRes := sRes || 'F';
+elsif substr( sVal, i, 1 ) = 'Х' then
+sRes := sRes || 'H';
+elsif substr( sVal, i, 1 ) = 'Ц' then
+sRes := sRes || 'C';
+elsif substr( sVal, i, 1 ) = 'Ш' then
+sRes := sRes || 'Sh';
+elsif substr( sVal, i, 1 ) = 'Щ' then
+sRes := sRes || 'Shh';
+elsif substr( sVal, i, 1 ) = 'Ъ' then
+sRes := sRes || '#';
+elsif substr( sVal, i, 1 ) = 'Ы' then
+sRes := sRes || 'Y';
+elsif substr( sVal, i, 1 ) = 'Ь' then
+sRes := sRes || chr(39);
+elsif substr( sVal, i, 1 ) = 'Э' then
+sRes := sRes || 'Je';
+elsif substr( sVal, i, 1 ) = 'Ю' then
+sRes := sRes || 'Yu';
+elsif substr( sVal, i, 1 ) = 'Я' then
+sRes := sRes || 'Ya';
+else
+sRes := sRes || substr( sVal, i, 1 );
+
+end if;
+end loop;
+return sRes;
+end;
+/
