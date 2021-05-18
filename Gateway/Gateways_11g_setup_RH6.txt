@@ -1,0 +1,704 @@
+Установка Oracle Gateways (ставим в отдельный ORACLE_HOME, если установленный релиз OracleDB отличается)
+
+./runInstaller -silent -responseFile="/mnt/data/distrib/gateways_11.2.0.3/tg.rsp" ORACLE_HOME_NAME="OHOME2" ORACLE_HOME="/mnt/data/oracle/product/11.2.0/gateways"
+
+в tg.rsp задаем:
+
+ORACLE_HOME = "/mnt/data/oracle/product/11.2.0/gateways"
+ORACLE_BASE = "/mnt/data/oracle/product"
+ORACLE_HOME_NAME = "OHOME2"
+
+и для informix
+
+oracle.tg:DEPENDENCY_LIST={"oracle.rdbms.tg4ifmx:11.2.0.3.0"}
+oracle.rdbms.tg4ifmx:sl_returnVal={"svr1","1234","isvr","idb"}
+
+svr1 - Informix Database Server Host Name
+1234 - Informix Database Server Port Number
+isvr - Informix Server Name
+idb  - Informix Database Name
+
+файл:
+/mnt/data/oracle/product/11.2.0/gateways/dg4ifmx/admin/initdg4ifmx.ora
+
+HS_FDS_CONNECT_INFO=[onldbt1]:9088/onldbt1/online
+HS_FDS_TRACE_LEVEL=DEBUG
+HS_FDS_RECOVERY_ACCOUNT=recover
+HS_FDS_RECOVERY_PWD=recover
+HS_FDS_TRANSACTION_LOG=HS_TRANSACTION_LOG
+
+
+1)
+ORACLE_HOME="/mnt/data/oracle/product/11.2.0/gateways"
+export ORACLE_HOME
+ORACLE_HOME_NAME="OHOME2"
+export ORACLE_HOME_NAME
+
+2) vim /mnt/data/distrib/gateways_11.2.0.3/response/tg.rsp
+
+UNIX_GROUP_NAME = "oinstall"
+ORACLE_HOME = "/mnt/data/oracle/product/11.2.0/gateways"
+ORACLE_BASE = "/mnt/data/oracle/product"
+ORACLE_HOME_NAME = "OHOME2"
+COMPONENT_LANGUAGES={"en","ru"}
+oracle.tg:DEPENDENCY_LIST={"oracle.rdbms.tg4ifmx:11.2.0.3.0"}
+oracle.rdbms.tg4ifmx:sl_returnVal={"[onldbt1]","9088","onldbt1","online"}
+
+!!! Пользователь oracle должен имень полные права на каталог ВЫШЕ ORACLE_BASE (для избежания ошибки при создании oraInventory)
+
+./runInstaller -silent -responseFile /mnt/data/distrib/gateways_11.2.0.3/tg.rsp
+
+***
+файл:
+/mnt/data/oracle/product/11.2.0/gateways/dg4ifmx/admin/initdg4ifmx.ora
+
+HS_FDS_CONNECT_INFO=[onldbt1]:9088/onldbt1/online
+HS_FDS_TRACE_LEVEL=DEBUG
+HS_FDS_RECOVERY_ACCOUNT=recover
+HS_FDS_RECOVERY_PWD=recover
+HS_FDS_TRANSACTION_LOG=HS_TRANSACTION_LOG
+***
+
+3) sudo su
+
+/mnt/data/oracle/product/11.2.0/gateways/root.sh
+
+/mnt/data/oracle/product/11.2.0/gateways/cfgtoollogs/configToolFailedCommands
+
+4) vim listener.ora в ORACLE_HOME для gateways (в ORACLE_HOME/dg4ifmx/admin и ORACLE_HOME/network/admin)
+
+LISTENER_GTW =
+  (DESCRIPTION_LIST =
+    (DESCRIPTION =
+      (ADDRESS = (PROTOCOL = IPC)(KEY = EXTPROC1522))
+      (ADDRESS = (PROTOCOL = TCP)(HOST = s-msk08-orclT.raiffeisen.ru)(PORT = 1522))
+    )
+  )
+
+SID_LIST_LISTENER_GTW =
+   (SID_LIST =
+      (SID_DESC =
+       (SID_NAME=DG4IFMX)
+       (ORACLE_HOME=/mnt/data/oracle/product/11.2.0/gateways)
+       (ENV="LD_LIBRARY_PATH=/mnt/data/oracle/product/11.2.0/gateways/dg4ifmx/driver/lib:$LD_LIBRARY_PATH")
+       (PROGRAM=DG4IFMX)
+      )
+   )
+
+ADR_BASE_LISTENER_GTW = /mnt/data/oracle
+
+5) vim listener.ora в ORACLE_HOME для Oracle database
+
+SID_LIST_LISTENER =
+  (SID_LIST =
+    (SID_DESC =
+      (SID_NAME = PLSExtProc)
+      (ORACLE_HOME = /mnt/data/oracle/db_1)
+      (PROGRAM = extproc)
+    )
+    (SID_DESC =
+    ...
+    )
+    (SID_DESC =
+    ...
+    )
+    (SID_DESC =
+      (SID_NAME=DG4IFMX)
+      (ORACLE_HOME=/mnt/data/oracle/product/11.2.0/gateways)
+      (ENV="LD_LIBRARY_PATH=/mnt/data/oracle/product/11.2.0/gateways/dg4ifmx/driver/lib:$LD_LIBRARY_PATH")
+      (PROGRAM=DG4IFMX)
+    )
+  )
+  
+5) vim tnsnames.ora в ORACLE_HOME для Oracle database
+
+DG4IFMX =
+  (DESCRIPTION=
+    (ADDRESS=(PROTOCOL=tcp)(HOST=10.242.182.17)(PORT=1522))
+    (CONNECT_DATA=(SID=DG4IFMX))
+    (HS=OK)
+  )
+  
+6) lsnrctl stop / start для обеих ORACLE_HOME
+
+7) Модификация файла initdg4ifmx.ora в ORACLE_HOME/dg4ifmx/admin (ORACLE_HOME для gateways)
+
+HS_FDS_CONNECT_INFO=[onldbt1]:9088/onldbt1/online
+HS_FDS_TRACE_LEVEL=OFF
+HS_FDS_RECOVERY_ACCOUNT=RECOVER
+HS_FDS_RECOVERY_PWD=RECOVER
+
+7) Создание DB_LINK
+
+SQL> CREATE public DATABASE LINK DG4IFMX CONNECT TO "root" IDENTIFIED BY "qwerty1234" USING 'DG4IFMX';
+
+create transaction log table (на информиксе от имени пользователя RECOVER)
+
+DELIMIDENT = y; export DELIMIDENT
+
+CREATE TABLE "HS_TRANSACTION_LOG"(
+  "GLOBAL_TRAN_ID" CHAR (64) NOT NULL,
+  "TRAN_COMMENT" CHAR (255) NULL
+);
+
+GRANT ALL ON "HS_TRANSACTION_LOG" TO PUBLIC;
+
+8) Проверка DB_LINK
+
+select * from dual@DG4IFMX;
+
+для выбора из таблиц informix имя таблицы помещаем в " " (кроме системных таблиц: select * from all_users@DG4IFMX;)
+
+desc "hotcards"@DG4IFMX;
+
+select "tpkunderlmk" from "terminals"@dg4ifmx;
+
+create or replace public synonym terminals for "terminals"@dg4ifmx;
+select 
+desc "online"."set_term_keys"@dg4ifmx;
+
+Вызов из информикса
+
+exec "online"."set_term_keys"@dg4ifmx('U','90002006','AD22926366B777E41309E632F97B74AA','63739F0000000000','U','3','01');
+
+изменение ключа терминала 99999003:
+
+exec "online"."set_term_keys"@dg4ifmx('U','99999003','BD22926366B777E41309E632F97B74BB','73739F0000000000','U','3','01');
+
+обратно
+
+exec "online"."set_term_keys"@dg4ifmx('U','99999003','AD22926366B777E41309E632F97B74AA','63739F0000000000','U','3','01');
+
+добавление терминала 99999004:
+
+exec "online"."set_term_keys"@dg4ifmx('N','99999004','BD22926366B777E41309E632F97B74BB','73739F0000000000','U','3','01');
+
+Вставка строки в таблицу терминалов
+
+INSERT INTO terminals 
+ ("number",
+ "location",
+ "serial",
+ "mer_number",
+ "currency",
+ "country",
+ "an_country",
+ "an_country_3",
+ "city",
+ "zipcode",
+ "state",
+ "county",
+ "vacq_bin",
+ "macq_bin",
+ "mds_id",
+ "acq_country",
+ "category",
+ "pos_entrymode",
+ "pos_condcode",
+ "pos_addit",
+ "pos_dc",
+ "pos_active",
+ "hsmusername",
+ "wkindex",
+ "tpkunderlmk",
+ "tpkunderlmkchkval",
+ "tpkunderlmktype",
+ "tpkunderlmkdes",
+ "pinblockfm",
+ "chip_capa",
+ "paymentsystem",
+ "mapmerchnum",
+ "maptermnum")
+ VALUES (
+ '99999004',
+ 'P2100',
+ '',
+ '1599999001',
+ '643',
+ '643',
+ 'RU',
+ 'RU',
+ 'MOSKVA',
+ '',
+ '',
+ '',
+ '476036',
+ '005275',
+ '',
+ '643',
+ '7299',
+ '9010',
+ '00',
+ '02',
+ 'Y',
+ 'Y',
+ 'rualam1',
+ '',
+ 'AD22926366B777E41309E632F97B74AA',
+ '63739F0000000000',
+ 'U',
+ '3',
+ '01',
+ '',
+ '',
+ '',
+ ''
+ );
+ 
+Вызов процедур не поддерживается (строка из документации):
+ 
+Stored Procedures
+The gateway does not support the procedure feature that allows the execution of
+stored procedures in a non-Oracle database.
+http://docs.oracle.com/cd/E11882_01/gateways.112/e12066/features.htm#i1006154
+
+Вызов через DBMS_HS_PASSTHROUGH
+
+SET TERMOUT ON
+SET SERVEROUTPUT ON
+
+CREATE OR REPLACE PROCEDURE SYS.set_term_keys (
+   l_action              VARCHAR2,
+   l_terminal_num        VARCHAR2,
+   l_tpkunderlmk_key     VARCHAR2,
+   l_tpkunderlmk_kcv     VARCHAR2,
+   l_tpkunderlmk_type    VARCHAR2,
+   l_tpkunderlmk_des     SMALLINT,
+   l_pinblckfmt          VARCHAR2)
+IS
+   /*,l_return out integer*/
+
+
+   l_cursor      BINARY_INTEGER;
+   l_condition   VARCHAR2 (250);
+   l_return      INTEGER;
+/*
+l_condition         VARCHAR2(250);
+l_action             CHAR(1)  ;
+l_terminal_num      CHAR(8)  ;
+l_tpkunderlmk_key   CHAR(48) ;
+l_tpkunderlmk_kcv   CHAR(16) ;
+l_tpkunderlmk_type   CHAR(1)  ;
+l_tpkunderlmk_des   SMALLINT ;
+l_pinblckfmt         CHAR(2)  ;
+*/
+
+BEGIN
+   l_condition :=
+         'execute procedure set_term_keys('
+      || ''''
+      || l_action
+      || ''''
+      || ','
+      || ''''
+      || l_terminal_num
+      || ''''
+      || ','
+      || ''''
+      || RTRIM (l_tpkunderlmk_key)
+      || ''''
+      || ','
+      || ''''
+      || RTRIM (l_tpkunderlmk_kcv)
+      || ''''
+      || ','
+      || ''''
+      || l_tpkunderlmk_type
+      || ''''
+      || ','
+      || ''''
+      || l_tpkunderlmk_des
+      || ''''
+      || ','
+      || ''''
+      || l_pinblckfmt
+      || ''''
+      || ');';
+   /*DBMS_OUTPUT.put_line(l_condition);*/
+
+   l_cursor := DBMS_HS_PASSTHROUGH.open_cursor@DG4IFMX;
+
+   DBMS_HS_PASSTHROUGH.parse@DG4IFMX (l_cursor, l_condition);
+
+   WHILE DBMS_HS_PASSTHROUGH.fetch_row@DG4IFMX (l_cursor) > 0
+   LOOP
+      DBMS_HS_PASSTHROUGH.get_value@DG4IFMX (l_cursor, 1, l_return);
+      DBMS_OUTPUT.put_line (l_return);
+   END LOOP;
+
+   DBMS_HS_PASSTHROUGH.close_cursor@DG4IFMX (l_cursor);
+EXCEPTION
+   WHEN OTHERS
+   THEN
+      DBMS_HS_PASSTHROUGH.close_cursor@DG4IFMX (l_cursor);
+      RAISE;
+END set_term_keys;
+/
+ 
+обновление строки с датой:
+
+SET TERMOUT ON
+SET SERVEROUTPUT ON
+
+DECLARE
+ v_date VARCHAR(19);
+begin
+ v_date:=to_char(sysdate,'YYYY-MM-DD HH24:MI:SS');
+ update terminals set "hsmtimestamp" = v_date where "number" = '99999004';
+ dbms_output.enable;
+ DBMS_OUTPUT.PUT_LINE('v_date= ' || v_date);
+end;
+/
+ 
+update terminals set "tpkunderlmk"='AE22926366B777E41309E632F97B74AA' where "number" = '99999004';
+
+select  * from terminals where "number" = '99999004';
+
+select  * from terminals order by 1;
+
+Добавление таблицы
+
+DECLARE
+v_ERROR_FLAG VARCHAR(2);
+begin
+v_ERROR_FLAG:=DBMS_HS_PASSTHROUGH.EXECUTE_IMMEDIATE@dg4ifmx('CREATE TABLE "online"."HSM_KEYS"("ACTION" CHAR (1),"TERMINAL_NUM" CHAR (8),"TPKUNDERLMK_KEY" CHAR (48),"TPKUNDERLMK_KCV" CHAR (16),"TPKUNDERLMK_TYPE" CHAR (1),"TPKUNDERLMK_DES" SMALLINT DEFAULT 3, "PINBLCKFMT" CHAR (2))');
+end;
+/
+
+desc "online"."HSM_KEYS"@dg4ifmx;
+
+create public synonym onl_hsm_keys for "online"."HSM_KEYS"@dg4ifmx;
+
+select * from onl_hsm_keys;
+
+select * from router.HSM_KEYS;
+
+
+Вставка
+
+insert into router.hsm_keys(SZNUMBER,RATM,TERM_NUMBER,MER_NUMBER,TPKUNDERLMK,TPKUNDERLMKCHKVAL,TPKUNDERLMKTYPE,TPKUNDERLMKDES,PINBLCKFMT) 
+values
+('123456',
+1234567,
+'99999004',
+'1599999001',
+'DF22926366B777E41309E632F97B74BB',
+'73739F0000000000',
+'U',
+3,
+'01');
+
+Изменение ключа
+
+update router.hsm_keys set TPKUNDERLMK = 'EF22926366B777E41309E632F97B74BB', TPKUNDERLMKCHKVAL = '63739F0000000000' where TERM_NUMBER = '99999004';
+
+
+INSERT INTO ROUTER.HSM_KEYS 
+                           (TERM_NUMBER,
+                             MER_NUMBER,
+                             TPKUNDERLMK,
+                             TPKUNDERLMKCHKVAL,
+                             PINBLCKFMT)
+     VALUES 
+            ('99999004',
+             '1599999001',
+             'BD22926366B777E41309E632F97B74BB',
+             '73739F0000000000',
+             '3');
+			 
+desc "RECOVER"."hs_transaction_log"@dg4ifmx;
+
+SET TERMOUT ON
+SET SERVEROUTPUT ON
+
+
+DB2
+
+cd $ORACLE_HOME/dg4db2/admin, где $ORACLE_HOME - Oracle gateway home
+
+cat initdg4db2.ora
+
+HS_FDS_CONNECT_INFO=[10.243.1.128]:447/ruaas06e,IOS
+HS_FDS_TRACE_LEVEL=255
+HS_FDS_RECOVERY_ACCOUNT=RECOVER
+HS_FDS_RECOVERY_PWD=RECOVER
+HS_TRANSACTION_MODEL=COMMIT_CONFIRM
+HS_FDS_TRANSACTION_ISOLATION=READ_COMMITTED
+HS_FDS_SUPPORT_STATISTICS=TRUE
+HS_FDS_RESULTSET_SUPPORT=FALSE
+#HS_FDS_PACKAGE_COLLID=ORACLEGTW
+HS_IDLE_TIMEOUT=0
+#
+# my params
+#
+HS_OPEN_CURSORS=200
+HS_FDS_PACKAGE_COLLID=NULLID
+
+поставить клиент (по умолчанию в /opt/ibm/db2/V9.7)
+
+создать пользователя db2inst1, ничего в home каталоге у него создавать не надо (важно, чтобы сам home каталог был).
+Потом:
+
+/opt/ibm/db2/V9.7/instance/db2icrt -s client db2inst1
+
+/home/db2inst1/sqllib/ и прочее будет создано командой db2icrt (что-то создано, что-то будет линками к каталогу с инсталляцией).
+
+Затем включить в свой профайл (в профайл пользователя, работающего с DB2) вызов /home/db2inst1/sqllib/db2profile:
+
+if [ -f /home/db2inst1/sqllib/db2profile ]; then
+    . /home/db2inst1/sqllib/db2profile
+fi
+
+Для проверки можно поселектить чего-нибудь из QSYS2.SYSCATALOGS или QSYS2.SYSTABLES:
+http://publib.boulder.ibm.com/infocenter/iseries/v5r3/topic/db2/rbafzmstcatalogtbls.htm
+
+
+настройка соединения через db2 клиента (НЕ ОБЯЗАТЕЛЬНО):
+
+su - root
+cd /opt/ibm/db2/V9.7/bin
+./db2
+
+db2 => 
+
+Теперь надо создать дескриптор соединения (говоря теминами Оракла)
+
+LIST NODE DIRECTORY
+LIST DATABASE DIRECTORY
+
+db2 CATALOG TCPIP NODE <node name> REMOTE <server name> SERVER 446 REMOTE_INSTANCE DB2 SYSTEM <db name> OSTYPE OS400
+db2 CATALOG DATABASE <db name> AS <db name> AT NODE <node name>
+
+в нашем случае:
+CATALOG TCPIP NODE ruaas06e REMOTE 10.243.1.128 SERVER 446 REMOTE_INSTANCE DB2 SYSTEM ruaas06e OSTYPE OS400
+CATALOG DATABASE ruaas06e AS ruaas06e AT NODE ruaas06e
+
+<node name> - самостоятельно придуманное название entry в локальной node directory
+<server name> - 10.243.1.128 (настоятельно рекомендую использовать имя хоста, а не IP - ruaas02e)
+<db name> - ruaas06e
+
+После каталогизирования ноды/базы, она становится доступной для приложений как "локальная" база. Приложения обращаются просто по имени.
+
+проверить:
+db2 connect to ruaas06e user OTGDB2
+
+далее оно пароль спросит и скорее всего сообщит "извиняйте, у вас нет лицензии на DB2 Connect" (Ораклу при прямом самостоятельном подключении и не нужна, нужна ли была вообще установка клиента - хто знает).
+
+Если база не каталогизировалась (db2 list node directory; db2 list db directory ничего не выдают), то общение идёт помимо клиента, хотя какие-то либы оттуда возможно и используются.
+
+Вызов процедур:
+
+http://docs.oracle.com/html/A95217_01/ch09.htm#1002715
+
+desc QSYS2.SYSPROCS@DG4db2;
+
+INT2GETMOD - название функции
+
+column SPECIFIC_NAME format a10
+column SPECIFIC_SCHEMA format a10
+column ROUTINE_NAME format a10
+select SPECIFIC_NAME,SPECIFIC_SCHEMA,ROUTINE_NAME from QSYS2.SYSPROCS@DG4db2 where SPECIFIC_NAME in ('INT2GETMOD');
+
+SET TERMOUT ON
+SET SERVEROUTPUT ON
+
+DECLARE
+ v_IN_STR        VARCHAR(4096);
+ v_OUT_STR       VARCHAR(4096);
+ v_ERROR_DESC    VARCHAR(200);
+ v_ERROR_FLAG    VARCHAR(1);
+begin
+ v_IN_STR:='aaa';
+ O1AXALPHA.INT2GETMOD@DG4db2(v_IN_STR, v_OUT_STR, v_ERROR_DESC, v_ERROR_FLAG);
+ dbms_output.enable;
+ DBMS_OUTPUT.PUT_LINE('v_OUT_STR= ' || v_OUT_STR);
+ DBMS_OUTPUT.PUT_LINE('***');
+ DBMS_OUTPUT.PUT_LINE('v_ERROR_DESC= ' || v_ERROR_DESC);
+ DBMS_OUTPUT.PUT_LINE('***');
+ DBMS_OUTPUT.PUT_LINE('v_ERROR_FLAG= ' || v_ERROR_FLAG);
+ DBMS_OUTPUT.PUT_LINE('***');
+end;
+/
+
+SET TERMOUT ON
+SET SERVEROUTPUT ON
+
+DECLARE
+ v_IN_STR        VARCHAR(4096);
+ v_OUT_STR       VARCHAR(4096);
+ v_ERROR_DESC    VARCHAR(200);
+ v_ERROR_FLAG    VARCHAR(1);
+begin
+ v_IN_STR:='aaa';
+ D1RBALIB.INT2GETMOD@DG4db2(v_IN_STR, v_OUT_STR, v_ERROR_DESC, v_ERROR_FLAG);
+ dbms_output.enable;
+ DBMS_OUTPUT.PUT_LINE('v_OUT_STR= ' || v_OUT_STR);
+ DBMS_OUTPUT.PUT_LINE('***');
+ DBMS_OUTPUT.PUT_LINE('v_ERROR_DESC= ' || v_ERROR_DESC);
+ DBMS_OUTPUT.PUT_LINE('***');
+ DBMS_OUTPUT.PUT_LINE('v_ERROR_FLAG= ' || v_ERROR_FLAG);
+ DBMS_OUTPUT.PUT_LINE('***');
+end;
+/
+
+балансы
+
+DECLARE
+ v_IN_STR        VARCHAR(4096);
+ v_OUT_STR       VARCHAR(4096);
+ v_ERROR_DESC    VARCHAR(200);
+ v_ERROR_FLAG    VARCHAR(1);
+ vBALANCE        NUMBER(12,2):=0;
+begin
+ v_IN_STR:=LPAD('201805507RUR382501 '          ,  24, ' ') ||
+      RPAD(' '                            ,   2, ' ') ||
+      RPAD(' '                            ,   3, ' ') ||
+      RPAD(TO_CHAR(sysdate,'YYYY-MM-DD'),  10, ' ') ||
+      RPAD(' '                            ,   4, ' ') ||
+      RPAD(' '                            ,  14, ' ') ||
+      RPAD(' '                            ,  16, ' ');
+ D1RBALIB.INT2GETBLN@DG4db2(v_IN_STR, v_OUT_STR, v_ERROR_DESC, v_ERROR_FLAG);
+ dbms_output.enable;
+ DBMS_OUTPUT.PUT_LINE('v_OUT_STR= ' || v_OUT_STR);
+ DBMS_OUTPUT.PUT_LINE('***');
+ DBMS_OUTPUT.PUT_LINE('v_ERROR_DESC= ' || v_ERROR_DESC);
+ DBMS_OUTPUT.PUT_LINE('***');
+ DBMS_OUTPUT.PUT_LINE('v_ERROR_FLAG= ' || v_ERROR_FLAG);
+ DBMS_OUTPUT.PUT_LINE('-----');
+ vBALANCE := (CASE WHEN SUBSTR(v_OUT_STR,33,1) = 'D' THEN -1 ELSE 1 END) * TO_NUMBER(SUBSTR(v_OUT_STR,18,15))/POWER(10,TO_NUMBER(SUBSTR(v_OUT_STR,17,1)));
+ DBMS_OUTPUT.PUT_LINE('vBALANCE= ' || to_char(vBALANCE));
+end;
+/
+
+Тестовый нью интерим:
+
+CREATE public DATABASE LINK A1AXALPHA CONNECT TO "A1AXALPHA" IDENTIFIED BY "A1AXALPHA1" USING 'DG4DB2';
+
+SET TERMOUT ON
+SET SERVEROUTPUT ON
+
+DECLARE
+ v_IN_STR        VARCHAR(4096);
+ v_OUT_STR       VARCHAR(4096);
+ v_ERROR_DESC    VARCHAR(200);
+ v_ERROR_FLAG    VARCHAR(1);
+begin
+ v_IN_STR:='aaa';
+ O1RBALIB.INT2GETMOD@A1AXALPHA(v_IN_STR, v_OUT_STR, v_ERROR_DESC, v_ERROR_FLAG);
+ dbms_output.enable;
+ DBMS_OUTPUT.PUT_LINE('v_OUT_STR= ' || v_OUT_STR);
+ DBMS_OUTPUT.PUT_LINE('***');
+ DBMS_OUTPUT.PUT_LINE('v_ERROR_DESC= ' || v_ERROR_DESC);
+ DBMS_OUTPUT.PUT_LINE('***');
+ DBMS_OUTPUT.PUT_LINE('v_ERROR_FLAG= ' || v_ERROR_FLAG);
+ DBMS_OUTPUT.PUT_LINE('***');
+end;
+/
+
+В случае с RUAAS07F
+
+CREATE public DATABASE LINK RUAAS07F CONNECT TO "O1AXALPHA" IDENTIFIED BY "ned4fusion" USING 'DG4DB2';
+CREATE public DATABASE LINK RUAAS07F CONNECT TO "O1AXALPHA" IDENTIFIED BY "card4ever" USING 'DG4DB2';
+  CREATE PUBLIC DATABASE LINK "RUAAS07F"
+   CONNECT TO "O1AXALPHA" IDENTIFIED BY VALUES '051A8E55AD2FD565410091837E813CB8CC76CF32578FD12518'
+   USING 'DG4DB2'
+
+Получить код DB_LINK из БД
+
+select dbms_metadata.get_ddl('DB_LINK', 'RUAAS07F', 'PUBLIC') FROM DUAL
+
+Среда O1, то есть все хранимки лежат в O1RBALIB.
+
+set pagesize 1000
+column SPECIFIC_NAME format a15
+column SPECIFIC_SCHEMA format a15
+column ROUTINE_NAME format a10
+select SPECIFIC_NAME,SPECIFIC_SCHEMA,ROUTINE_NAME from QSYS2.SYSPROCS@RUAAS07F where SPECIFIC_NAME in ('INT2GETMOD');
+
+просмотр доступных функций:
+
+select SPECIFIC_NAME,SPECIFIC_SCHEMA from QSYS2.SYSPROCS@RUAAS07F where SPECIFIC_SCHEMA in ('O1RBALIB') order by 1;
+
+SET TERMOUT ON
+SET SERVEROUTPUT ON
+
+DECLARE
+ v_IN_STR        VARCHAR(4096);
+ v_OUT_STR       VARCHAR(4096);
+ v_ERROR_DESC    VARCHAR(200);
+ v_ERROR_FLAG    VARCHAR(1);
+begin
+ v_IN_STR:='aaa';
+ O1RBALIB.INT2GETMOD@RUAAS07F(v_IN_STR, v_OUT_STR, v_ERROR_DESC, v_ERROR_FLAG);
+ dbms_output.enable;
+ DBMS_OUTPUT.PUT_LINE('v_OUT_STR= ' || v_OUT_STR);
+ DBMS_OUTPUT.PUT_LINE('***');
+ DBMS_OUTPUT.PUT_LINE('v_ERROR_DESC= ' || v_ERROR_DESC);
+ DBMS_OUTPUT.PUT_LINE('***');
+ DBMS_OUTPUT.PUT_LINE('v_ERROR_FLAG= ' || v_ERROR_FLAG);
+ DBMS_OUTPUT.PUT_LINE('***');
+end;
+/
+
+
+балансы
+
+201000201RUR503501
+201805507RUR382501
+
+DECLARE
+ v_IN_STR        VARCHAR(4096);
+ v_OUT_STR       VARCHAR(4096);
+ v_ERROR_DESC    VARCHAR(200);
+ v_ERROR_FLAG    VARCHAR(1);
+ vBALANCE        NUMBER(12,2):=0;
+begin
+ v_IN_STR:=LPAD('201000201RUR503501 '          ,  24, ' ') ||
+      RPAD(' '                            ,   2, ' ') ||
+      RPAD(' '                            ,   3, ' ') ||
+      RPAD(TO_CHAR(sysdate,'YYYY-MM-DD'),  10, ' ') ||
+      RPAD(' '                            ,   4, ' ') ||
+      RPAD(' '                            ,  14, ' ') ||
+      RPAD(' '                            ,  16, ' ');
+ O1RBALIB.INT2GETBLN@RUAAS07F(v_IN_STR, v_OUT_STR, v_ERROR_DESC, v_ERROR_FLAG);
+ dbms_output.enable;
+ DBMS_OUTPUT.PUT_LINE('v_OUT_STR= ' || v_OUT_STR);
+ DBMS_OUTPUT.PUT_LINE('***');
+ DBMS_OUTPUT.PUT_LINE('v_ERROR_DESC= ' || v_ERROR_DESC);
+ DBMS_OUTPUT.PUT_LINE('***');
+ DBMS_OUTPUT.PUT_LINE('v_ERROR_FLAG= ' || v_ERROR_FLAG);
+ DBMS_OUTPUT.PUT_LINE('-----');
+ vBALANCE := (CASE WHEN SUBSTR(v_OUT_STR,33,1) = 'D' THEN -1 ELSE 1 END) * TO_NUMBER(SUBSTR(v_OUT_STR,18,15))/POWER(10,TO_NUMBER(SUBSTR(v_OUT_STR,17,1)));
+ DBMS_OUTPUT.PUT_LINE('vBALANCE= ' || to_char(vBALANCE));
+end;
+/
+
+Боевой нью интерим:
+
+CREATE public DATABASE LINK RUAAS01 CONNECT TO "RUAXALPHA" IDENTIFIED BY "R08Ke$o8" USING 'dg4db2_prod';
+
+новый пароль на AS/400 (uppercase):
+
+CREATE public DATABASE LINK RUAAS01 CONNECT TO "RUAXALPHA" IDENTIFIED BY "R08KE$O8" USING 'dg4db2_prod';
+
+set pagesize 1000
+column SPECIFIC_NAME format a15
+column SPECIFIC_SCHEMA format a15
+column ROUTINE_NAME format a10
+select SPECIFIC_NAME,SPECIFIC_SCHEMA,ROUTINE_NAME from QSYS2.SYSPROCS@RUAAS01 where SPECIFIC_NAME in ('INT2GETMOD');
+
+SELECT SPECIFIC_NAME, SPECIFIC_SCHEMA, ROUTINE_NAME
+  FROM QSYS2.SYSPROCS@RUAAS01;
+
+просмотр доступных функций:
+
+select SPECIFIC_NAME,SPECIFIC_SCHEMA from QSYS2.SYSPROCS@RUAAS01 where SPECIFIC_SCHEMA in ('O1RBALIB') order by 1;
+
+
+Проверка работоспособности: соединиться с сервером БД при помощи SQL Developer или чего-либо аналогичного, создать линк на внешнюю базу и попробовать из этого линка что-то выбрать (пример селектов выше). Подчеркиваю, что напрямую подключаться к SID не имеет смысла, т.к. будет ошибка, и ругаться будет на что-то общее, вроде
+
+ORA-28547: connection to server failed, probable Oracle Net admin error
+
+отсылая искать ошибку самому (например, эта ошибка может говорить о неправильном имени пользователя/пароле)
+
+
