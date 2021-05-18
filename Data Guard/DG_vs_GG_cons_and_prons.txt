@@ -1,0 +1,36 @@
+Oracle Data Guard DG pro:
+
+Fully supported HA solution from Oracle
+Can guarantee zero data loss in the case of database, cluster or data corruption failures
+DG is supported as default HA solution from OW
+Active data guard allow standby DB be available for read only load which will give us possibility to offload it to standby site
+Downtime of patching may be decreased by using stanby first patching mechanism
+Current DBA in NI is aware of DG technology
+Supported thansparent application connection descriptor where app will always connect to either primary os standy DB no matter in which site it will be
+Easy switchover and failover with standard data guard manager utility
+Potential possibility of using snapshot standby technology if required
+
+contra:
+
+No active/active mode possible. standby DB will be read only (with active standby mode)
+No possible to do sync with different versions of Oracle rdbms sw
+
+Oracle Golden Gate GG pro:
+
+active/active mode possible. standby DB will be read only (with active standby mode)
+Possible to do sync with different versions of Oracle rdbms sw
+
+contra:
+
+Oracle GoldenGate alone cannot guarantee zero data loss in the case of database, cluster or data corruption failures
+No oficial support for GG from OW, DG is supported as default HA solution
+Much more efforts required to administer/setup and make changes in existing GG configuration
+Additional licencing (payment) required for GG
+Lack of resources with GG experience for support GG as HA in PROD
+Additional SW + changes in ALL DBs required
+Swichover more complicated in comparicon with DG
+Failover and futher configuration restoration extremely complicated in comparicon with DG
+Global change in current architecture required for active-active mode support from all apps
+
+
+So DG is recommended approach for enterprise HA realization.

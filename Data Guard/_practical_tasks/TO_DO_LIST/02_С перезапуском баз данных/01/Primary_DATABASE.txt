@@ -1,0 +1,6 @@
+select name,value/1024/1024 "SIZE IN MEGABYTES" from v$parameter where name = '_kgl_large_heap_warning_threshold';
+create pfile='D:\Oracle\OraHome\Database\new_good_pfile.ora' from spfile;
+alter system set "_kgl_large_heap_warning_threshold"=52428800 scope=spfile;
+SHUTDOWN IMMEDIATE;
+STARTUP;
+select name,value/1024/1024 "SIZE IN MEGABYTES" from v$parameter where name = '_kgl_large_heap_warning_threshold';

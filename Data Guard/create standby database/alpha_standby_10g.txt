@@ -1,0 +1,228 @@
+Primary server
+
+В SQLplus
+
+Просмотр состояния логирования операций в основной БД 
+
+select force_logging from v$database;
+
+Выполняем на основной БД:
+
+exec DBMS_SERVICE.CREATE_SERVICE(service_name =>'UNO_SERVICE',network_name =>'UNO_SERVICE',aq_ha_notifications=>true,failover_method =>'BASIC',failover_type =>'SELECT',failover_retries =>180,failover_delay => 5);
+
+CREATE OR REPLACE TRIGGER MANAGED_SERVICE AFTER DB_ROLE_CHANGE ON DATABASE DECLARE ROLE VARCHAR(30);
+BEGIN
+SELECT DATABASE_ROLE INTO ROLE FROM V$DATABASE;
+IF ROLE = 'PRIMARY' THEN
+DBMS_SERVICE.START_SERVICE('UNO_SERVICE');
+ELSE
+DBMS_SERVICE.STOP_SERVICE('UNO_SERVICE');
+END IF;
+END;
+/
+
+CREATE OR REPLACE TRIGGER MANAGED_SERVICE_START AFTER STARTUP ON DATABASE DECLARE ROLE VARCHAR(30);
+BEGIN
+SELECT DATABASE_ROLE INTO ROLE FROM V$DATABASE;
+IF ROLE = 'PRIMARY' THEN
+DBMS_SERVICE.START_SERVICE('UNO_SERVICE');
+ELSE
+DBMS_SERVICE.STOP_SERVICE('UNO_SERVICE');
+END IF;
+END;
+/
+
+BEGIN
+DBMS_SERVICE.START_SERVICE('UNO_SERVICE');
+END;
+/
+
+alter system set log_archive_config='DG_CONFIG=(unoc,unoc_s)' SCOPE=BOTH;
+alter system set log_archive_dest_1='LOCATION=G:\ARCHIVELOG VALID_FOR=(ALL_LOGFILES,ALL_ROLES) DB_UNIQUE_NAME=unoc' SCOPE=BOTH;
+alter system set log_archive_dest_2='SERVICE=UNOC_S SYNC VALID_FOR=(ONLINE_LOGFILES,PRIMARY_ROLE) DB_UNIQUE_NAME=unoc_s' SCOPE=BOTH;
+
+alter system set log_archive_dest_state_2='ENABLE' SCOPE=BOTH;
+
+alter system set fal_client='UNOC' SCOPE=BOTH;
+alter system set fal_server='UNOC_S' SCOPE=BOTH;
+alter system set LOCAL_LISTENER='(ADDRESS=(PROTOCOL=TCP)(HOST=10.243.100.237)(PORT=1521))' SCOPE=BOTH;
+
+Создаем файл инициализации резервной БД и копируем его в каталог OracleHome\Database на резервном сервере
+
+create pfile='G:\INITUNOC.ORA' from spfile;
+
+В файле меняем:
+
+db_unique_name='unoc_s' SCOPE=BOTH;
+alter system set log_archive_dest_1='LOCATION=G:\ARCHIVELOG VALID_FOR=(ALL_LOGFILES,ALL_ROLES) DB_UNIQUE_NAME=unoc_s' SCOPE=BOTH;
+alter system set log_archive_dest_2='SERVICE=UNOC SYNC VALID_FOR=(ONLINE_LOGFILES,PRIMARY_ROLE) DB_UNIQUE_NAME=unoc' SCOPE=BOTH;
+alter system set log_archive_dest_state_2='ENABLE' SCOPE=BOTH;
+alter system set fal_client='UNOC_S' SCOPE=BOTH;
+alter system set fal_server='UNOC' SCOPE=BOTH;
+
+Удаляем строку с параметром
+
+log_archive_start
+
+Добавляем в tnsnames.ora
+
+UNOC =
+  (DESCRIPTION =
+    (ADDRESS_LIST =
+      (ADDRESS = (PROTOCOL = TCP)(HOST = 10.243.100.237)(PORT = 1521))
+    )
+    (CONNECT_DATA =
+      (SERVER = DEDICATED)
+      (SERVICE_NAME = UNOC)
+    )
+)
+
+UNOC_S =
+  (DESCRIPTION =
+    (ADDRESS_LIST =
+      (ADDRESS = (PROTOCOL = TCP)(HOST = 10.243.103.248)(PORT = 1521))
+    )
+    (CONNECT_DATA =
+      (SERVER = DEDICATED)
+      (SERVICE_NAME = UNOC)
+    )
+  )
+  
+UNO_SERVICE =
+ (DESCRIPTION =
+  (TRANSPORT_CONNECT_TIMEOUT=3)
+  (failover=on)
+  (ADDRESS = (PROTOCOL = TCP)(HOST = 10.243.100.237)(PORT = 1521))
+  (ADDRESS = (PROTOCOL = TCP)(HOST = 10.243.103.248)(PORT = 1521))
+  (CONNECT_DATA =
+    (SERVER = DEDICATED)
+    (SERVICE_NAME = UNO_SERVICE)
+    (failover_mode=
+   (type=session))
+  )
+ )
+ 
+Добавляем в listener на standby
+
+LISTENER =
+  (DESCRIPTION =
+    (ADDRESS = (PROTOCOL = TCP)(HOST = 10.243.103.248 )(PORT = 1521))
+  )
+
+SID_LIST_LISTENER =
+  (SID_LIST =
+    (SID_DESC =
+      (GLOBAL_DBNAME = UNOC)
+      (ORACLE_HOME = D:\oracle\OraHome)
+      (SID_NAME = UNOC)
+    )
+    (SID_DESC =
+      (GLOBAL_DBNAME = UNO_SERVICE)
+      (ORACLE_HOME = D:\oracle\OraHome)
+      (SID_NAME = UNOC)
+    )
+  )
+
+Создание резервной копии основной БД:
+
+spool log to 'G:\backup\backup4standby.log';
+
+CONNECT TARGET SYS/DUO@UNOC
+
+CONNECT AUXILIARY SYS/NCTSYS@UNOC_S
+
+BACKUP DATABASE INCLUDE CURRENT CONTROLFILE FOR STANDBY tag=STB_BACKUP_20130717;
+
+spool log off
+
+Копируем созданный архив на сервер standby и на нем выполняем:
+
+RMAN
+
+spool log to 'G:\backup\recover4standby.log';
+
+CONNECT TARGET SYS/DUO@UNOC
+
+CONNECT AUXILIARY SYS/NCTSYS@UNOC_S
+
+DUPLICATE TARGET DATABASE FOR STANDBY NOFILENAMECHECK DORECOVER;
+
+spool log off
+
+Затем добавляем необходимые файлы на standby БД:
+
+на основной БД смотрим кол-во логов, добавляем на обе БД standby-логи кол-вом на 1 больше online логов
+
+column MEMBER format a40;
+select type,group#,member from v$logfile;
+
+На standby сервере
+
+create spfile from pfile;
+
+удаляем файл INITUNOC.ORA из OracleHome\Database
+
+Добавляем standby-логи:
+
+alter database add standby logfile group 7 'D:\UNOC\SREDO01.LOG' size 200M;
+alter database add standby logfile group 8 'D:\UNOC\SREDO04.LOG' size 200M;
+alter database add standby logfile group 9 'D:\UNOC\SREDO07.LOG' size 200M;
+alter database add standby logfile group 10 'D:\UNOC\SREDO10.LOG' size 200M;
+alter database add standby logfile group 11 'D:\UNOC\SREDO13.LOG' size 200M;
+alter database add standby logfile group 12 'D:\UNOC\SREDO16.LOG' size 200M;
+alter database add standby logfile group 13 'D:\UNOC\SREDO19.LOG' size 200M;
+
+Добавление файлов TEMP на резервном сервере (сначала проверить, какие файлы и ТП есть физически на основном и резервном серверах)
+
+column name format a40
+column BYTES format 999,999,999,999,999
+
+select NAME,BYTES from v$tempfile;
+
+для того файла, который будет в результате выборки для standby БД, но физически отсутствует на диске:
+
+выполнить на standby БД:
+
+ALTER DATABASE RECOVER MANAGED STANDBY DATABASE CANCEL;
+ALTER DATABASE OPEN READ ONLY;
+alter database tempfile 'H:\UNOC\TEMP01.DBF' drop;
+alter tablespace temp add tempfile 'H:\UNOC\TEMP01.DBF' size 5000M reuse;
+alter tablespace temp add tempfile 'H:\UNOC\TEMP02.DBF' size 5000M reuse;
+alter tablespace temp add tempfile 'H:\UNOC\TEMP03.DBF' size 5000M reuse;
+alter tablespace temp add tempfile 'H:\UNOC\TEMP04.DBF' size 5000M reuse;
+
+после добавлениея файлов TEMP снова запускаем standby БД
+
+STARTUP NOMOUNT;
+ALTER DATABASE MOUNT STANDBY DATABASE;
+ALTER DATABASE RECOVER MANAGED STANDBY DATABASE DISCONNECT FROM SESSION;
+
+Проверка доставки логов:
+
+show parameter log_archive_dest
+
+ALTER SYSTEM SWITCH LOGFILE;
+SELECT MAX(SEQUENCE#),thread# FROM V$LOG_HISTORY group by thread#;
+
+select switchover_status,database_role,PROTECTION_MODE,PROTECTION_LEVEL from v$database;
+column DESTINATION format a20
+SELECT DESTINATION, STATUS, ARCHIVED_THREAD#, ARCHIVED_SEQ# FROM V$ARCHIVE_DEST_STATUS
+ WHERE STATUS <> 'DEFERRED' AND STATUS <> 'INACTIVE';
+ 
+ На основной БД:
+ 
+alter system set log_archive_dest_state_3='DEFER' SCOPE=BOTH;
+alter system set REMOTE_ARCHIVE_ENABLE='FALSE' SCOPE=BOTH;
+
+Для ручного запуска STANDBY необходимо выполнить следующие команды:
+
+SHUTDOWN IMMEDIATE;
+STARTUP NOMOUNT;
+ALTER DATABASE MOUNT STANDBY DATABASE;
+ALTER DATABASE RECOVER MANAGED STANDBY DATABASE DISCONNECT FROM SESSION;
+ALTER DATABASE RECOVER MANAGED STANDBY DATABASE USING CURRENT LOGFILE DISCONNECT FROM SESSION;
+
+Для ручной остановки STANDBY необходимо выполнить следующие команды:
+
+ALTER DATABASE RECOVER MANAGED STANDBY DATABASE CANCEL;
+SHUTDOWN IMMEDIATE;

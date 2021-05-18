@@ -1,0 +1,13 @@
+1) Выполняем на primary database:
+EXEC dbms_shared_pool.unkeep ('dbman.alarm_standby');
+
+ALTER SYSTEM FLUSH SHARED_POOL;
+
+2) Убеждаемся, что в файле H:\DBLOGS\BDUMP\alert_unoc.log
+на основном сервере Альфа (его IP-адрес 10.243.100.237)
+
+не появляются новые записи типа
+
+Memory Notification: Library Cache Object loaded into SGA
+
+после выполнения пункта 1

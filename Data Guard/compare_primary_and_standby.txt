@@ -1,0 +1,13 @@
+SELECT thread#, low_sequence#, high_sequence# from V$archive_gap;
+select dest_id,error_code,to_char(timestamp,'DD-MON-YYYY HH24:MI:SS'),message from v$dataguard_status;
+ 
+
+on primary 
+ 
+SQL> select max(sequence#)  from v$archived_log; 
+ 
+ on standby 
+ 
+SQL> select max(sequence#)  from v$archived_log; 
+SQL> select max(sequence#)  from v$archived_log where APPLIED='YES';
+

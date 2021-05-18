@@ -1,0 +1,287 @@
+Для избежания дополнительного кеширования при записи в онлайн-логи устанавливаем параметр (и перезапускаем БД)
+
+filesystemio_options=SETALL
+
+Настройка инициализационных параметров
+
+alter system set log_archive_config='DG_CONFIG=(lanit,lanit_stb)' SCOPE=BOTH;
+alter system set log_archive_dest_1='LOCATION=/mnt/data2/oracle/archivelog VALID_FOR=(ALL_LOGFILES,ALL_ROLES) DB_UNIQUE_NAME=lanit' SCOPE=BOTH;
+alter system set log_archive_dest_2='SERVICE=lanit_stb ASYNC VALID_FOR=(ONLINE_LOGFILES,PRIMARY_ROLE) DB_UNIQUE_NAME=lanit_stb' SCOPE=BOTH;
+alter system set fal_client='lanit' SCOPE=BOTH;
+alter system set fal_server='lanit_stb' SCOPE=BOTH;
+alter system set LOCAL_LISTENER='(ADDRESS=(PROTOCOL=TCP)(HOST=10.243.12.45)(PORT=1521))' SCOPE=BOTH;
+
+для синхронного применения изменений в standby БД (на БД с db_unique_name = lanit_stb) процессом LGWR
+
+alter system set log_archive_dest_state_2 = DEFER scope = MEMORY;
+alter system set log_archive_dest_2='SERVICE=lanit_live LGWR SYNC NOAFFIRM delay=0 OPTIONAL MAX_FAILURE=5 REOPEN=10 VALID_FOR=(ONLINE_LOGFILE,PRIMARY_ROLE) DB_UNIQUE_NAME=lanit' SCOPE=MEMORY;
+alter system set log_archive_dest_state_2 = ENABLE scope = MEMORY;
+
+для синхронного применения изменений в standby БД (на БД с db_unique_name = lanit) процессом LGWR
+
+alter system set log_archive_dest_state_2 = DEFER scope = MEMORY;
+alter system set log_archive_dest_2='SERVICE=lanit_stb LGWR SYNC NOAFFIRM delay=0 OPTIONAL MAX_FAILURE=5 REOPEN=10 VALID_FOR=(ONLINE_LOGFILE,PRIMARY_ROLE) DB_UNIQUE_NAME=lanit_stb' SCOPE=BOTH;
+alter system set log_archive_dest_state_2 = ENABLE scope = MEMORY;
+
+для асинхронного применения изменений в standby БД (на БД с db_unique_name = lanit_stb) процессом ARCH (меньше текущих ожиданий на коммит)
+
+alter system set log_archive_dest_2='SERVICE=lanit_live ARCH ASYNC NOAFFIRM delay=0 OPTIONAL MAX_FAILURE=5 REOPEN=10 VALID_FOR=(ONLINE_LOGFILE,PRIMARY_ROLE) DB_UNIQUE_NAME=lanit' SCOPE=MEMORY;
+
+alter system set log_archive_dest_state_1 = DEFER scope = MEMORY;
+alter system set log_archive_dest_state_1 = ENABLE scope = MEMORY;
+
+обратное переключение в асинхронный режим
+
+alter system set log_archive_dest_2='SERVICE=lanit_live ASYNC VALID_FOR=(ONLINE_LOGFILES,PRIMARY_ROLE) DB_UNIQUE_NAME=lanit' SCOPE=MEMORY;
+
+create pfile from spfile;
+
+Просмотр информации о логах:
+
+show parameter db_create_online_log_dest
+show parameter standby_
+
+select BYTES,STATUS,GROUP# from V$LOG;
+
+номера и названия онлайн логов для добавления стендбай логов:
+
+column MEMBER format a80;
+select type,group#,member,STATUS from v$logfile order by 1,2;
+
+добавление логов при OMF (будут созданы в заданных db_create_online_log_dest):
+
+alter system set db_create_online_log_dest_1 = '/mnt/oracle/temp' (логи создадутся в /mnt/oracle/temp/<DB_NAME>/onlinelog):
+
+ALTER DATABASE ADD LOGFILE GROUP 4 SIZE 1G;
+
+ALTER DATABASE ADD STANDBY LOGFILE GROUP 5 SIZE 1G;
+ALTER DATABASE ADD STANDBY LOGFILE GROUP 6 SIZE 1G;
+ALTER DATABASE ADD STANDBY LOGFILE GROUP 7 SIZE 1G;
+ALTER DATABASE ADD STANDBY LOGFILE GROUP 8 SIZE 1G;
+
+Удалить старые логи:
+
+alter system switch logfile;
+alter system checkpoint;
+
+ALTER DATABASE DROP LOGFILE GROUP 1;
+ALTER DATABASE DROP LOGFILE GROUP 2;
+ALTER DATABASE DROP LOGFILE GROUP 3;
+ALTER DATABASE DROP STANDBY LOGFILE GROUP 9;
+ALTER DATABASE DROP STANDBY LOGFILE GROUP 10;
+ALTER DATABASE DROP STANDBY LOGFILE GROUP 11;
+
+Создаем бекап primary БД 
+
+rman target /
+
+BACKUP CURRENT CONTROLFILE FOR STANDBY;
+
+backup database include current controlfile for standby plus archivelog;
+
+либо
+run
+{
+BACKUP CURRENT CONTROLFILE FOR STANDBY tag=STB_BACKUP_20130717;
+backup database include current controlfile for standby tag=STB_BACKUP_20130717 plus archivelog tag=STB_BACKUP_20130717;
+}
+
+и копируем его на standby сервер в тот же каталог(и), где файлы бекапа были на primary сервере
+
+Копируем созданный pfile на standby сервер
+
+называем его initlanit.ora помещаем в oracle_home/dbs и меняем в нем следующие параметры
+
+db_unique_name='lanit_stb' SCOPE=BOTH;
+log_archive_config='DG_CONFIG=(lanit,lanit_stb)' SCOPE=BOTH;
+LOG_ARCHIVE_DEST_1='LOCATION=/mnt/data2/oracle/archivelog VALID_FOR=(ALL_LOGFILES,ALL_ROLES) DB_UNIQUE_NAME=lanit_stb' SCOPE=BOTH;
+LOG_ARCHIVE_DEST_2='SERVICE=lanit_live ASYNC VALID_FOR=(ONLINE_LOGFILES,PRIMARY_ROLE) DB_UNIQUE_NAME=lanit' SCOPE=BOTH;
+FAL_SERVER='lanit_live' SCOPE=BOTH;
+FAL_CLIENT='lanit_stb' SCOPE=BOTH;
+
+Затем на standby сервере:
+
+sqlplus / as sysdba;
+
+startup nomount;
+
+rman target sys/*@lanit_live
+connect auxiliary LANIT_STB 
+
+DUPLICATE TARGET DATABASE FOR STANDBY DORECOVER NOFILENAMECHECK;
+
+При необходимости изменить параметры data guard на резервной БД используйте следующие команды sqlplus:
+
+ALTER SYSTEM SET db_unique_name='lanit_stb' SCOPE=BOTH;
+ALTER SYSTEM SET LOG_ARCHIVE_DEST_1='LOCATION=/mnt/data2/oracle/archivelog VALID_FOR=(ALL_LOGFILES,ALL_ROLES) DB_UNIQUE_NAME=lanit_stb' SCOPE=BOTH;
+ALTER SYSTEM SET LOG_ARCHIVE_DEST_2='SERVICE=lanit_live ASYNC VALID_FOR=(ONLINE_LOGFILES,PRIMARY_ROLE) DB_UNIQUE_NAME=lanit' SCOPE=BOTH;
+ALTER SYSTEM SET log_archive_config='DG_CONFIG=(lanit,lanit_stb)' SCOPE=BOTH;
+ALTER SYSTEM SET FAL_SERVER='lanit_live' SCOPE=BOTH;
+ALTER SYSTEM SET FAL_CLIENT='lanit_stb' SCOPE=BOTH;
+  
+sqlplus / as sysdba;
+
+shutdown immediate;
+
+startup nomount;
+
+alter database mount standby database;
+
+create spfile from pfile;
+
+shutdown immediate;
+
+Перемещаем initlanit.ora из oracle_home/dbs (там должен остаться файл spfilelanit.ora)
+
+Запуск резервной БД (на резервном сервере) в режиме приема логов с основной
+
+STARTUP NOMOUNT;
+ALTER DATABASE MOUNT STANDBY DATABASE;
+
+восстановление либо realtime (данные в логи standby пишутся параллельно с primary):
+
+ALTER DATABASE RECOVER MANAGED STANDBY DATABASE USING CURRENT LOGFILE DISCONNECT FROM SESSION;
+
+либо при переключении лога (данные в логи standby пишутся после переключения/архивации лога на primary):
+
+ALTER DATABASE RECOVER MANAGED STANDBY DATABASE DISCONNECT FROM SESSION;
+
+Добавление файлов TEMP на резервном сервере (сначала проверить, какие файлы и ТП есть на основном и резервном серверах)
+
+select name from v$tempfile;
+
+для того файла, который будет в результате выборки для standby БД, но физически отсутствует на диске:
+
+выполнить на standby БД:
+
+ALTER DATABASE RECOVER MANAGED STANDBY DATABASE CANCEL;
+ALTER DATABASE OPEN READ ONLY;
+
+alter database tempfile '/mnt/data/oracle/dbfiles/temp01.dbf' drop;
+alter database tempfile '/mnt/data/oracle/dbfiles/temp02.dbf' drop;
+alter database tempfile '/mnt/data/oracle/dbfiles/temp03.dbf' drop;
+
+alter tablespace temp add tempfile '/mnt/data/oracle/dbfiles/temp01.dbf' size 1000M reuse;
+alter tablespace temp add tempfile '/mnt/data/oracle/dbfiles/temp02.dbf' size 1000M reuse;
+alter tablespace temp add tempfile '/mnt/data/oracle/dbfiles/temp03.dbf' size 1000M reuse;
+
+Далее убедитесь, что на резервной БД принялись все переданные архивные журналы
+Номера последних журналов должны совпадать:
+
+ALTER SYSTEM SWITCH LOGFILE;
+SELECT MAX(SEQUENCE#),thread# FROM V$LOG_HISTORY group by thread#;
+
+Просмотр текущего статуса БД:
+
+select switchover_status,database_role,PROTECTION_MODE,PROTECTION_LEVEL from v$database;
+
+column DESTINATION format a40
+SELECT DESTINATION, STATUS, ARCHIVED_THREAD#, ARCHIVED_SEQ# FROM V$ARCHIVE_DEST_STATUS
+ WHERE STATUS <> 'DEFERRED' AND STATUS <> 'INACTIVE';
+ 
+Просмотр текущего режима восстановления:
+
+SELECT RECOVERY_MODE FROM V$ARCHIVE_DEST_STATUS WHERE DEST_ID=2;
+
+Просмотр статуса восстановления логов:
+
+SELECT PROCESS, STATUS, THREAD#, SEQUENCE#, BLOCK#, BLOCKS FROM V$MANAGED_STANDBY;
+ 
+ Для ручного запуска STANDBY необходимо выполнить следующие команды на резервном сервере:
+
+sqlplus / as sysdba;
+STARTUP NOMOUNT;
+ALTER DATABASE MOUNT STANDBY DATABASE;
+ALTER DATABASE RECOVER MANAGED STANDBY DATABASE DISCONNECT FROM SESSION;
+
+или (для Real-Time Apply)
+
+ALTER DATABASE RECOVER MANAGED STANDBY DATABASE USING CURRENT LOGFILE;
+
+ALTER DATABASE RECOVER MANAGED STANDBY DATABASE USING CURRENT LOGFILE DISCONNECT;
+
+установка нулевой задержки при восстановлении:
+
+ALTER DATABASE RECOVER MANAGED STANDBY DATABASE NODELAY;
+
+Для ручной остановки STANDBY необходимо выполнить следующие команды на резервном сервере:
+
+sqlplus / as sysdba;
+ALTER DATABASE RECOVER MANAGED STANDBY DATABASE CANCEL;
+SHUTDOWN IMMEDIATE;
+
+Переключение SWITCHOVER
+Чтобы переключаться между PRIMARY и STANDBY (менять их ролями сколько угодно раз),
+необходимо использовать операцию SWITCHOWER. Как следует из её названия, она предоставляет
+возможность основной и резервной БД поменяться ролями. Данная операция обратима. Для выполнения
+SWITCHOVER необходимо:
+1. Выполнить переключение — SWITCHOVER на основной БД:
+sqlplus / as sysdba;
+ALTER SYSTEM ARCHIVE LOG CURRENT;
+ALTER DATABASE COMMIT TO SWITCHOVER TO PHYSICAL STANDBY WITH SESSION SHUTDOWN;
+SHUTDOWN IMMEDIATE;
+connect / as sysdba;
+STARTUP NOMOUNT;
+ALTER DATABASE MOUNT STANDBY DATABASE;
+ALTER DATABASE RECOVER MANAGED STANDBY DATABASE DISCONNECT FROM SESSION;
+
+2. Переключить STANDBY в режим основной:
+sqlplus / as sysdba;
+ALTER DATABASE COMMIT TO SWITCHOVER TO PRIMARY;
+SHUTDOWN IMMEDIATE;
+STARTUP MOUNT;
+ALTER DATABASE OPEN;
+
+3. Проверить доставку логов на новую STANDBY БД, для чего
+выполнить следующее:
+ALTER SYSTEM SWITCH LOGFILE;
+
+!!! Переключение FAILOVER
+
+ALTER DATABASE RECOVER MANAGED STANDBY DATABASE FINISH;
+ALTER DATABASE COMMIT TO SWITCHOVER TO PRIMARY;
+SHUTDOWN IMMEDIATE;
+STARTUP MOUNT;
+ALTER DATABASE OPEN;
+
+Изменение protection mode c maximum PERFORMANCE на maximum AVAILABILITY
+
+На основном сервере:
+
+SHUTDOWN IMMEDIATE;
+STARTUP MOUNT;
+ALTER DATABASE SET STANDBY DATABASE TO MAXIMIZE AVAILABILITY;
+ALTER DATABASE OPEN;
+alter system set log_archive_dest_2='SERVICE=lanit_stb SYNC VALID_FOR=(ONLINE_LOGFILES,PRIMARY_ROLE) DB_UNIQUE_NAME=lanit_stb' SCOPE=BOTH;
+select switchover_status,database_role,PROTECTION_MODE,PROTECTION_LEVEL from v$database;
+
+На резервном сервере:
+
+alter system set log_archive_dest_2='SERVICE=lanit_live SYNC VALID_FOR=(ONLINE_LOGFILES,PRIMARY_ROLE) DB_UNIQUE_NAME=lanit' SCOPE=MEMORY;
+select switchover_status,database_role,PROTECTION_MODE,PROTECTION_LEVEL from v$database;
+
+Разрешение GAP в архивных логах на standby БД
+
+Выполняем на основной бД в RMAN
+
+backup archivelog sequence x или backup archivelog from sequence x
+
+Передаем полученные файлы на stanby сервер и выполняем в rman
+
+catalog backuppiece 'file_name'
+
+recover archivelog sequence x или recover archivelog from sequence x
+
+Выполнение перезапуска архивного процесса, передающего логи в LOG_ARCHIVE_DEST_2 (если STATUS=DEFER из V$ARCHIVE_DEST_STATUS)
+
+ALTER SYSTEM SET log_archive_dest_state_2='DEFER' SCOPE=MEMORY;
+
+ALTER SYSTEM SET log_archive_dest_state_2='ENABLE' SCOPE=MEMORY;
+
+используемые ранее параметры RMAN:
+ 
+CONFIGURE CONTROLFILE AUTOBACKUP FORMAT FOR DEVICE TYPE DISK TO '/mnt/data/oracle/backup/CTL_AUTO_%F.BCK';
+
+старый параметр инициализации primary БД:
+
+alter system set log_archive_dest_2='service="(DESCRIPTION=(ADDRESS_LIST=(ADDRESS=(PROTOCOL=tcp)(HOST=s-msk00-atmdb02)(PORT=1521)))(CONNECT_DATA=(SERVICE_NAME=lanit_stb)(INSTANCE_NAME=lanit)(SERVER=dedicated)))"','   LGWR ASYNC NOAFFIRM delay=0 OPTIONAL max_failure=0 max_connections=1   reopen=10 db_unique_name="lanit_stb" register net_timeout=180  valid_for=(online_logfile,primary_role)' scope = both;

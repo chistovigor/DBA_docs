@@ -1,0 +1,18 @@
+Use note:
+
+Handling ORL and SRL (Resize) on Primary and Physical Standby in Data Guard Environment (Doc ID 1532566.1)
+
+select to_char(max(first_time), 'DD/MM/YYYY HH24:MI:SS') from v$archived_log WHERE NAME = 'UNOC_STANDBY_S' AND applied = 'YES';
+
+alter database add standby logfile group 7 'D:\UNOC\SREDO01.LOG' SIZE 200M;
+alter database add standby logfile group 7 'D:\UNOC\SREDO02.LOG' SIZE 200M;
+alter database add standby logfile group 8 'D:\UNOC\SREDO04.LOG' SIZE 200M;
+alter database add standby logfile group 8 'D:\UNOC\SREDO05.LOG' SIZE 200M;
+
+
+на STANDBY DATABASE;
+--ALTER DATABASE RECOVER MANAGED STANDBY DATABASE cancel;
+shutdown immediate;
+startup nomount;
+alter database mount standby database;
+ALTER DATABASE RECOVER MANAGED STANDBY DATABASE DISCONNECT FROM SESSION;

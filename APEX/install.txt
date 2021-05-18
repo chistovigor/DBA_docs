@@ -1,0 +1,40 @@
+Install Oracle APEX 5.0
+
+http://o7planning.org/en/10341/installing-and-configuring-oracle-apex
+
+1) Download
+
+http://www.oracle.com/technetwork/developer-tools/apex/downloads/index.html
+
+2) sqlplus / as sysdba (sysaux - tablespace for APEX data, my be different)
+
+@apexins.sql sysaux sysaux temp /i/
+
+3) Load the Application Express images into XDB and then configure a DAD for use by Application Express in the Embedded PL/SQL Gateway.
+
+@apex_epg_config.sql /u01/app/oracle/product/12.1.0.2/dbhome_1/APEX
+
+/u01/app/oracle/product/12.1.0.2/dbhome_1/APEX - directory, where downloaded APEX archive was extracted
+
+4) Unlock and change pass for APEX users
+
+alter user anonymous account unlock;
+alter user apex_public_user account unlock;
+alter user apex_public_user identified by ...;
+
+5) Setting the XDB HTTP listener port and Application Express ADMIN password.
+
+@apxconf.sql
+
+enter admin user password
+EXEC DBMS_XDB.SETHTTPPORT(8080);
+COMMIT;
+SELECT DBMS_XDB.GETHTTPPORT FROM DUAL;
+
+6) Avoid high Virtual Circuit Waits When Working with the Apex Application Using XDB (Doc ID 1136313.1)
+
+Call dbms_xdb.cfg_update( updatexml( dbms_xdb.cfg_get(), '/xdbconfig/sysconfig/call-timeout/text()', '300', 'xmlns="http://xmlns.oracle.com/xdb/xdbconfig.xsd"'));
+
+7) HTTP interface (use ADMIN user to logon):
+
+http://mr01vm01.moex.com:8080/apex/apex_admin

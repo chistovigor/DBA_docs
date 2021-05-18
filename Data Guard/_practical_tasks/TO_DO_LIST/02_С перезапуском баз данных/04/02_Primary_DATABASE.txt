@@ -1,0 +1,6 @@
+Убеждаемся, что в файле H:\DBLOGS\BDUMP\alert_unoc.log
+на основном сервере Альфа (его IP-адрес 10.243.100.237)
+
+не появляются новые записи типа
+
+Memory Notification: Library Cache Object loaded into SGA

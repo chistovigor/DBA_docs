@@ -1,0 +1,100 @@
+Standby server
+
+-- Connected User is Valid
+RFS[7]: Assigned to RFS process 19648
+RFS[7]: Identified database type as 'physical standby'
+RFS[7]: No standby redo logfiles created
+RFS[7]: Archived Log: 'G:\ARCHIVELOG\1_424419_677620123.ARC'
+Tue Apr 02 09:25:20 2013
+Media Recovery Log G:\ARCHIVELOG\1_424419_677620123.ARC
+Media Recovery Waiting for thread 2 sequence 399964
+Tue Apr 02 09:30:53 2013
+Redo Shipping Client Connected as PUBLIC
+-- Connected User is Valid
+RFS[8]: Assigned to RFS process 18520
+RFS[8]: Identified database type as 'physical standby'
+RFS[8]: No standby redo logfiles created
+RFS[8]: Archived Log: 'G:\ARCHIVELOG\1_424420_677620123.ARC'
+RFS[8]: No standby redo logfiles created
+RFS[8]: Archived Log: 'G:\ARCHIVELOG\2_399964_677620123.ARC'
+
+Primary server
+
+Tue Apr 02 09:25:04 2013
+starting up 1 dispatcher(s) for network address '(ADDRESS=(PARTIAL=YES)(PROTOCOL=TCP))'...
+starting up 1 shared server(s) ...
+Tue Apr 02 09:25:04 2013
+alter database mount exclusive
+Tue Apr 02 09:25:08 2013
+Setting recovery target incarnation to 3
+Tue Apr 02 09:25:09 2013
+Successful mount of redo thread 1, with mount id 43588144
+Tue Apr 02 09:25:09 2013
+Database mounted in Exclusive Mode
+Completed: alter database mount exclusive
+Tue Apr 02 09:25:09 2013
+alter database open
+Tue Apr 02 09:25:10 2013
+Beginning crash recovery of 1 threads
+ parallel recovery started with 15 processes
+ 
+
+Mon Apr 15 19:28:30 2013
+Memory Notification: Library Cache Object loaded into SGA
+Heap size 115098K exceeds notification threshold (8192K)
+KGL object name :SYS.ALERT_QUE
+
+
+possible solution for KGL object name :SYS.ALERT_QUE
+
+пересоздание алерт-метрики
+
+SQL> connect / as sysdba 
+SQL>alter system enable restricted session; 
+To drop server alert schema. 
+SQL>@$ORACLE_HOME/rdbms/admin/catnoalr.sql 
+To re-create tables, sequence, type and queue for server alert 
+SQL>@$ORACLE_HOME/rdbms/admin/dbmsslrt.sql 
+SQL>@$ORACLE_HOME/rdbms/admin/catalrt.sql 
+To recompile the invalid objects 
+SQL>@$ORACLE_HOME/rdbms/admin/utlrp.sql 
+SQL> alter system disable restricted session; 
+SQL> connect / as sysdba 
+SQL>alter system enable restricted session; 
+To drop server alert schema. 
+SQL>@$ORACLE_HOME/rdbms/admin/catnoalr.sql 
+Rerun catproc.sql 
+SQL>@$ORACLE_HOME/rdbms/admin/catproc.sql 
+SQL> alter system disable restricted session;
+
+изменение размера _kgl_large_heap_warning_threshold
+
+select name,value/1024/1024 "SIZE IN MEGABYTES" from v$parameter where name = '_kgl_large_heap_warning_threshold';
+
+alter system set "_kgl_large_heap_warning_threshold"=52428800 scope=spfile;
+
+SHUTDOWN IMMEDIATE;
+
+STARTUP;
+
+select name,value/1024/1024 "SIZE IN MEGABYTES" from v$parameter where name = '_kgl_large_heap_warning_threshold';
+
+Запуск архивации:
+
+1. На обоих
+shutdown immediate;
+2. На продакшене 
+startup;
+3. На стендбае
+startup nomount;
+alter database mount standby database;
+alter database recover managed standby database disconnect from session;
+4. На продакшене
+alter system archive log current;
+
+
+
+
+
+
+
