@@ -1,0 +1,4 @@
+﻿SPOOL=
+C:\My_data\Docs\new_scripts\Analyze DB\How Long Each Connection Has Been Idle [ID 365693.1]\idle_connections.sql|Analyze_db|How Long Each Connection Has Been Idle [ID 365693.1]|False
+C:\My_data\Docs\oracle_doc\Upgrade\03_audit_preprocess\Audit_Pre_Process.sql|Upgrade||False
+C:\My_data\Docs\oracle_doc\Upgrade\02_Check for the integrity of the source database\dbupgdiag.sql|Upgrade|Check for the integrity of the source database|False

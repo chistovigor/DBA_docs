@@ -1,0 +1,26 @@
+Connected as SYS@duo as sysdba
+*** START AT ***
+
+Дата                                                                       
+---------------------------------------------------------------------------
+17/06/2013 18:03:11                                                        
+1 row selected.
+*** v$instance ***
+
+INSTANCE_NUMBER INSTANCE_NAME    HOST_NAME                                                        VERSION           STARTUP_TIME STATUS       PARALLEL    THREAD# ARCHIVER LOG_SWITCH_WAIT LOGINS     SHUTDOWN_PENDING DATABASE_STATUS   INSTANCE_ROLE      ACTIVE_STATE BLOCKED
+--------------- ---------------- ---------------------------------------------------------------- ----------------- ------------ ------------ -------- ---------- -------- --------------- ---------- ---------------- ----------------- ------------------ ------------ -------
+              1 unoc             S-MSK34-ALPHAT                                                   10.2.0.5.0        17-июн-13    OPEN         NO                1 STARTED                  ALLOWED    NO               ACTIVE            PRIMARY_INSTANCE   NORMAL       NO     
+1 row selected.
+*** idle connections ***
+
+       SID MINS_WAITING WAIT_CLASS                                                       STATE               OSUSER                         MACHINE                                                          PROGRAM                                                          SCHEMANAME                    
+---------- ------------ ---------------------------------------------------------------- ------------------- ------------------------------ ---------------------------------------------------------------- ---------------------------------------------------------------- ------------------------------
+       530           52 Idle                                                             WAITING             SYSTEM                         s-msk34-alphat                                                   OMS                                                              SYSMAN                        
+       540           15 Idle                                                             WAITING             ruacii2                        RAIFFEISEN\S-MSK00-TRMBCD1                                       Alpha.exe                                                        ALTAIR                        
+       543            1 Idle                                                             WAITING             SYSTEM                         s-msk34-alphat                                                   OMS                                                              SYSMAN                        
+       523            0 Idle                                                             WAITING             NT AUTHORITY\SYSTEM            WORKGROUP\S-MSK34-ALPHAT                                         emagent.exe                                                      DBSNMP                        
+       535            0 Idle                                                             WAITING             SYSTEM                         s-msk34-alphat                                                   OMS                                                              SYSMAN                        
+       528            0 Idle                                                             WAITING             ruacii2                        RAIFFEISEN\W-MSK34-040FG18                                       Toad.exe                                                         SYS                           
+       537            0 Idle                                                             WAITING             SYSTEM                         s-msk34-alphat                                                   OMS                                                              SYSMAN                        
+
+7 rows selected.
