@@ -1,0 +1,170 @@
+*** instance at the current server status ***
+Connected.
+
+INSTANCE_N HOST_NAME        STARTED                   STATUS                                                                                                    
+---------- ---------------- ------------------------- ------------                                                                                              
+lanit      s-msk00-atmdb02  04/07/2013 05:56:49       OPEN                                                                                                      
+
+
+************** TABLESPACES *****************
+
+TS# Name                      Files Type                 Current Size     Max Limit        (Limit - Size)   Empty Space  Status     Objects                     
+--- ------------------------- ----- -------------------- ---------------- ---------------- ---------------- ------------ ---------- ---------------             
+  0 SYSTEM                        1 PERMANENT            2048 Mb          32768 Mb         30720 Mb         74%          ONLINE     1282                        
+  2 SYSAUX                        1 PERMANENT            800 Mb           32768 Mb         31968 Mb         21%          ONLINE     3191                        
+  3 TEMP                          3 TEMP                 3000 Mb          3000 Mb          0 Mb             0%           ONLINE     {temp}                      
+  4 USERS                         1 PERMANENT            6730 Mb          32768 Mb         26038 Mb         30%          ONLINE     494                         
+  8 CORE                          3 PERMANENT            1989 Mb          2329 Mb          340 Mb           84%          ONLINE     196                         
+  9 CORE_INDEX                    2 PERMANENT            1324 Mb          1200 Mb          -124 Mb          61%          ONLINE     192                         
+ 10 TOOLS                         1 PERMANENT            200 Mb           500 Mb           300 Mb           93%          ONLINE     71                          
+ 11 AUDITING                      1 PERMANENT            2048 Mb          16384 Mb         14336 Mb         99%          ONLINE     2                           
+ 12 UNDO                          1 UNDO                 20480 Mb         20480 Mb         0 Mb             24%          ONLINE     {undo}                      
+ 15 ATMMONITOR_PREV               1 PERMANENT            50209 Mb         33554432 Mb      33504223 Mb      100%         ONLINE     EMPTY!!!                    
+ 16 ROUTER_PREV                   1 PERMANENT            84809 Mb         33554432 Mb      33469623 Mb      100%         ONLINE     EMPTY!!!                    
+ 17 ANNUAL_INDEX                  1 PERMANENT            48551 Mb         33554432 Mb      33505881 Mb      32%          ONLINE     280                         
+ 18 OLD_ANNUAL_INDEX              1 PERMANENT            100 Mb           100 Mb           0 Mb             99%          ONLINE     8                           
+ 19 ANNUAL_TABLE                  1 PERMANENT            126238 Mb        33554432 Mb      33428194 Mb      27%          ONLINE     207                         
+ 20 ARCSIGHT_TBS                  1 PERMANENT            100 Mb           16384 Mb         16284 Mb         99%          ONLINE     1                           
+
+15 rows selected.
+
+
+************** TS PROPERTIES *****************
+
+TS# Name                      Bigfile?        Flashback?      Segment Mng Type Extent Mng Type                                                                  
+--- ------------------------- --------------- --------------- ---------------- ---------------                                                                  
+  0 SYSTEM                    NO              YES             MANUAL           LOCAL                                                                            
+ 17 ANNUAL_INDEX              YES             YES             AUTO             LOCAL                                                                            
+  2 SYSAUX                    NO              YES             AUTO             LOCAL                                                                            
+  4 USERS                     NO              YES             AUTO             LOCAL                                                                            
+  3 TEMP                      NO              YES             MANUAL           LOCAL                                                                            
+ 19 ANNUAL_TABLE              YES             YES             AUTO             LOCAL                                                                            
+ 20 ARCSIGHT_TBS              NO              YES             AUTO             LOCAL                                                                            
+  8 CORE                      NO              YES             AUTO             LOCAL                                                                            
+  9 CORE_INDEX                NO              YES             AUTO             LOCAL                                                                            
+ 10 TOOLS                     NO              YES             AUTO             LOCAL                                                                            
+ 11 AUDITING                  NO              YES             AUTO             LOCAL                                                                            
+ 12 UNDO                      NO              YES             MANUAL           LOCAL                                                                            
+ 18 OLD_ANNUAL_INDEX          NO              YES             AUTO             LOCAL                                                                            
+ 15 ATMMONITOR_PREV           YES             YES             AUTO             LOCAL                                                                            
+ 16 ROUTER_PREV               YES             YES             AUTO             LOCAL                                                                            
+
+15 rows selected.
+
+
+
+
+#########
+####################
+### 3 USERS AND OBJECTS INFO ###
+####################
+#########
+
+
+************** USERS WITH OBJECTS *****************
+
+USERNAME        USER_SIZE      Status             SECURITY_PROFIL CREATED      EXPIRY_DATE  LOCK_DATE    DEFAULT_TABLESPACE   TEMPORARY_TABLESPACE              
+--------------- -------------- ------------------ --------------- ------------ ------------ ------------ -------------------- --------------------              
+ARCSIGHT        .8 Mb          OPEN               DEFAULT         11-JUN-13    09-SEP-13                 ARCSIGHT_TBS         TEMP                              
+ATMMONITOR      47503.6 Mb     OPEN               MONITORING_PROF 29-SEP-11                              USERS                TEMP                              
+DBSNMP          1.9 Mb         OPEN               MONITORING_PROF 22-OCT-05                              SYSAUX               TEMP                              
+MANAGE          14.1 Mb        OPEN               MONITORING_PROF 29-SEP-11                              TOOLS                TEMP                              
+ROUTER          83973.8 Mb     OPEN               MONITORING_PROF 29-SEP-11                              USERS                TEMP                              
+SPOTLIGHT       246.4 Mb       OPEN               MONITORING_PROF 05-SEP-12                              USERS                TEMP                              
+SYS             16622.1 Mb     OPEN               MONITORING_PROF 22-OCT-05                              SYSTEM               TEMP                              
+SYSMAN          87.6 Mb        OPEN               MONITORING_PROF 15-OCT-12                              SYSAUX               TEMP                              
+SYSTEM          22.3 Mb        OPEN               MONITORING_PROF 22-OCT-05                              SYSTEM               TEMP                              
+CTXSYS          4.6 Mb         EXPIRED & LOCKED   DEFAULT         22-OCT-05    28-SEP-11    28-SEP-11    SYSAUX               TEMP                              
+DMSYS           .3 Mb          EXPIRED & LOCKED   DEFAULT         22-OCT-05    28-SEP-11    28-SEP-11    SYSAUX               TEMP                              
+EXFSYS          3.6 Mb         EXPIRED & LOCKED   DEFAULT         22-OCT-05    28-SEP-11    28-SEP-11    SYSAUX               TEMP                              
+MDSYS           32.8 Mb        EXPIRED & LOCKED   DEFAULT         22-OCT-05    28-SEP-11    28-SEP-11    SYSAUX               TEMP                              
+OLAPSYS         15.6 Mb        EXPIRED & LOCKED   DEFAULT         22-OCT-05    28-SEP-11    28-SEP-11    SYSAUX               TEMP                              
+ORDSYS          .5 Mb          EXPIRED & LOCKED   DEFAULT         22-OCT-05    28-SEP-11    28-SEP-11    SYSAUX               TEMP                              
+OUTLN           .6 Mb          EXPIRED & LOCKED   DEFAULT         22-OCT-05    28-SEP-11    28-SEP-11    SYSTEM               TEMP                              
+SCOTT           .4 Mb          EXPIRED & LOCKED   DEFAULT         22-OCT-05    28-SEP-11    28-SEP-11    USERS                TEMP                              
+TSMSYS          .3 Mb          EXPIRED & LOCKED   DEFAULT         22-OCT-05    28-SEP-11    28-SEP-11    USERS                TEMP                              
+WMSYS           7.1 Mb         EXPIRED & LOCKED   DEFAULT         22-OCT-05    28-SEP-11    28-SEP-11    SYSAUX               TEMP                              
+XDB             48.3 Mb        EXPIRED & LOCKED   DEFAULT         22-OCT-05    28-SEP-11    28-SEP-11    SYSAUX               TEMP                              
+
+20 rows selected.
+
+
+************** EMPTY USERS *****************
+
+USERNAME        USER_SIZE      Status             SECURITY_PROFIL CREATED      EXPIRY_DATE  LOCK_DATE    DEFAULT_TABLESPACE   TEMPORARY_TABLESPACE              
+--------------- -------------- ------------------ --------------- ------------ ------------ ------------ -------------------- --------------------              
+ADMRUAGOV3                     OPEN               RBRU_DBA        26-NOV-12    18-JUN-13                 USERS                TEMP                              
+ISD-MON                        OPEN               MONITORING_PROF 17-OCT-11                              USERS                TEMP                              
+MGMT_VIEW                      OPEN               DEFAULT         15-OCT-12    13-JAN-13                 SYSTEM               TEMP                              
+ADMRUASAVC                     LOCKED             RBRU_DBA        26-NOV-12    26-FEB-13    10-DEC-12    USERS                TEMP                              
+RUAFAA1                        LOCKED             RBRU_DBA        05-SEP-12    04-DEC-12    26-NOV-12    USERS                TEMP                              
+RUAGOV3                        LOCKED             RBRU_DBA        05-SEP-12    04-DEC-12    26-NOV-12    USERS                TEMP                              
+RUAKOS2                        LOCKED             RBRU_DBA        29-SEP-11    31-OCT-12    26-NOV-12    USERS                TEMP                              
+RUALKD2                        LOCKED             RBRU_DBA        29-SEP-11    24-APR-12    26-NOV-12    USERS                TEMP                              
+RUASAVC                        LOCKED             DEFAULT         23-NOV-12    21-FEB-13    26-NOV-12    USERS                TEMP                              
+ADMRUAFAA1                     EXPIRED(GRACE)     RBRU_DBA        26-NOV-12    01-AUG-13                 USERS                TEMP                              
+ANONYMOUS                      EXPIRED & LOCKED   DEFAULT         22-OCT-05    28-SEP-11    28-SEP-11    SYSAUX               TEMP                              
+DIP                            EXPIRED & LOCKED   DEFAULT         22-OCT-05                 22-OCT-05    USERS                TEMP                              
+MDDATA                         EXPIRED & LOCKED   DEFAULT         22-OCT-05    28-SEP-11    28-SEP-11    USERS                TEMP                              
+ORACLE_OCM                     EXPIRED & LOCKED   DEFAULT         10-OCT-11    10-OCT-11    10-OCT-11    USERS                TEMP                              
+ORDPLUGINS                     EXPIRED & LOCKED   DEFAULT         22-OCT-05    28-SEP-11    28-SEP-11    SYSAUX               TEMP                              
+SI_INFORMTN_SCH                EXPIRED & LOCKED   DEFAULT         22-OCT-05    28-SEP-11    28-SEP-11    SYSAUX               TEMP                              
+EMA                                                                                                                                                             
+                                                                                                                                                                
+ADMRUACII2                     EXPIRED            RBRU_DBA        25-APR-13                              USERS                TEMP                              
+
+17 rows selected.
+
+
+************** DBA ROLES *****************
+
+Role                           User            Admin?     Default?                                                                                              
+------------------------------ --------------- ---------- ----------                                                                                            
+DBA                            ADMRUACII2      NO         YES                                                                                                   
+DBA                            ADMRUAFAA1      NO         YES                                                                                                   
+DBA                            ADMRUAGOV3      NO         YES                                                                                                   
+DBA                            ADMRUASAVC      NO         YES                                                                                                   
+DBA                            ATMMONITOR      NO         YES                                                                                                   
+DBA                            MANAGE          NO         YES                                                                                                   
+DBA                            ROUTER          NO         YES                                                                                                   
+DBA                            RUAFAA1         NO         YES                                                                                                   
+DBA                            RUAGOV3         NO         YES                                                                                                   
+DBA                            RUAKOS2         NO         YES                                                                                                   
+DBA                            RUALKD2         NO         YES                                                                                                   
+DBA                            RUASAVC         NO         YES                                                                                                   
+DBA                            SYS             YES        YES                                                                                                   
+DBA                            SYSMAN          NO         YES                                                                                                   
+DBA                            SYSTEM          YES        YES                                                                                                   
+UNLIMITED TABLESPACE           ADMRUACII2      NO         YES                                                                                                   
+UNLIMITED TABLESPACE           ADMRUAFAA1      NO         YES                                                                                                   
+UNLIMITED TABLESPACE           ADMRUAGOV3      NO         YES                                                                                                   
+UNLIMITED TABLESPACE           ADMRUASAVC      NO         YES                                                                                                   
+UNLIMITED TABLESPACE           ARCSIGHT        NO         YES                                                                                                   
+UNLIMITED TABLESPACE           ATMMONITOR      NO         YES                                                                                                   
+UNLIMITED TABLESPACE           CTXSYS          NO         YES                                                                                                   
+UNLIMITED TABLESPACE           DBSNMP          NO         YES                                                                                                   
+UNLIMITED TABLESPACE           EXFSYS          NO         YES                                                                                                   
+UNLIMITED TABLESPACE           MANAGE          YES        YES                                                                                                   
+UNLIMITED TABLESPACE           MDDATA          NO         YES                                                                                                   
+UNLIMITED TABLESPACE           MDSYS           NO         YES                                                                                                   
+UNLIMITED TABLESPACE           OLAPSYS         NO         YES                                                                                                   
+UNLIMITED TABLESPACE           ORDSYS          NO         YES                                                                                                   
+UNLIMITED TABLESPACE           OUTLN           NO         YES                                                                                                   
+UNLIMITED TABLESPACE           ROUTER          NO         YES                                                                                                   
+UNLIMITED TABLESPACE           RUAFAA1         NO         YES                                                                                                   
+UNLIMITED TABLESPACE           RUAGOV3         NO         YES                                                                                                   
+UNLIMITED TABLESPACE           RUAKOS2         NO         YES                                                                                                   
+UNLIMITED TABLESPACE           RUALKD2         NO         YES                                                                                                   
+UNLIMITED TABLESPACE           RUASAVC         NO         YES                                                                                                   
+UNLIMITED TABLESPACE           SCOTT           NO         YES                                                                                                   
+UNLIMITED TABLESPACE           SI_INFORMTN_SCH NO         YES                                                                                                   
+UNLIMITED TABLESPACE           SPOTLIGHT       YES        YES                                                                                                   
+UNLIMITED TABLESPACE           SYS             NO         YES                                                                                                   
+UNLIMITED TABLESPACE           SYSMAN          NO         YES                                                                                                   
+UNLIMITED TABLESPACE           SYSTEM          YES        YES                                                                                                   
+UNLIMITED TABLESPACE           TSMSYS          NO         YES                                                                                                   
+UNLIMITED TABLESPACE           WMSYS           NO         YES                                                                                                   
+UNLIMITED TABLESPACE           XDB             NO         YES                                                                                                   
+
+45 rows selected.
+
