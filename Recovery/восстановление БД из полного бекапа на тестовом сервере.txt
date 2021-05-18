@@ -1,0 +1,14 @@
+Копируем файлы резервной копии (в тот же каталог, как на рабочем сервере) а автобекап контролфайла на тестовый сервер
+
+1)  sqlplus / as sysdba
+2)  shutdown immediate;
+3)  startup nomount;
+4)  rman target /
+5)  SPOOL LOG TO '/mnt/data2/backup/recover_db.log';
+6)  restore controlfile from '/mnt/data2/backup/CTL_AUTO_C-4101235284-20130410-00.BCK';
+7)  alter database mount;
+8)  crosscheck backup;
+9)  RESTORE DATABASE;
+10) RECOVER DATABASE;
+11) alter database open resetlogs;
+12) SPOOL LOG OFF;

@@ -1,0 +1,30 @@
+srvctl add service -help
+
+    -service <service>             Service name
+    -preferred "<preferred_list>"  Comma separated list of preferred instances
+    -available "<available_list>"  Comma separated list of available instances
+    -serverpool <pool_name>        Server pool name
+    -cardinality                   (UNIFORM | SINGLETON) Service runs on every active server in the server pool hosting this service (UNIFORM) or just one server (SINGLETON)
+    -netnum  <network_number>      Network number (default number is 1)
+    -tafpolicy                     (NONE | BASIC | PRECONNECT)        TAF policy specification
+    -role <role>                   Role of the service (primary, physical_standby, logical_standby, snapshot_standby)
+    -policy <policy>               Management policy for the service (AUTOMATIC or MANUAL)
+    -failovertype                  (NONE | SESSION | SELECT | TRANSACTION)      Failover type
+    -failovermethod                (NONE | BASIC)     Failover method
+    -failoverdelay <failover_delay> Failover delay (in seconds)
+    -failoverretry <failover_retries> Number of attempts to retry connection
+    -edition <edition>             Edition (or "" for empty edition value)
+    -pdb <pluggable_database>      Pluggable database name
+    -maxlag <maximum replication lag> Maximum replication lag time in seconds (Non-negative integer, default value is 'ANY')
+    -clbgoal                       (SHORT | LONG)                   Connection Load Balancing Goal. Default is LONG.
+    -rlbgoal                       (SERVICE_TIME | THROUGHPUT | NONE)     Runtime Load Balancing Goal
+    -dtp                           (TRUE | FALSE)  Distributed Transaction Processing
+    -notification                  (TRUE | FALSE)  Enable Fast Application Notification (FAN) for OCI connections
+    -global <global>               Global attribute (TRUE or FALSE)
+    -preferred <new_pref_inst>     Name of new preferred instance
+    -available <new_avail_inst>    Name of new available instance
+    -sql_translation_profile <sql_translation_profile> Specify a database object for SQL translation profile
+    -commit_outcome                (TRUE | FALSE)          Commit outcome
+    -retention <retention>         Specifies the number of seconds the commit outcome is retained
+    -replay_init_time <replay_init_time> Seconds after which replay will not be initiated
+    -session_state <session_state> Session state consistency (STATIC or DYNAMIC)

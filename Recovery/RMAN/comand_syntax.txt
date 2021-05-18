@@ -1,0 +1,103 @@
+Удаление устаревшего несуществующего бекапа контрольного файла
+
+RMAN> 
+RMAN retention policy will be applied to the command
+RMAN retention policy is set to redundancy 1
+Deleting the following obsolete backups and copies:
+Type                 Key    Completion Time    Filename/Handle
+-------------------- ------ ------------------ --------------------
+Control File Copy     112    22-MAY-17          /backup/rman/vdrf/2017_05_22/BACK_control_20170522041449.ctl
+
+select * from v$datafile_copy  where recid = 112;
+
+exec dbms_backup_restore.deleteDataFileCopy(112, 944626695, '/backup/rman/vdrf/2017_05_22/BACK_control_20170522041449.ctl', 0, 1, 0, 10182877210321, 8192, 1 /* Uncatalog */ );
+
+
+Команда для полного бекапа БД (10g,11g)
+
+BACKUP validate as compressed backupset full DATABASE include current controlfile PLUS ARCHIVELOG format 'G:\Backup\20130529\db0_%T_%d_%U.rm' DELETE ALL INPUT SKIP INACCESSIBLE;
+
+BACKUP as compressed backupset DATABASE include current controlfile PLUS ARCHIVELOG DELETE ALL INPUT SKIP INACCESSIBLE;
+
+BACKUP validate as compressed backupset DATABASE include current controlfile PLUS ARCHIVELOG DELETE ALL INPUT SKIP INACCESSIBLE;
+
+backup validate as compressed backupset incremental level 0 database include current controlfile PLUS ARCHIVELOG DELETE ALL INPUT SKIP INACCESSIBLE;
+
+backup validate as compressed backupset full database include current controlfile PLUS ARCHIVELOG DELETE ALL INPUT SKIP INACCESSIBLE;
+
+backup validate as compressed backupset full database include current controlfile;
+
+SPOOL LOG TO 'G:\Backup\backup_0_including_controlfile.log';
+SPOOL LOG TO 'G:\Backup\backup_1_incl_controlfile_archivelogs.log';
+SPOOL LOG OFF;
+
+backup validate as compressed backupset full database PLUS ARCHIVELOG DELETE ALL INPUT SKIP INACCESSIBLE;
+
+RUN {
+2> BACKUP validate current controlfile;
+3> backup validate as compressed backupset full database PLUS ARCHIVELOG DELETE
+ALL INPUT SKIP INACCESSIBLE;
+4> }
+
+RUN {
+BACKUP validate current controlfile;
+backup validate as compressed backupset full database PLUS ARCHIVELOG DELETE ALL INPUT SKIP INACCESSIBLE;
+}
+
+backup as compressed backupset incremental level 0 database include current controlfile format 'G:\Backup\24042013\db0_%%T_%%d_%%U.rm';
+
+backup validate as compressed backupset incremental level 0 database include current controlfile format 'G:\Backup\24042013\db0_%%T_%%d_%%U.rm';
+
+backup validate as compressed backupset archivelog all format 'G:\Backup\24042013\db0_%%T_%%d_%%U.rm' SKIP INACCESSIBLE;
+
+backup validate as compressed backupset incremental level 0 database include current controlfile
+
+RUN
+{
+ backup validate spfile format 'G:\BACKUP\20130425\spfilebackup_%T_%d_%U.bck';
+ backup validate current controlfile format 'G:\BACKUP\20130425\controlfile_%T_%d_%U.bck';
+ backup validate as compressed backupset incremental level 0 database include current controlfile PLUS ARCHIVELOG  format 'G:\BACKUP\20130425\db0_%T_%d_%U.bck' SKIP INACCESSIBLE; 
+}
+
+RUN
+{
+ backup validate spfile format 'G:\BACKUP\20130425\spfilebackup_%T_%d_%U.bck';
+ backup validate current controlfile format 'G:\BACKUP\20130425\controlfile_%T_%d_%U.bck';
+ backup validate as compressed backupset incremental level 1 database include current controlfile PLUS ARCHIVELOG  format 'G:\BACKUP\20130425\db0_%T_%d_%U.bck' SKIP INACCESSIBLE; 
+}
+
+crosscheck archivelog all;
+list expired backup;
+report obsolete;
+
+RUN
+{
+  set until time "to_date('2013-05-10 01:40:00', 'yyyy-mm-dd hh24:mi:ss')";
+  RESTORE DATABASE VALIDATE;
+  RESTORE DATABASE PREVIEW SUMMARY;
+  RESTORE ARCHIVELOG PREVIEW SUMMARY;
+  RESTORE ARCHIVELOG ALL VALIDATE;
+}
+
+RUN
+{
+  set until time "to_date('2013-05-11 22:57:00', 'yyyy-mm-dd hh24:mi:ss')";
+  RESTORE DATABASE PREVIEW;
+  RESTORE DATABASE PREVIEW SUMMARY;
+}
+
+LIST BACKUP BY FILE;
+RUN
+{
+  set until SCN = 9182210457899;
+  RESTORE DATABASE PREVIEW;
+  RESTORE DATABASE PREVIEW SUMMARY;
+}
+
+RUN {
+2>   BACKUP validate as compressed backupset DATABASE PLUS ARCHIVELOG DELETE ALL INPUT SKIP INACCESSIBLE;
+3>   DELETE FORCE NOPROMPT OBSOLETE;
+4> }
+5> 
+6> 
+7> EXIT;

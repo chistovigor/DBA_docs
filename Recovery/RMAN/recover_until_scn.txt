@@ -1,0 +1,47 @@
+SPOOL LOG TO 'G:\Backup\recover_until_time.log';
+
+connect target;
+
+startup nomount;
+
+restore controlfile from 'G:\Backup\CTL_AUTO_C-4101235284-20130410-00.BCK';
+
+alter database mount;
+
+catalog start with 'G:\Backup\20130311';
+
+crosscheck backup;
+
+delete expired backup;
+
+list backup;
+
+restore archivelog all preview;
+
+restore database preview summary;
+
+RUN
+{
+  set until time "to_date('2013-03-11 02:00:00', 'yyyy-mm-dd hh24:mi:ss')";
+  RESTORE DATABASE preview summary;
+  RECOVER DATABASE preview summary;
+}
+
+RUN
+{
+  SET UNTIL SCN=9182205767568;
+  RESTORE DATABASE;
+  RECOVER DATABASE;
+}
+
+alter database open resetlogs;
+
+SPOOL LOG OFF;
+
+exit;
+
+
+
+
+
+

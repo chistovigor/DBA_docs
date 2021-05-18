@@ -1,0 +1,184 @@
+1) Проверить, что пользователь, от имени которого будет восстанавливаться БД в группе DBA
+в /etc/group должна быть запись вида
+dba:*:614:<your_user_name>
+
+2) Задаем SID восстанавливаемого экземпляра
+export ORACLE_SID=LANIT
+
+! создание pfile с DB_NAME и startup force (SQLPLUS), затем 
+
+3) Подключаемся RMAN для восстановления
+rman TARGET / NOCATALOG
+
+4) Устанавливаем DBID восстанавливаемой БД и запускаем экземпляр в режиме NOMOUNT для его восстановления
+SET DBID 3705530278;
+STARTUP NOMOUNT;
+
+5) Появится сообщение (RMAN не найдет файл параметров для запуска экземпляра и запустит его с пустым файлом):
+startup failed: ORA-01078: failure in processing system parameters
+LRM-00109: could not open parameter file '/net/hostb/oracle/dbs/inittrgta.ora'
+
+trying to start the Oracle instance without parameter files ...
+Oracle instance started
+
+6) Запуск восстановления файла инициализации экземпляра
+ RUN
+{
+RESTORE SPFILE TO PFILE '/mnt/data/oracle/db_1/dbs/initLANIT.ora' FROM '/mnt/data/oracle/backup/CTL_AUTO_c-3705530278-20130506-00.BCK';
+  SHUTDOWN ABORT;
+}
+либо (если бекап на ленте и CONTROLFILE AUTOBACKUP ON)
+RUN
+{
+  ALLOCATE CHANNEL c1 DEVICE TYPE sbt PARMS='...';
+  RESTORE SPFILE TO PFILE '?/oradata/test/inittrgta.ora' FROM AUTOBACKUP;
+  SHUTDOWN ABORT;
+}
+
+
+7) Изменяем следующие переменные в восстановленном pfile либо создаем соответствующие им директории на сервере:
+  - IFILE
+  - *_DUMP_DEST
+  - LOG_ARCHIVE_DEST*
+  - CONTROL_FILES
+  
+8) Запускаем экземпляр, используя отредактированный PFILE:
+STARTUP FORCE NOMOUNT PFILE='/mnt/data/oracle/db_1/dbs/initLANIT.ora';
+
+9) Запуск восстановления контрольного файла:
+RUN 
+{
+  RESTORE CONTROLFILE FROM '/mnt/data/oracle/backup/CTL_AUTO_c-3705530278-20130506-00.BCK';
+  ALTER DATABASE MOUNT;
+}
+либо (если бекап на ленте и CONTROLFILE AUTOBACKUP ON)
+RUN 
+{
+  ALLOCATE CHANNEL c1 DEVICE TYPE sbt PARMS='...';
+  RESTORE CONTROLFILE FROM AUTOBACKUP;
+  ALTER DATABASE MOUNT;
+}
+
+10) Добавляем в текущий управляющий файл информацию о имеющихся бекапах (из которых восстанавливаемся)
+
+RUN
+{
+CATALOG START WITH '/mnt/data2/backup/20130505';
+CATALOG START WITH '/mnt/data2/backup/20130506';
+crosscheck backup;
+}
+
+delete expired backup;
+
+11) Запускаем новую сессию SQLPLUS и соединяемся с БД для просмотра расположения файлов (будут в логе db_filenames.out)
+sqlplus '/ AS SYSDBA'
+SQL> COLUMN NAME FORMAT a60
+SQL> COLUMN UNTIL_TIME FORMAT 999,999,999,999,999
+SQL> COLUMN ARCHIVE_CHANGE# FORMAT 999,999,999,999,999
+SQL> COLUMN CTL_FILE_BACKUP_SCN FORMAT 999,999,999,999,999
+SQL> COLUMN MAX_CHANGE FORMAT 999,999,999,999,999
+SQL> SPOOL LOG 'db_filenames.out'
+SQL> SELECT FILE# AS "File/Grp#", NAME FROM V$DATAFILE
+     UNION
+     SELECT GROUP#,MEMBER FROM V$LOGFILE;
+SQL> SELECT ARCHIVE_CHANGE#,CONTROLFILE_CHANGE# as CTL_FILE_BACKUP_SCN,TO_CHAR(CONTROLFILE_TIME,'dd/mm/yyyy hh24:mi:ss') as UNTIL_TIME FROM V$DATABASE;
+SQL> SELECT MAX(NEXT_CHANGE#) as MAX_CHANGE FROM V$LOG_HISTORY;
+SQL> SPOOL OFF
+SQL EXIT
+
+ARCHIVE_CHANGE#  - последний SCN в бекапе управляющего файла
+CONTROLFILE_TIME - последнее время в бекапе управляющего файла
+MAX(NEXT_CHANGE#) - последний SCN в имеющихся архивных логах
+вышеуказанные значения можно использовать в UNTIL при восстановлении БД
+
+
+12) Написание скрипта восстановления БД (если файлы следует распологать по другому, то в скрипте используем команду
+SET NEWNAME FOR DATAFILE 1 TO '?/oradata/test/system01.dbf'; 
+для задания новых имен для файлов
+SQL "ALTER DATABASE RENAME FILE ''/dev3/oracle/dbs/redo01.log''
+      TO ''?/oradata/test/redo01.log'' ";
+для задания новых имен для REDO-логов)
+
+ Устанавливаем SET UNTIL SCN = <SCN последнего имеющегося архивлога> 
+ для того, чтобы RMAN не пытался восстановить онлайн-логи (архивных копий которых нет)
+ 
+ Если имеет место переименование файлов, то после RESTORE DATABASE; добавляем команду SWITCH DATAFILE ALL;
+ 
+Создаем файл reco_test.rman со следующим содержимым:
+ 
+RUN
+{
+  SET UNTIL sequence=117001;
+  RESTORE DATABASE;
+  RECOVER DATABASE;
+}
+EXIT
+
+или (полный текст с вышеуказанными добавлениями и в случае бекапа на ленте):
+
+RUN
+{
+  # allocate a channel to the tape device
+  ALLOCATE CHANNEL c1 DEVICE TYPE sbt PARMS='...';
+
+  # rename the datafiles and online redo logs
+  SET NEWNAME FOR DATAFILE 1 TO '?/oradata/test/system01.dbf';
+  SET NEWNAME FOR DATAFILE 2 TO '?/oradata/test/undotbs01.dbf';
+  SET NEWNAME FOR DATAFILE 3 TO '?/oradata/test/cwmlite01.dbf';
+  SET NEWNAME FOR DATAFILE 4 TO '?/oradata/test/drsys01.dbf';
+  SET NEWNAME FOR DATAFILE 5 TO '?/oradata/test/example01.dbf';
+  SET NEWNAME FOR DATAFILE 6 TO '?/oradata/test/indx01.dbf';
+  SET NEWNAME FOR DATAFILE 7 TO '?/oradata/test/tools01.dbf';
+  SET NEWNAME FOR DATAFILE 8 TO '?/oradata/test/users01.dbf';
+  SQL "ALTER DATABASE RENAME FILE ''/dev3/oracle/dbs/redo01.log''
+      TO ''?/oradata/test/redo01.log'' ";
+  SQL "ALTER DATABASE RENAME FILE ''/dev3/oracle/dbs/redo02.log''
+      TO ''?/oradata/test/redo02.log'' ";
+
+  # Do a SET UNTIL to prevent recovery of the online logs
+  SET UNTIL SCN 123456;
+  # restore the database and switch the datafile names
+  RESTORE DATABASE;
+  SWITCH DATAFILE ALL;
+
+  # recover the database
+  RECOVER DATABASE;
+}
+EXIT
+
+13) Запуск написанного скрипта:
+
+rman TARGET / NOCATALOG
+
+RMAN> SPOOL LOG TO '/mnt/data/oracle/backup/rman_logs/restore_validate.log';
+RMAN> @/mnt/data/oracle/backup/rman_logs/reco_test.rman
+RMAN> ALTER DATABASE OPEN RESETLOGS;
+RMAN> SPOOL LOG OFF;
+RMAN> EXIT;
+
+
+TARGET / NOCATALOG
+SPOOL LOG TO '/mnt/data/oracle/backup/rman_logs/restore_validate_1.log';
+RUN
+{
+CROSSCHECK BACKUP;
+LIST BACKUP BY FILE;
+LIST BACKUP;
+}
+QUIT;
+
+
+
+
+
+
+
+
+ 
+ 
+ 
+
+
+
+
+

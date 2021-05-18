@@ -1,0 +1,3 @@
+select value,display_value from v$parameter where name like '%log%format%';
+alter system set log_archive_format="ARC%s_%R.%T" scope=SPFILE;
+select value,display_value from v$parameter where name like '%log%format%';

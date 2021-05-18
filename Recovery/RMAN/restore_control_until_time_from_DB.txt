@@ -1,0 +1,6 @@
+RUN
+{
+  set until time "to_date('2013-03-11 01:00:00', 'yyyy-mm-dd hh24:mi:ss')";
+  RESTORE CONTROLFILE TO 'G:\backup\CTL_AUTO_C-4101235284-20130310-00.BCK' FROM AUTOBACKUP
+    MAXSEQ 1 MAXDAYS 40;
+}

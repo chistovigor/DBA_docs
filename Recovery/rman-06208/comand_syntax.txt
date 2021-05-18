@@ -1,0 +1,3 @@
+crosscheck controlfilecopy 'G:\BACKUP\RESTORE_CONTROL_TEST.CTL';
+
+delete <noprompt> obsolete;

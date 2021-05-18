@@ -1,0 +1,62 @@
+Создаем скрипт восстановления RMAN
+
+vim reco_test.rman
+
+RUN
+{
+  SET UNTIL SCN 9189907498226;
+  RESTORE DATABASE;
+  RECOVER DATABASE;
+}
+ALTER DATABASE OPEN RESETLOGS;
+EXIT;
+
+Создаем системный скрипт для его запуска
+
+vim rman_test.sh
+
+#!/bin/sh
+export ORACLE_SID=ULTRALB
+echo RMAN started at `date`
+rman  log='/mnt/data1/backup/restore_validate_1.log' TARGET / NOCATALOG @/mnt/data1/backup/reco_test.rman
+echo RMAN finished at `date`
+
+
+Даем права на запуск и чтение указанных скриптом и на запись с каталоги их логов пользователю, от имени которого они будут выполняться
+
+
+
+
+sequence=117001
+/mnt/data/oracle/dbfiles/
+/mnt/data2/oracle/dbfiles/
+
+/mnt/data/oracle/backup/CTL_AUTO_c-3705530278-20130506-00.BCK
+
+parameter file '/mnt/data/oracle/db_1/dbs/initLANIT.ora'
+
+RESTORE SPFILE TO PFILE '/mnt/data/oracle/db_1/dbs/initLANIT.ora' FROM '/mnt/data/oracle/backup/CTL_AUTO_c-3705530278-20130506-00.BCK';
+
+RESTORE SPFILE FROM '/mnt/data/oracle/backup/CTL_AUTO_c-3705530278-20130506-00.BCK';
+
+RESTORE SPFILE FROM AUTOBACKUP db_recovery_file_dest='/mnt/data/oracle/backup/' db_name='LANIT';
+
+
+RUN
+{
+CONFIGURE CONTROLFILE AUTOBACKUP FORMAT FOR DEVICE TYPE DISK TO '/mnt/data/oracle/backup/%F.BCK';
+RESTORE CONTROLFILE FROM '/mnt/data/oracle/backup/CTL_AUTO_c-3705530278-20130506-00.BCK';
+  SHUTDOWN ABORT;
+}
+
+RUN
+{
+ RESTORE SPFILE TO PFILE '/mnt/data/oracle/db_1/dbs/initLANIT.ora' FROM AUTOBACKUP;
+ SHUTDOWN ABORT;
+}
+
+
+restore spfile from '/mnt/data/oracle/backup/CTL_AUTO_c-3705530278-20130506-00.BCK' db_recovery_file_dest='/mnt/data/oracle/backup/' db_name='LANIT';
+
+Пересоздание пароля sys
+$ORACLE_HOME/bin/orapwd file=orapwLANIT password=spotlight entries=5
