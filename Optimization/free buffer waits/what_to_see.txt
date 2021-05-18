@@ -1,0 +1,3 @@
+параметры
+db_writer_processes - number of background database writer  processes to start
+dbwr_io_slaves      - DBWR I/O slaves
