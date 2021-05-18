@@ -1,0 +1,31 @@
+Enter a server alias/connection string (UNOC): 
+Enter new admin USER name: admruaken
+Connected.
+
+Соединение SYS/duo@UNOC
+*** START AT ***
+
+Дата                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    
+---------------------------------------------------------------------------                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             
+18/04/2013 12:20:09                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     
+
+old   1: CREATE USER &adminuser IDENTIFIED BY "&adminpassword"
+new   1: CREATE USER admruaken IDENTIFIED BY "admin"
+
+User created.
+
+old   1: GRANT SYSDBA TO &adminuser
+new   1: GRANT SYSDBA TO admruaken
+
+Grant succeeded.
+
+old   1: GRANT DBA TO &adminuser
+new   1: GRANT DBA TO admruaken
+
+Grant succeeded.
+
+*** FINISH AT ***
+
+Дата                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    
+---------------------------------------------------------------------------                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             
+18/04/2013 12:20:09

@@ -1,0 +1,1 @@
+grant drop any table to --<user which must truncate the partition>;

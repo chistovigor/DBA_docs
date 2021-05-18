@@ -1,0 +1,15 @@
+Description
+Error received when starting SQL Tuning from the SQL Editor window:
+
+"Could not convert variant of type (OleStr) into type (Double)."
+
+Cause
+The Decimal Separator is set to a "." and the Thousand Separator is set to a space.
+
+Resolution
+
+1. In Toad 8.6.1 and older: Select View | Options | Startup | Numeric Characters.
+
+In Toad 9.0.0 and newer: Select View | Toad Options | General | Numeric Characters.
+
+2. Set the Decimal Separator to a "," (comma) and the Thousand Separator to a "." (period).

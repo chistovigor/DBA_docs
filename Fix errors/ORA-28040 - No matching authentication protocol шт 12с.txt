@@ -1,0 +1,20 @@
+ORA-28040: No matching authentication protocol
+
+http://docs.oracle.com/database/121/NETRF/sqlnet.htm#NETRF2010
+
+https://twelvec.com/tag/sqlnet-allowed_logon_version_client/
+
+set
+
+SQLNET.ALLOWED_LOGON_VERSION_SERVER=8
+SQLNET.ALLOWED_LOGON_VERSION_CLIENT=8 
+
+in sqlnet.ora file
+
+if using SQLNET.ALLOWED_LOGON_VERSION, will be warnings in alertlog!
+
+Now now some background about the authentication protocol behavior. In earlier Oracle versions there was a 1-1 relation between authentication protocol and Oracle client version. This behavior changed in Oracle 10g , starting with Oracle 10g, this is no longer a 1-1 relation between authentication protocol and Oracle client version.  So what is the problem?  the problem lies in the fact that both Oracle 10g and 11g use SHA-1 protocol where as Oracle 12c uses SHA-2 protocol.  While SHA-2 protocol by itself is not causing the error, It is the default setting for SQLNET.ALLOWED_LOGON_VERSION_SERVER that is causing the error. In earlier versions , the default was 8 whereas it is 11 in Oracle 12c; therefore all  client versions 10 and below may get ORA-28040 error.
+
+Please note that  SQLNET.ALLOWED_LOGON_VERSION parameter is deprecated in Oracle Database 12c and replaced with SQLNET.ALLOWED_LOGON_VERSION_SERVER  and SQLNET.ALLOWED_LOGON_VERSION_CLIENT.
+
+Other ways to fix the above issue is to upgrade your client like JDBC drivers to  12c to match authentication protocols.

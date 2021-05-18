@@ -1,0 +1,136 @@
+17.04.2013 16:23:24 oracle.sysman.emcp.ParamsManager setFlag
+CONFIG: Flag '-config' set to true
+17.04.2013 16:23:24 oracle.sysman.emcp.ParamsManager setFlag
+CONFIG: Flag 'UPDATE_EMAIL' set to true
+17.04.2013 16:23:24 oracle.sysman.emcp.ParamsManager setFlag
+CONFIG: Flag 'dbcontrol' set to true
+17.04.2013 16:23:24 oracle.sysman.emcp.ParamsManager setFlag
+CONFIG: Flag 'db' set to true
+17.04.2013 16:23:24 oracle.sysman.emcp.ParamsManager setParam
+CONFIG: Setting param: ORACLE_HOSTNAME value: s-msk34-alpha-s
+17.04.2013 16:23:24 oracle.sysman.emcp.ParamsManager setParam
+CONFIG: Setting param: ORACLE_HOME value: D:\oracle\OraHome\
+17.04.2013 16:23:24 oracle.sysman.emcp.ParamsManager setParam
+CONFIG: Setting param: SID value: UNOC
+17.04.2013 16:23:24 oracle.sysman.emcp.ParamsManager setParam
+CONFIG: Setting param: PORT value: 1521
+17.04.2013 16:23:24 oracle.sysman.emcp.ParamsManager setParam
+CONFIG: Setting param: MAIL_SERVER_NAME value: ''
+17.04.2013 16:23:24 oracle.sysman.emcp.ParamsManager getLocalHost
+CONFIG: Value for parameter ORACLE_HOSTNAME: s-msk34-alpha-s
+17.04.2013 16:23:24 oracle.sysman.emcp.ParamsManager getLocalHost
+CONFIG: Current value for env variable ORACLE_HOSTNAME: null
+17.04.2013 16:23:24 oracle.sysman.emcp.ParamsManager getLocalHost
+CONFIG: Setting the env variable ORACLE_HOSTNAME to s-msk34-alpha-s
+17.04.2013 16:23:24 oracle.sysman.emcp.ParamsManager setParam
+CONFIG: Setting param: EM_HOME value: D:\oracle\OraHome\
+17.04.2013 16:23:24 oracle.sysman.emcp.util.ClusterUtil getLocalNode
+CONFIG: Cluster.isCluster: false. Skip call to getLocalNode
+17.04.2013 16:23:24 oracle.sysman.emcp.util.ClusterUtil getLocalNode
+CONFIG: isLocalNodeDone: true localNode: null
+17.04.2013 16:23:24 oracle.sysman.emcp.util.DBControlUtil isDBConsoleConfigured
+CONFIG: Sid: UNOC Host: s-msk34-alpha-s Node: null OH: D:\oracle\OraHome\ isDBC: false
+17.04.2013 16:23:24 oracle.sysman.emcp.util.CentralAgentUtil isCentralAgentConfigured
+CONFIG: Sid: UNOC Host: s-msk34-alpha-s Node: null OH: D:\oracle\OraHome\ agentHome: null isCentral: false
+17.04.2013 16:23:24 oracle.sysman.emcp.util.CentralAgentUtil isCentralAgentConfigured
+CONFIG: Sid: UNOC Host: s-msk34-alpha-s Node: null OH: D:\oracle\OraHome\ agentHome: null isCentral: false
+17.04.2013 16:23:24 oracle.sysman.emcp.util.GeneralUtil initSQLEngine
+CONFIG: SQLEngine connecting with SID: UNOC, oracleHome: D:\oracle\OraHome\, and user: SYS
+17.04.2013 16:23:25 oracle.sysman.emcp.util.GeneralUtil initSQLEngine
+CONFIG: SQLEngine created successfully and connected
+17.04.2013 16:23:25 oracle.sysman.emcp.ParamsManager setFlag
+CONFIG: Flag 'asm_db' set to false
+17.04.2013 16:23:25 oracle.sysman.emcp.ParamsManager setFlag
+CONFIG: Flag 'asm_db' set to false
+17.04.2013 16:23:27 oracle.sysman.emcp.ParamsManager setParam
+CONFIG: Setting param: EMAIL_ADDRESS value: 
+17.04.2013 16:23:27 oracle.sysman.emcp.ParamsManager setParam
+CONFIG: Setting param: CONFIRMATION ANSWER value: 
+17.04.2013 16:23:36 oracle.sysman.emcp.ParamsManager setParam
+CONFIG: Setting param: CONFIRMATION ANSWER value: yes
+17.04.2013 16:23:36 oracle.sysman.emcp.ParamsManager getParam
+CONFIG: No value was set for the parameter LOG_FILE.
+17.04.2013 16:23:36 oracle.sysman.emcp.ParamsManager getParam
+CONFIG: No value was set for the parameter DB_UNIQUE_NAME.
+17.04.2013 16:23:36 oracle.sysman.emcp.ParamsManager getParam
+CONFIG: No value was set for the parameter DB_UNIQUE_NAME.
+17.04.2013 16:23:36 oracle.sysman.emcp.util.GeneralUtil initSQLEngine
+CONFIG: SQLEngine connecting with SID: UNOC, oracleHome: D:\oracle\OraHome\, and user: SYS
+17.04.2013 16:23:37 oracle.sysman.emcp.util.GeneralUtil initSQLEngine
+CONFIG: SQLEngine created successfully and connected
+17.04.2013 16:23:37 oracle.sysman.emcp.DatabaseChecks getDbUniqueName
+CONFIG: No Database unique name available. Will try to retrieve it from DB itself
+17.04.2013 16:23:37 oracle.sysman.emcp.ParamsManager setParam
+CONFIG: Setting param: DB_UNIQUE_NAME value: unoc
+17.04.2013 16:23:37 oracle.sysman.emcp.EMConfig perform
+INFO: This operation is being logged at D:\oracle\OraHome\\cfgtoollogs\emca\unoc\emca_2013-04-17_04-23-23-PM.log.
+17.04.2013 16:23:37 oracle.sysman.emcp.ParamsManager setFlag
+CONFIG: Flag 'CHECK_CONFIG' set to true
+17.04.2013 16:23:37 oracle.sysman.emcp.util.GeneralUtil initSQLEngine
+CONFIG: SQLEngine connecting with SID: UNOC, oracleHome: D:\oracle\OraHome\, and user: SYS
+17.04.2013 16:23:38 oracle.sysman.emcp.util.GeneralUtil initSQLEngine
+CONFIG: SQLEngine created successfully and connected
+17.04.2013 16:23:38 oracle.sysman.emcp.util.GeneralUtil initSQLEngine
+CONFIG: SQLEngine connecting with SID: UNOC, oracleHome: D:\oracle\OraHome\, and user: DBSNMP
+17.04.2013 16:23:39 oracle.sysman.emcp.util.GeneralUtil initSQLEngine
+CONFIG: ORA-01017: invalid username/password; logon denied
+
+oracle.sysman.assistants.util.sqlEngine.SQLFatalErrorException: ORA-01017: invalid username/password; logon denied
+
+	at oracle.sysman.assistants.util.sqlEngine.SQLEngine.executeImpl(SQLEngine.java:1467)
+	at oracle.sysman.assistants.util.sqlEngine.SQLEngine.connect(SQLEngine.java:814)
+	at oracle.sysman.assistants.util.sqlEngine.SQLEngine.connect(SQLEngine.java:777)
+	at oracle.sysman.emcp.util.GeneralUtil.initSQLEngine(GeneralUtil.java:359)
+	at oracle.sysman.emcp.DatabaseChecks.validateUserCredentials(DatabaseChecks.java:986)
+	at oracle.sysman.emcp.ParamsManager.validatePassword(ParamsManager.java:2694)
+	at oracle.sysman.emcp.EMDBPreConfig.checkConfigParams(EMDBPreConfig.java:1278)
+	at oracle.sysman.emcp.EMDBPreConfig.checkParameters(EMDBPreConfig.java:1060)
+	at oracle.sysman.emcp.EMDBPreConfig.invoke(EMDBPreConfig.java:174)
+	at oracle.sysman.emcp.EMDBPreConfig.invoke(EMDBPreConfig.java:160)
+	at oracle.sysman.emcp.EMConfig.perform(EMConfig.java:141)
+	at oracle.sysman.emcp.EMConfigAssistant.invokeEMCA(EMConfigAssistant.java:479)
+	at oracle.sysman.emcp.EMConfigAssistant.performConfiguration(EMConfigAssistant.java:1123)
+	at oracle.sysman.emcp.EMConfigAssistant.statusMain(EMConfigAssistant.java:463)
+	at oracle.sysman.emcp.EMConfigAssistant.main(EMConfigAssistant.java:412)
+17.04.2013 16:23:39 oracle.sysman.emcp.util.GeneralUtil initSQLEngine
+CONFIG: SQLEngine connecting with SID: UNOC, oracleHome: D:\oracle\OraHome\, and user: SYS
+17.04.2013 16:23:40 oracle.sysman.emcp.util.GeneralUtil initSQLEngine
+CONFIG: SQLEngine created successfully and connected
+17.04.2013 16:23:40 oracle.sysman.emcp.util.GeneralUtil initSQLEngine
+CONFIG: SQLEngine connecting with SID: UNOC, oracleHome: D:\oracle\OraHome\, and user: DBSNMP
+17.04.2013 16:23:41 oracle.sysman.emcp.util.GeneralUtil initSQLEngine
+CONFIG: ORA-01017: invalid username/password; logon denied
+
+oracle.sysman.assistants.util.sqlEngine.SQLFatalErrorException: ORA-01017: invalid username/password; logon denied
+
+	at oracle.sysman.assistants.util.sqlEngine.SQLEngine.executeImpl(SQLEngine.java:1467)
+	at oracle.sysman.assistants.util.sqlEngine.SQLEngine.connect(SQLEngine.java:814)
+	at oracle.sysman.assistants.util.sqlEngine.SQLEngine.connect(SQLEngine.java:777)
+	at oracle.sysman.emcp.util.GeneralUtil.initSQLEngine(GeneralUtil.java:359)
+	at oracle.sysman.emcp.util.GeneralUtil.initSQLEngine(GeneralUtil.java:384)
+	at oracle.sysman.emcp.DatabaseChecks.validateUserCredentials(DatabaseChecks.java:1021)
+	at oracle.sysman.emcp.ParamsManager.validatePassword(ParamsManager.java:2694)
+	at oracle.sysman.emcp.EMDBPreConfig.checkConfigParams(EMDBPreConfig.java:1278)
+	at oracle.sysman.emcp.EMDBPreConfig.checkParameters(EMDBPreConfig.java:1060)
+	at oracle.sysman.emcp.EMDBPreConfig.invoke(EMDBPreConfig.java:174)
+	at oracle.sysman.emcp.EMDBPreConfig.invoke(EMDBPreConfig.java:160)
+	at oracle.sysman.emcp.EMConfig.perform(EMConfig.java:141)
+	at oracle.sysman.emcp.EMConfigAssistant.invokeEMCA(EMConfigAssistant.java:479)
+	at oracle.sysman.emcp.EMConfigAssistant.performConfiguration(EMConfigAssistant.java:1123)
+	at oracle.sysman.emcp.EMConfigAssistant.statusMain(EMConfigAssistant.java:463)
+	at oracle.sysman.emcp.EMConfigAssistant.main(EMConfigAssistant.java:412)
+17.04.2013 16:23:41 oracle.sysman.emcp.EMConfig perform
+SEVERE: Invalid username/password.
+Refer to the log file at D:\oracle\OraHome\\cfgtoollogs\emca\unoc\emca_2013-04-17_04-23-23-PM.log for more details.
+17.04.2013 16:23:41 oracle.sysman.emcp.EMConfig perform
+CONFIG: Stack Trace: 
+oracle.sysman.emcp.exception.EMConfigException: Invalid username/password.
+	at oracle.sysman.emcp.EMDBPreConfig.checkConfigParams(EMDBPreConfig.java:1282)
+	at oracle.sysman.emcp.EMDBPreConfig.checkParameters(EMDBPreConfig.java:1060)
+	at oracle.sysman.emcp.EMDBPreConfig.invoke(EMDBPreConfig.java:174)
+	at oracle.sysman.emcp.EMDBPreConfig.invoke(EMDBPreConfig.java:160)
+	at oracle.sysman.emcp.EMConfig.perform(EMConfig.java:141)
+	at oracle.sysman.emcp.EMConfigAssistant.invokeEMCA(EMConfigAssistant.java:479)
+	at oracle.sysman.emcp.EMConfigAssistant.performConfiguration(EMConfigAssistant.java:1123)
+	at oracle.sysman.emcp.EMConfigAssistant.statusMain(EMConfigAssistant.java:463)
+	at oracle.sysman.emcp.EMConfigAssistant.main(EMConfigAssistant.java:412)

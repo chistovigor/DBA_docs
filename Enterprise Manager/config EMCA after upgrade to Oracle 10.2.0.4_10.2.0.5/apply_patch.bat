@@ -1,0 +1,1 @@
+ORACLE_HOME\Opatch\Opatch apply <path_to_unpacked_patch>

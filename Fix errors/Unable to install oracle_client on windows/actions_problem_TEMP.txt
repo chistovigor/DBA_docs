@@ -1,0 +1,14 @@
+Stop SERVICE OracleRemExecServiceV2
+
+1. Restore the administrative share for C$. See Microsoft document http://support.microsoft.com/kb/314984
+
+2. Check that it is ok:
+- net use \\<hostname>\c$ should work
+- the current user (i.e. user in administrator group) should have all privileges on the default share
+
+3. retry the installation
+
+4. remove the administrative share again
+
+5. Allow read/write permission %TEMP directory to the user account from which Oracle Database installation is getting done.
+

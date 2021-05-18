@@ -1,0 +1,24 @@
+29.09.2009 16:05:17 oracle.sysman.emcp.ParamsManager setFlag
+CONFIG: Flag '-cluster' set to false
+29.09.2009 16:05:17 oracle.sysman.emcp.ParamsManager setFlag
+CONFIG: Flag 'db' set to true
+29.09.2009 16:05:17 oracle.sysman.emcp.ParamsManager setParam
+CONFIG: Setting param: ORACLE_HOME value: D:\oracle\OraHome
+29.09.2009 16:05:17 oracle.sysman.emcp.EMConfig isEMConfigured
+CONFIG: isEMConfigured for DB: TEST
+29.09.2009 16:05:17 oracle.sysman.emcp.ParamsManager getParam
+CONFIG: No value was set for the parameter ORACLE_HOSTNAME.
+29.09.2009 16:05:18 oracle.sysman.emcp.util.ClusterUtil getLocalNode
+CONFIG: Cluster.isCluster: false. Skip call to getLocalNode
+29.09.2009 16:05:18 oracle.sysman.emcp.util.ClusterUtil getLocalNode
+CONFIG: isLocalNodeDone: true localNode: null
+29.09.2009 16:05:18 oracle.sysman.emcp.util.DBControlUtil isDBConsoleConfigured
+CONFIG: Sid: TEST Host: s-msk34-alpha-s Node: null OH: D:\oracle\OraHome isDBC: false
+29.09.2009 16:05:18 oracle.sysman.emcp.ParamsManager getParam
+CONFIG: No value was set for the parameter ORACLE_HOSTNAME.
+29.09.2009 16:05:18 oracle.sysman.emcp.util.ClusterUtil getLocalNode
+CONFIG: isLocalNodeDone: true localNode: null
+29.09.2009 16:05:18 oracle.sysman.emcp.util.CentralAgentUtil isCentralAgentConfigured
+CONFIG: Sid: TEST Host: s-msk34-alpha-s Node: null OH: D:\oracle\OraHome agentHome: null isCentral: false
+29.09.2009 16:05:44 oracle.sysman.emcp.EMConfig finalize
+CONFIG: finalize() called for EMConfig

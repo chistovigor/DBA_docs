@@ -1,0 +1,8 @@
+-ORACLE_HOSTNAME=s-msk08-ultra-la
+-ORACLE_HOME=/usr/oracle/app/product/11.2.0/dbhome_1
+-SID=ULTRASTN 
+-SYS_PWD=trjvthc
+-PORT=1521
+-DBSNMP_PWD=dbsnmp
+-SYSMAN_PWD=sysman
+-MAIL_SERVER_NAME=''

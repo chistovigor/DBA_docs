@@ -1,0 +1,97 @@
+remove agentTZRegion parameter from $ORACLE_HOME/db10g_db10g/sysman/config/emd.properties
+emctl stop dbconsole
+unset TZ
+emctl start dbconsole
+
+emctl status agent - can be down, but EMCA will be accessible
+
+
+for atmdb01
+
+удалить из файла 
+
+/usr/oracle/product/10.2.0/db_1/s-msk08-atmdb01_lanit/sysman/config/emd.properties
+
+запись
+agentTZRegion=
+
+emctl stop dbconsole
+unset TZ
+emctl start dbconsole
+
+
+Действия для 11g
+1) set | grep TZ - проверить текущую TZ
+2) unset TZ
+3) set | grep TZ - не должно ничего быть
+4) export TZ=Etc/GMT-3 - на TZ для Москвы (с учетом того, что нет перехода на летнее время)
+5) unset _
+6) set | grep TZ - должен выдать только TZ=Etc/GMT-3
+7) vim /usr/oracle/app/product/11.2.0/dbhome_1/s-msk00-ultra-lb_ULTRALB/sysman/config/emd.properties - удалить строчку agentTZRegion=
+8) emctl config agent getTZ - должен выдать Etc/GMT-3
+9) emctl resetTZ agent
+10) sqlplus /nolog
+11) conn sysman/sysman (либо connect to sys as sysdba, alter session set current_schema = SYSMAN;)
+12) exec mgmt_target.set_agent_tzrgn('s-msk00-ultra-lb:3938','Etc/GMT-3') - тут s-msk00-ultra-lb:3938 - инфо Agent URL (emctl status agent)
+13) emctl stop dbconsole
+14) emctl start dbconsole
+15) emctl status dbconsole
+16) emctl status agent
+
+Если не получается выполнить шаг 12, то пропускаем его.
+
+Проверка (от имени sysman)
+
+/* Formatted on 27/10/2014 15:27:27 (QP5 v5.227.12220.39754) */
+SELECT agent,
+       timezone_region,
+       difference "seconds",
+          DECODE (SIGN (difference), -1, '-', '+')
+       || TRIM (TO_CHAR (MOD (FLOOR (ABS (difference) / 3600), 24), '09'))
+       || 'h'
+       || TRIM (TO_CHAR (MOD (FLOOR (ABS (difference) / 60), 60), '09'))
+       || 'm'
+       || TRIM (TO_CHAR (MOD (ABS (difference), 60), '09'))
+       || 's'
+          clock_skew
+  FROM (SELECT t.target_name agent,
+               t.timezone_region,
+                 (  p.last_heartbeat_utc
+                  - (MGMT_GLOBAL.TO_UTC (p.last_heartbeat_ts,
+                                         t.timezone_region)))
+               * 86400
+                  difference
+          FROM sysman.mgmt_emd_ping p, sysman.mgmt_targets t
+         WHERE p.target_guid = t.target_guid)
+
+Скрипт для вышеуказанных шагов
+
+#!/bin/bash
+
+. $HOME/.bash_profile
+. $HOME/.bashrc
+
+unset TZ
+export TZ=Etc/GMT-3 #For Moscow
+hostname=`uname -n`
+emca_param=`find $ORACLE_HOME -wholename *$hostname*/emd.properties`
+
+#script body
+
+echo emca parameter file is $emca_param
+echo emca parameter file backup is ${emca_param}_backup
+cp ${emca_param} ${emca_param}_backup -f
+
+echo change file
+
+sed '/agentTZRegion=*/d' $emca_param > ${emca_param}_new
+cp ${emca_param}_new $emca_param -f
+emctl config agent getTZ
+emctl resetTZ agent
+
+echo restart dbconsole
+
+emctl stop dbconsole
+emctl start dbconsole
+emctl status dbconsole
+emctl status agent

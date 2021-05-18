@@ -1,0 +1,12 @@
+INFO: >>>>>>>>>>> The Database Control URL is http://s-msk34-web-a:5500/em <<<<<<<<<<<
+
+
+Error securing Database Control. Database Control has been brought-up in non-secure mode. To secure the Database Control execute the following command(s):
+
+ 1) Set the environment variable ORACLE_UNQNAME to Database unique name
+ 2) /usr/oracle/app/product/11.2.0/dbhome_1/bin/emctl stop dbconsole
+ 3) /usr/oracle/app/product/11.2.0/dbhome_1/bin/emctl config emkey -repos -sysman_pwd < Password for SYSMAN user >
+ 4) /usr/oracle/app/product/11.2.0/dbhome_1/bin/emctl secure dbconsole -sysman_pwd < Password for SYSMAN user >
+ 5) /usr/oracle/app/product/11.2.0/dbhome_1/bin/emctl start dbconsole
+
+ To secure Em Key, run /usr/oracle/app/product/11.2.0/dbhome_1/bin/emctl config emkey -remove_from_repos -sysman_pwd < Password for SYSMAN user >

@@ -1,0 +1,1 @@
+D:\oracle\OraHome\bin\emca.bat -config dbcontrol db -ORACLE_HOSTNAME s-msk34-alpha-s -ORACLE_HOME D:\oracle\OraHome\ -SID UNOC -SYS_PWD DUO -PORT 1521 -DBSNMP_PWD UNOC -SYSMAN_PWD DUO -MAIL_SERVER_NAME ''

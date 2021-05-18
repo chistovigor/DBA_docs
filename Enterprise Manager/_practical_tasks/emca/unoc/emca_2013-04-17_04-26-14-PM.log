@@ -1,0 +1,566 @@
+17.04.2013 16:26:14 oracle.sysman.emcp.ParamsManager setFlag
+CONFIG: Flag '-config' set to true
+17.04.2013 16:26:14 oracle.sysman.emcp.ParamsManager setFlag
+CONFIG: Flag 'UPDATE_EMAIL' set to true
+17.04.2013 16:26:14 oracle.sysman.emcp.ParamsManager setFlag
+CONFIG: Flag 'dbcontrol' set to true
+17.04.2013 16:26:14 oracle.sysman.emcp.ParamsManager setFlag
+CONFIG: Flag 'db' set to true
+17.04.2013 16:26:14 oracle.sysman.emcp.ParamsManager setParam
+CONFIG: Setting param: ORACLE_HOSTNAME value: s-msk34-alpha-s
+17.04.2013 16:26:14 oracle.sysman.emcp.ParamsManager setParam
+CONFIG: Setting param: ORACLE_HOME value: D:\oracle\OraHome\
+17.04.2013 16:26:14 oracle.sysman.emcp.ParamsManager setParam
+CONFIG: Setting param: SID value: UNOC
+17.04.2013 16:26:14 oracle.sysman.emcp.ParamsManager setParam
+CONFIG: Setting param: PORT value: 1521
+17.04.2013 16:26:14 oracle.sysman.emcp.ParamsManager setParam
+CONFIG: Setting param: MAIL_SERVER_NAME value: ''
+17.04.2013 16:26:14 oracle.sysman.emcp.ParamsManager getLocalHost
+CONFIG: Value for parameter ORACLE_HOSTNAME: s-msk34-alpha-s
+17.04.2013 16:26:14 oracle.sysman.emcp.ParamsManager getLocalHost
+CONFIG: Current value for env variable ORACLE_HOSTNAME: null
+17.04.2013 16:26:14 oracle.sysman.emcp.ParamsManager getLocalHost
+CONFIG: Setting the env variable ORACLE_HOSTNAME to s-msk34-alpha-s
+17.04.2013 16:26:14 oracle.sysman.emcp.ParamsManager setParam
+CONFIG: Setting param: EM_HOME value: D:\oracle\OraHome\
+17.04.2013 16:26:14 oracle.sysman.emcp.util.ClusterUtil getLocalNode
+CONFIG: Cluster.isCluster: false. Skip call to getLocalNode
+17.04.2013 16:26:14 oracle.sysman.emcp.util.ClusterUtil getLocalNode
+CONFIG: isLocalNodeDone: true localNode: null
+17.04.2013 16:26:14 oracle.sysman.emcp.util.DBControlUtil isDBConsoleConfigured
+CONFIG: Sid: UNOC Host: s-msk34-alpha-s Node: null OH: D:\oracle\OraHome\ isDBC: false
+17.04.2013 16:26:14 oracle.sysman.emcp.util.CentralAgentUtil isCentralAgentConfigured
+CONFIG: Sid: UNOC Host: s-msk34-alpha-s Node: null OH: D:\oracle\OraHome\ agentHome: null isCentral: false
+17.04.2013 16:26:14 oracle.sysman.emcp.util.CentralAgentUtil isCentralAgentConfigured
+CONFIG: Sid: UNOC Host: s-msk34-alpha-s Node: null OH: D:\oracle\OraHome\ agentHome: null isCentral: false
+17.04.2013 16:26:14 oracle.sysman.emcp.util.GeneralUtil initSQLEngine
+CONFIG: SQLEngine connecting with SID: UNOC, oracleHome: D:\oracle\OraHome\, and user: SYS
+17.04.2013 16:26:15 oracle.sysman.emcp.util.GeneralUtil initSQLEngine
+CONFIG: SQLEngine created successfully and connected
+17.04.2013 16:26:15 oracle.sysman.emcp.ParamsManager setFlag
+CONFIG: Flag 'asm_db' set to false
+17.04.2013 16:26:15 oracle.sysman.emcp.ParamsManager setFlag
+CONFIG: Flag 'asm_db' set to false
+17.04.2013 16:26:16 oracle.sysman.emcp.ParamsManager setParam
+CONFIG: Setting param: EMAIL_ADDRESS value: 
+17.04.2013 16:26:16 oracle.sysman.emcp.ParamsManager setParam
+CONFIG: Setting param: CONFIRMATION ANSWER value: 
+17.04.2013 16:26:21 oracle.sysman.emcp.ParamsManager setParam
+CONFIG: Setting param: CONFIRMATION ANSWER value: yes
+17.04.2013 16:26:21 oracle.sysman.emcp.ParamsManager getParam
+CONFIG: No value was set for the parameter LOG_FILE.
+17.04.2013 16:26:21 oracle.sysman.emcp.ParamsManager getParam
+CONFIG: No value was set for the parameter DB_UNIQUE_NAME.
+17.04.2013 16:26:21 oracle.sysman.emcp.ParamsManager getParam
+CONFIG: No value was set for the parameter DB_UNIQUE_NAME.
+17.04.2013 16:26:21 oracle.sysman.emcp.util.GeneralUtil initSQLEngine
+CONFIG: SQLEngine connecting with SID: UNOC, oracleHome: D:\oracle\OraHome\, and user: SYS
+17.04.2013 16:26:22 oracle.sysman.emcp.util.GeneralUtil initSQLEngine
+CONFIG: SQLEngine created successfully and connected
+17.04.2013 16:26:22 oracle.sysman.emcp.DatabaseChecks getDbUniqueName
+CONFIG: No Database unique name available. Will try to retrieve it from DB itself
+17.04.2013 16:26:22 oracle.sysman.emcp.ParamsManager setParam
+CONFIG: Setting param: DB_UNIQUE_NAME value: unoc
+17.04.2013 16:26:22 oracle.sysman.emcp.EMConfig perform
+INFO: This operation is being logged at D:\oracle\OraHome\\cfgtoollogs\emca\unoc\emca_2013-04-17_04-26-14-PM.log.
+17.04.2013 16:26:22 oracle.sysman.emcp.ParamsManager setFlag
+CONFIG: Flag 'CHECK_CONFIG' set to true
+17.04.2013 16:26:22 oracle.sysman.emcp.util.GeneralUtil initSQLEngine
+CONFIG: SQLEngine connecting with SID: UNOC, oracleHome: D:\oracle\OraHome\, and user: SYS
+17.04.2013 16:26:23 oracle.sysman.emcp.util.GeneralUtil initSQLEngine
+CONFIG: SQLEngine created successfully and connected
+17.04.2013 16:26:23 oracle.sysman.emcp.util.GeneralUtil initSQLEngine
+CONFIG: SQLEngine connecting with SID: UNOC, oracleHome: D:\oracle\OraHome\, and user: DBSNMP
+17.04.2013 16:26:24 oracle.sysman.emcp.util.GeneralUtil initSQLEngine
+CONFIG: SQLEngine created successfully and connected
+17.04.2013 16:26:24 oracle.sysman.emcp.ParamsManager getParam
+CONFIG: No value was set for the parameter MODIFY_SID.
+17.04.2013 16:26:24 oracle.sysman.emcp.util.GeneralUtil initSQLEngine
+CONFIG: SQLEngine connecting with SID: UNOC, oracleHome: D:\oracle\OraHome\, and user: SYS
+17.04.2013 16:26:24 oracle.sysman.emcp.util.GeneralUtil initSQLEngine
+CONFIG: SQLEngine created successfully and connected
+17.04.2013 16:26:24 oracle.sysman.emcp.ParamsManager setFlag
+CONFIG: Flag 'asm_db' set to false
+17.04.2013 16:26:24 oracle.sysman.emcp.ParamsManager getParam
+CONFIG: No value was set for the parameter MODIFY_SID.
+17.04.2013 16:26:24 oracle.sysman.emcp.DatabaseChecks getDbServiceName
+CONFIG: No service name available. Will try to set db_unique_name.db_domain
+17.04.2013 16:26:24 oracle.sysman.emcp.util.GeneralUtil initSQLEngine
+CONFIG: SQLEngine connecting with SID: UNOC, oracleHome: D:\oracle\OraHome\, and user: SYS
+17.04.2013 16:26:25 oracle.sysman.emcp.util.GeneralUtil initSQLEngine
+CONFIG: SQLEngine created successfully and connected
+17.04.2013 16:26:25 oracle.sysman.emcp.ParamsManager setParam
+CONFIG: Setting param: DB_UNIQUE_NAME value: 
+17.04.2013 16:26:25 oracle.sysman.emcp.ParamsManager getParam
+CONFIG: No value was set for the parameter DB_UNIQUE_NAME.
+17.04.2013 16:26:25 oracle.sysman.emcp.DatabaseChecks getDbUniqueName
+CONFIG: No Database unique name available. Will try to retrieve it from DB itself
+17.04.2013 16:26:25 oracle.sysman.emcp.ParamsManager setParam
+CONFIG: Setting param: DB_UNIQUE_NAME value: unoc
+17.04.2013 16:26:25 oracle.sysman.emcp.ParamsManager getParam
+CONFIG: No value was set for the parameter DB_DOMAIN.
+17.04.2013 16:26:25 oracle.sysman.emcp.DatabaseChecks getDbDomain
+CONFIG: No db domain available. Will query db for db_domain parameter
+17.04.2013 16:26:25 oracle.sysman.emcp.ParamsManager setParam
+CONFIG: Setting param: DB_UNIQUE_NAME value: unoc
+17.04.2013 16:26:25 oracle.sysman.emcp.ParamsManager setParam
+CONFIG: Setting param: SERVICE_NAME value: unoc
+17.04.2013 16:26:25 oracle.sysman.emcp.ParamsManager getParam
+CONFIG: No value was set for the parameter MODIFY_SID.
+17.04.2013 16:26:25 oracle.sysman.emcp.ParamsManager getParam
+CONFIG: No value was set for the parameter DBID.
+17.04.2013 16:26:25 oracle.sysman.emcp.DatabaseChecks getDbid
+CONFIG: No dbid available. Will query db to extract it.
+17.04.2013 16:26:25 oracle.sysman.emcp.util.GeneralUtil initSQLEngine
+CONFIG: SQLEngine connecting with SID: UNOC, oracleHome: D:\oracle\OraHome\, and user: SYS
+17.04.2013 16:26:26 oracle.sysman.emcp.util.GeneralUtil initSQLEngine
+CONFIG: SQLEngine created successfully and connected
+17.04.2013 16:26:26 oracle.sysman.emcp.ParamsManager setParam
+CONFIG: Setting param: DBID value: 4101235284
+17.04.2013 16:26:26 oracle.sysman.emcp.util.GeneralUtil initSQLEngine
+CONFIG: SQLEngine connecting with SID: UNOC, oracleHome: D:\oracle\OraHome\, and user: SYSMAN
+17.04.2013 16:26:27 oracle.sysman.emcp.util.GeneralUtil initSQLEngine
+CONFIG: ORA-28000: the account is locked
+
+oracle.sysman.assistants.util.sqlEngine.SQLFatalErrorException: ORA-28000: the account is locked
+
+	at oracle.sysman.assistants.util.sqlEngine.SQLEngine.executeImpl(SQLEngine.java:1467)
+	at oracle.sysman.assistants.util.sqlEngine.SQLEngine.connect(SQLEngine.java:814)
+	at oracle.sysman.assistants.util.sqlEngine.SQLEngine.connect(SQLEngine.java:777)
+	at oracle.sysman.emcp.util.GeneralUtil.initSQLEngine(GeneralUtil.java:359)
+	at oracle.sysman.emcp.DatabaseChecks.validateUserCredentials(DatabaseChecks.java:986)
+	at oracle.sysman.emcp.ParamsManager.validatePassword(ParamsManager.java:2694)
+	at oracle.sysman.emcp.EMDBPreConfig.checkConfigParams(EMDBPreConfig.java:1335)
+	at oracle.sysman.emcp.EMDBPreConfig.checkParameters(EMDBPreConfig.java:1060)
+	at oracle.sysman.emcp.EMDBPreConfig.invoke(EMDBPreConfig.java:174)
+	at oracle.sysman.emcp.EMDBPreConfig.invoke(EMDBPreConfig.java:160)
+	at oracle.sysman.emcp.EMConfig.perform(EMConfig.java:141)
+	at oracle.sysman.emcp.EMConfigAssistant.invokeEMCA(EMConfigAssistant.java:479)
+	at oracle.sysman.emcp.EMConfigAssistant.performConfiguration(EMConfigAssistant.java:1123)
+	at oracle.sysman.emcp.EMConfigAssistant.statusMain(EMConfigAssistant.java:463)
+	at oracle.sysman.emcp.EMConfigAssistant.main(EMConfigAssistant.java:412)
+17.04.2013 16:26:27 oracle.sysman.emcp.util.GeneralUtil initSQLEngine
+CONFIG: SQLEngine connecting with SID: UNOC, oracleHome: D:\oracle\OraHome\, and user: SYS
+17.04.2013 16:26:28 oracle.sysman.emcp.util.GeneralUtil initSQLEngine
+CONFIG: SQLEngine created successfully and connected
+17.04.2013 16:26:28 oracle.sysman.emcp.DatabaseChecks updateAccountStatus
+CONFIG: Unlocked SYSMAN account
+17.04.2013 16:26:28 oracle.sysman.emcp.util.GeneralUtil initSQLEngine
+CONFIG: SQLEngine connecting with SID: UNOC, oracleHome: D:\oracle\OraHome\, and user: SYSMAN
+17.04.2013 16:26:29 oracle.sysman.emcp.util.GeneralUtil initSQLEngine
+CONFIG: SQLEngine created successfully and connected
+17.04.2013 16:26:29 oracle.sysman.emcp.ParamsManager getParam
+CONFIG: No value was set for the parameter EMAIL_ADDRESS.
+17.04.2013 16:26:29 oracle.sysman.emcp.util.GeneralUtil initSQLEngine
+CONFIG: SQLEngine connecting with SID: UNOC, oracleHome: D:\oracle\OraHome\, and user: SYS
+17.04.2013 16:26:30 oracle.sysman.emcp.util.GeneralUtil initSQLEngine
+CONFIG: SQLEngine created successfully and connected
+17.04.2013 16:26:30 oracle.sysman.emcp.EMDBPreConfig invoke
+CONFIG: Passed repository configuration check
+17.04.2013 16:26:30 oracle.sysman.emcp.ParamsManager getParam
+CONFIG: No value was set for the parameter MODIFY_SID.
+17.04.2013 16:26:30 oracle.sysman.emcp.ParamsManager getParam
+CONFIG: No value was set for the parameter MODIFY_SID.
+17.04.2013 16:26:30 oracle.sysman.emcp.ParamsManager getParam
+CONFIG: No value was set for the parameter GLOBAL_DB_UNIQUE_NAME.
+17.04.2013 16:26:30 oracle.sysman.emcp.DatabaseChecks getGlobalDbUniqueName
+CONFIG: No Global database unique name available. Will try to retrieve it from DB itself
+17.04.2013 16:26:30 oracle.sysman.emcp.util.GeneralUtil initSQLEngine
+CONFIG: SQLEngine connecting with SID: UNOC, oracleHome: D:\oracle\OraHome\, and user: SYS
+17.04.2013 16:26:30 oracle.sysman.emcp.util.GeneralUtil initSQLEngine
+CONFIG: SQLEngine created successfully and connected
+17.04.2013 16:26:30 oracle.sysman.emcp.ParamsManager getParam
+CONFIG: No value was set for the parameter DB_DOMAIN.
+17.04.2013 16:26:30 oracle.sysman.emcp.DatabaseChecks getDbDomain
+CONFIG: No db domain available. Will query db for db_domain parameter
+17.04.2013 16:26:31 oracle.sysman.emcp.ParamsManager setParam
+CONFIG: Setting param: GLOBAL_DB_UNIQUE_NAME value: unoc
+17.04.2013 16:26:31 oracle.sysman.emcp.util.FileUtil _copyFile
+CONFIG: Copying file D:\oracle\OraHome\sysman\config\emd.properties to D:\oracle\OraHome\sysman\config\emd.properties.emca.tmp
+17.04.2013 16:26:31 oracle.sysman.emcp.util.FileUtil backupFile
+CONFIG: The original file D:\oracle\OraHome\\sysman\config\emd.properties has been copied to D:\oracle\OraHome\\sysman\config\emd.properties.emca.tmp
+17.04.2013 16:26:31 oracle.sysman.emcp.util.FileUtil _copyFile
+CONFIG: Copying file D:\oracle\OraHome\sysman\config\emoms.properties to D:\oracle\OraHome\sysman\config\emoms.properties.emca.tmp
+17.04.2013 16:26:31 oracle.sysman.emcp.util.FileUtil backupFile
+CONFIG: The original file D:\oracle\OraHome\\sysman\config\emoms.properties has been copied to D:\oracle\OraHome\\sysman\config\emoms.properties.emca.tmp
+17.04.2013 16:26:31 oracle.sysman.emcp.util.FileUtil _copyFile
+CONFIG: Copying file D:\oracle\OraHome\sysman\emd\targets.xml to D:\oracle\OraHome\sysman\emd\targets.xml.emca.tmp
+17.04.2013 16:26:31 oracle.sysman.emcp.util.FileUtil backupFile
+CONFIG: The original file D:\oracle\OraHome\\sysman\emd\targets.xml has been copied to D:\oracle\OraHome\\sysman\emd\targets.xml.emca.tmp
+17.04.2013 16:26:31 oracle.sysman.emcp.util.ClusterUtil getLocalNode
+CONFIG: isLocalNodeDone: true localNode: null
+17.04.2013 16:26:31 oracle.sysman.emcp.ParamsManager setFlag
+CONFIG: Flag 'IS_CENTRAL_AGENT_RECONFIG' set to false
+17.04.2013 16:26:31 oracle.sysman.emcp.util.ClusterUtil getLocalNode
+CONFIG: isLocalNodeDone: true localNode: null
+17.04.2013 16:26:31 oracle.sysman.emcp.util.CentralAgentUtil isCentralAgentConfigured
+CONFIG: Sid: UNOC Host: s-msk34-alpha-s Node: null OH: D:\oracle\OraHome\ agentHome: null isCentral: false
+17.04.2013 16:26:31 oracle.sysman.emcp.util.DBControlUtil isDBConsoleConfigured
+CONFIG: Sid: UNOC Host: s-msk34-alpha-s Node: null OH: D:\oracle\OraHome\ isDBC: false
+17.04.2013 16:26:31 oracle.sysman.emcp.ParamsManager setFlag
+CONFIG: Flag 'IS_CENTRAL_AGENT_CONFIGURED' set to false
+17.04.2013 16:26:31 oracle.sysman.emcp.ParamsManager setFlag
+CONFIG: Flag 'IS_DBCONTROL_CONFIGURED' set to false
+17.04.2013 16:26:31 oracle.sysman.emcp.ParamsManager getParam
+CONFIG: No value was set for the parameter DBCONTROL_HTTP_PORT.
+17.04.2013 16:26:31 oracle.sysman.emcp.ParamsManager getParam
+CONFIG: No value was set for the parameter AGENT_PORT.
+17.04.2013 16:26:31 oracle.sysman.emcp.ParamsManager getParam
+CONFIG: No value was set for the parameter RMI_PORT.
+17.04.2013 16:26:31 oracle.sysman.emcp.ParamsManager getParam
+CONFIG: No value was set for the parameter JMS_PORT.
+17.04.2013 16:26:31 oracle.sysman.emcp.util.ClusterUtil getLocalNode
+CONFIG: isLocalNodeDone: true localNode: null
+17.04.2013 16:26:31 oracle.sysman.emcp.util.DBControlUtil isDBConsoleConfigured
+CONFIG: Sid: UNOC Host: s-msk34-alpha-s Node: null OH: D:\oracle\OraHome\ isDBC: false
+17.04.2013 16:26:31 oracle.sysman.emcp.ParamsManager getParam
+CONFIG: No value was set for the parameter PORTS_FILE.
+17.04.2013 16:26:31 oracle.sysman.emcp.util.ClusterUtil getLocalNode
+CONFIG: isLocalNodeDone: true localNode: null
+17.04.2013 16:26:31 oracle.sysman.emcp.ParamsManager getParam
+CONFIG: No value was set for the parameter JMS_PORT_UNOC.
+17.04.2013 16:26:31 oracle.sysman.emcp.ParamsManager getParam
+CONFIG: No value was set for the parameter JMS_PORT.
+17.04.2013 16:26:31 oracle.sysman.emcp.ParamsManager getParam
+CONFIG: No value was set for the parameter RMI_PORT_UNOC.
+17.04.2013 16:26:31 oracle.sysman.emcp.ParamsManager getParam
+CONFIG: No value was set for the parameter RMI_PORT.
+17.04.2013 16:26:31 oracle.sysman.emcp.ParamsManager getParam
+CONFIG: No value was set for the parameter DBCONTROL_HTTP_PORT_UNOC.
+17.04.2013 16:26:31 oracle.sysman.emcp.ParamsManager getParam
+CONFIG: No value was set for the parameter DBCONTROL_HTTP_PORT.
+17.04.2013 16:26:31 oracle.sysman.emcp.ParamsManager getParam
+CONFIG: No value was set for the parameter AGENT_PORT_UNOC.
+17.04.2013 16:26:31 oracle.sysman.emcp.ParamsManager getParam
+CONFIG: No value was set for the parameter AGENT_PORT.
+17.04.2013 16:26:31 oracle.sysman.emcp.util.OUIInventoryUtil setOUILoc
+CONFIG: Setting oracle.installer.oui_loc to D:\oracle\OraHome\oui
+17.04.2013 16:26:31 oracle.sysman.emcp.util.OUIInventoryUtil setOUILoc
+CONFIG: Setting oracle.installer.oui_loc to D:\oracle\OraHome\\oui
+17.04.2013 16:26:31 oracle.sysman.emcp.util.PortManager markAllUsedPorts
+CONFIG: Homes to scan for used ports: [D:\oracle\OraHome]
+17.04.2013 16:26:31 oracle.sysman.emcp.util.PortManager markAllUsedPorts
+CONFIG: Searching all DBConsole instances for used ports under ORACLE_HOME D:\oracle\OraHome
+17.04.2013 16:26:31 oracle.sysman.emcp.util.PortManager markAllUsedPorts
+CONFIG: Marking JMS port: null from D:\oracle\OraHome\oc4j\j2ee\OC4J_DBConsole
+17.04.2013 16:26:31 oracle.sysman.emcp.util.PortManager markAllUsedPorts
+CONFIG: Marking RMI port: null from D:\oracle\OraHome\oc4j\j2ee\OC4J_DBConsole
+17.04.2013 16:26:31 oracle.sysman.emcp.util.PortManager markAllUsedPorts
+CONFIG: Marking HTTP port: null from D:\oracle\OraHome\oc4j\j2ee\OC4J_DBConsole
+17.04.2013 16:26:31 oracle.sysman.emcp.util.PortManager markAllUsedPorts
+CONFIG: Marking JMS port: 5540 from D:\oracle\OraHome\oc4j\j2ee\OC4J_DBConsole_10.243.100.237_UNOC
+17.04.2013 16:26:31 oracle.sysman.emcp.util.PortManager markAllUsedPorts
+CONFIG: Marking RMI port: 5520 from D:\oracle\OraHome\oc4j\j2ee\OC4J_DBConsole_10.243.100.237_UNOC
+17.04.2013 16:26:31 oracle.sysman.emcp.util.PortManager markAllUsedPorts
+CONFIG: Marking HTTP port: 1158 from D:\oracle\OraHome\oc4j\j2ee\OC4J_DBConsole_10.243.100.237_UNOC
+17.04.2013 16:26:31 oracle.sysman.emcp.util.PortManager getAgentPort
+CONFIG: Cannot parse EMD_URL correctly. No port identified
+17.04.2013 16:26:31 oracle.sysman.emcp.util.PortManager markAllUsedPorts
+CONFIG: Marking Agent port: null from D:\oracle\OraHome\sysman\config\emd.properties
+17.04.2013 16:26:31 oracle.sysman.emcp.util.PortManager markAllUsedPorts
+CONFIG: Cannnot parse EMD_URL correctly. No port identified
+17.04.2013 16:26:31 oracle.sysman.emcp.util.FileUtil getProperties
+CONFIG: Error reading file D:\oracle\OraHome\install\staticports.ini
+17.04.2013 16:26:31 oracle.sysman.emcp.util.PortManager getFreePorts
+CONFIG: D:\oracle\OraHome\:s-msk34-alpha-s:null:UNOC:{}:null:{DBCONTROL_HTTP_PORT=5500, RMI_PORT=5521, JMS_PORT=5541, AGENT_PORT=3938}
+17.04.2013 16:26:31 oracle.sysman.emcp.ParamsManager getParam
+CONFIG: No value was set for the parameter AGENT_PORT_UNOC.
+17.04.2013 16:26:31 oracle.sysman.emcp.ParamsManager setParam
+CONFIG: Setting param: AGENT_PORT_UNOC value: 3938
+17.04.2013 16:26:31 oracle.sysman.emcp.ParamsManager getParam
+CONFIG: No value was set for the parameter DBCONTROL_HTTP_PORT_UNOC.
+17.04.2013 16:26:31 oracle.sysman.emcp.ParamsManager setParam
+CONFIG: Setting param: DBCONTROL_HTTP_PORT_UNOC value: 5500
+17.04.2013 16:26:31 oracle.sysman.emcp.ParamsManager getParam
+CONFIG: No value was set for the parameter JMS_PORT_UNOC.
+17.04.2013 16:26:31 oracle.sysman.emcp.ParamsManager setParam
+CONFIG: Setting param: JMS_PORT_UNOC value: 5541
+17.04.2013 16:26:31 oracle.sysman.emcp.ParamsManager getParam
+CONFIG: No value was set for the parameter RMI_PORT_UNOC.
+17.04.2013 16:26:31 oracle.sysman.emcp.ParamsManager setParam
+CONFIG: Setting param: RMI_PORT_UNOC value: 5521
+17.04.2013 16:26:31 oracle.sysman.emcp.EMDBPreConfig getFreePorts
+CONFIG: Ports assigned for SID: UNOC : {DBCONTROL_HTTP_PORT=5500, RMI_PORT=5521, JMS_PORT=5541, AGENT_PORT=3938}
+17.04.2013 16:26:31 oracle.sysman.emcp.util.GeneralUtil initSQLEngine
+CONFIG: SQLEngine connecting with SID: UNOC, oracleHome: D:\oracle\OraHome\, and user: SYS
+17.04.2013 16:26:32 oracle.sysman.emcp.util.GeneralUtil initSQLEngine
+CONFIG: SQLEngine created successfully and connected
+17.04.2013 16:26:32 oracle.sysman.emcp.EMReposConfig invoke
+CONFIG: Successfully granted priviliges to dbsnmp.
+17.04.2013 16:26:32 oracle.sysman.emcp.ParamsManager getParam
+CONFIG: No value was set for the parameter EMAIL_ADDRESS.
+17.04.2013 16:26:32 oracle.sysman.emcp.ParamsManager getParam
+CONFIG: No value was set for the parameter MAIL_SERVER_SENDER_NAME.
+17.04.2013 16:26:32 oracle.sysman.emcp.ParamsManager getParam
+CONFIG: No value was set for the parameter MAIL_SERVER_SENDER_ADDR.
+17.04.2013 16:26:32 oracle.sysman.emcp.EMReposConfig updateReposVars
+CONFIG: Updating file D:\oracle\OraHome\\sysman\emdrep\config\repository.variables ...
+17.04.2013 16:26:32 oracle.sysman.emcp.util.FileUtil _copyFile
+CONFIG: Copying file D:\oracle\OraHome\sysman\emdrep\config\repository.variables.emca.util.tmp to D:\oracle\OraHome\sysman\emdrep\config\repository.variables
+17.04.2013 16:26:32 oracle.sysman.emcp.EMReposConfig updateReposVars
+CONFIG: File D:\oracle\OraHome\\sysman\emdrep\config\repository.variables is successfully updated
+17.04.2013 16:26:32 oracle.sysman.emcp.util.GeneralUtil initSQLEngine
+CONFIG: SQLEngine connecting with SID: UNOC, oracleHome: D:\oracle\OraHome\, and user: SYS
+17.04.2013 16:26:32 oracle.sysman.emcp.util.GeneralUtil initSQLEngine
+CONFIG: SQLEngine created successfully and connected
+17.04.2013 16:26:32 oracle.sysman.emcp.EMReposConfig unlockAccounts
+CONFIG: Unlocking dbsnmp and sysman
+17.04.2013 16:26:32 oracle.sysman.emcp.EMReposConfig unlockAccounts
+CONFIG: Unlocked mgmt_view account
+17.04.2013 16:26:32 oracle.sysman.emcp.EMReposConfig invoke
+CONFIG: Successfully unlocked relevant accounts
+17.04.2013 16:26:32 oracle.sysman.emcp.util.GeneralUtil initSQLEngine
+CONFIG: SQLEngine connecting with SID: UNOC, oracleHome: D:\oracle\OraHome\, and user: SYSMAN
+17.04.2013 16:26:33 oracle.sysman.emcp.util.GeneralUtil initSQLEngine
+CONFIG: SQLEngine created successfully and connected
+17.04.2013 16:26:34 oracle.sysman.emcp.EMReposConfig createOutOfBoxJobs
+CONFIG: EM configuration (out-of-box) has already been performed. 
+17.04.2013 16:26:34 oracle.sysman.emcp.EMDBCConfig updateEmomsProps
+CONFIG: Updating file D:\oracle\OraHome\\sysman\config\emoms.properties ...
+17.04.2013 16:26:34 oracle.sysman.emcp.util.FileUtil _copyFile
+CONFIG: Copying file D:\oracle\OraHome\sysman\config\emoms.properties.emca to D:\oracle\OraHome\sysman\config\emoms.properties
+17.04.2013 16:26:34 oracle.sysman.emcp.util.FileUtil _copyFile
+CONFIG: Copying file D:\oracle\OraHome\sysman\config\emoms.properties.emca.util.tmp to D:\oracle\OraHome\sysman\config\emoms.properties
+17.04.2013 16:26:34 oracle.sysman.emcp.util.FileUtil _copyFile
+CONFIG: Copying file D:\oracle\OraHome\oc4j\j2ee\OC4J_DBConsole\config\server.xml.emca.util.tmp to D:\oracle\OraHome\oc4j\j2ee\OC4J_DBConsole\config\server.xml
+17.04.2013 16:26:34 oracle.sysman.emcp.util.ClusterUtil getLocalNode
+CONFIG: isLocalNodeDone: true localNode: null
+17.04.2013 16:26:34 oracle.sysman.emcp.EMDBCConfig copyOC4JDir
+CONFIG: Copying OC4J config files from D:\oracle\OraHome\\oc4j\j2ee\OC4J_DBConsole to D:\oracle\OraHome\\oc4j\j2ee\OC4J_DBConsole_s-msk34-alpha-s_UNOC
+17.04.2013 16:26:34 oracle.sysman.emcp.util.FileUtil _makeDirectory
+CONFIG: Create directory D:\oracle\OraHome\oc4j\j2ee\OC4J_DBConsole_s-msk34-alpha-s_UNOC\config
+17.04.2013 16:26:34 oracle.sysman.emcp.util.FileUtil _copyFile
+CONFIG: Copying file D:\oracle\OraHome\oc4j\j2ee\OC4J_DBConsole\config\application.xml to D:\oracle\OraHome\oc4j\j2ee\OC4J_DBConsole_s-msk34-alpha-s_UNOC\config\application.xml
+17.04.2013 16:26:34 oracle.sysman.emcp.util.FileUtil _copyFile
+CONFIG: Copying file D:\oracle\OraHome\oc4j\j2ee\OC4J_DBConsole\config\data-sources.xml to D:\oracle\OraHome\oc4j\j2ee\OC4J_DBConsole_s-msk34-alpha-s_UNOC\config\data-sources.xml
+17.04.2013 16:26:34 oracle.sysman.emcp.util.FileUtil _copyFile
+CONFIG: Copying file D:\oracle\OraHome\oc4j\j2ee\OC4J_DBConsole\config\global-web-application.xml to D:\oracle\OraHome\oc4j\j2ee\OC4J_DBConsole_s-msk34-alpha-s_UNOC\config\global-web-application.xml
+17.04.2013 16:26:34 oracle.sysman.emcp.util.FileUtil _copyFile
+CONFIG: Copying file D:\oracle\OraHome\oc4j\j2ee\OC4J_DBConsole\config\http-web-site.xml to D:\oracle\OraHome\oc4j\j2ee\OC4J_DBConsole_s-msk34-alpha-s_UNOC\config\http-web-site.xml
+17.04.2013 16:26:34 oracle.sysman.emcp.util.FileUtil _copyFile
+CONFIG: Copying file D:\oracle\OraHome\oc4j\j2ee\OC4J_DBConsole\config\internal-settings.xml to D:\oracle\OraHome\oc4j\j2ee\OC4J_DBConsole_s-msk34-alpha-s_UNOC\config\internal-settings.xml
+17.04.2013 16:26:34 oracle.sysman.emcp.util.FileUtil _copyFile
+CONFIG: Copying file D:\oracle\OraHome\oc4j\j2ee\OC4J_DBConsole\config\java2.policy to D:\oracle\OraHome\oc4j\j2ee\OC4J_DBConsole_s-msk34-alpha-s_UNOC\config\java2.policy
+17.04.2013 16:26:34 oracle.sysman.emcp.util.FileUtil _copyFile
+CONFIG: Copying file D:\oracle\OraHome\oc4j\j2ee\OC4J_DBConsole\config\jazn-data.xml to D:\oracle\OraHome\oc4j\j2ee\OC4J_DBConsole_s-msk34-alpha-s_UNOC\config\jazn-data.xml
+17.04.2013 16:26:34 oracle.sysman.emcp.util.FileUtil _copyFile
+CONFIG: Copying file D:\oracle\OraHome\oc4j\j2ee\OC4J_DBConsole\config\jazn.xml to D:\oracle\OraHome\oc4j\j2ee\OC4J_DBConsole_s-msk34-alpha-s_UNOC\config\jazn.xml
+17.04.2013 16:26:34 oracle.sysman.emcp.util.FileUtil _copyFile
+CONFIG: Copying file D:\oracle\OraHome\oc4j\j2ee\OC4J_DBConsole\config\jms.xml to D:\oracle\OraHome\oc4j\j2ee\OC4J_DBConsole_s-msk34-alpha-s_UNOC\config\jms.xml
+17.04.2013 16:26:34 oracle.sysman.emcp.util.FileUtil _copyFile
+CONFIG: Copying file D:\oracle\OraHome\oc4j\j2ee\OC4J_DBConsole\config\mime.types to D:\oracle\OraHome\oc4j\j2ee\OC4J_DBConsole_s-msk34-alpha-s_UNOC\config\mime.types
+17.04.2013 16:26:34 oracle.sysman.emcp.util.FileUtil _copyFile
+CONFIG: Copying file D:\oracle\OraHome\oc4j\j2ee\OC4J_DBConsole\config\oc4j-connectors.xml to D:\oracle\OraHome\oc4j\j2ee\OC4J_DBConsole_s-msk34-alpha-s_UNOC\config\oc4j-connectors.xml
+17.04.2013 16:26:34 oracle.sysman.emcp.util.FileUtil _copyFile
+CONFIG: Copying file D:\oracle\OraHome\oc4j\j2ee\OC4J_DBConsole\config\principals.xml to D:\oracle\OraHome\oc4j\j2ee\OC4J_DBConsole_s-msk34-alpha-s_UNOC\config\principals.xml
+17.04.2013 16:26:34 oracle.sysman.emcp.util.FileUtil _copyFile
+CONFIG: Copying file D:\oracle\OraHome\oc4j\j2ee\OC4J_DBConsole\config\rmi.xml to D:\oracle\OraHome\oc4j\j2ee\OC4J_DBConsole_s-msk34-alpha-s_UNOC\config\rmi.xml
+17.04.2013 16:26:34 oracle.sysman.emcp.util.FileUtil _copyFile
+CONFIG: Copying file D:\oracle\OraHome\oc4j\j2ee\OC4J_DBConsole\config\server.xml to D:\oracle\OraHome\oc4j\j2ee\OC4J_DBConsole_s-msk34-alpha-s_UNOC\config\server.xml
+17.04.2013 16:26:34 oracle.sysman.emcp.util.FileUtil _makeDirectory
+CONFIG: Create directory D:\oracle\OraHome\oc4j\j2ee\OC4J_DBConsole_s-msk34-alpha-s_UNOC\META-INF
+17.04.2013 16:26:34 oracle.sysman.emcp.util.FileUtil _copyFile
+CONFIG: Copying file D:\oracle\OraHome\oc4j\j2ee\OC4J_DBConsole\META-INF\MANIFEST.MF to D:\oracle\OraHome\oc4j\j2ee\OC4J_DBConsole_s-msk34-alpha-s_UNOC\META-INF\MANIFEST.MF
+17.04.2013 16:26:34 oracle.sysman.emcp.util.FileUtil _makeDirectory
+CONFIG: Create directory D:\oracle\OraHome\oc4j\j2ee\OC4J_DBConsole_s-msk34-alpha-s_UNOC\application-deployments\default\defaultWebApp
+17.04.2013 16:26:34 oracle.sysman.emcp.util.FileUtil _copyFile
+CONFIG: Copying file D:\oracle\OraHome\oc4j\j2ee\OC4J_DBConsole\application-deployments\default\defaultWebApp\orion-web.xml to D:\oracle\OraHome\oc4j\j2ee\OC4J_DBConsole_s-msk34-alpha-s_UNOC\application-deployments\default\defaultWebApp\orion-web.xml
+17.04.2013 16:26:34 oracle.sysman.emcp.EMDBCConfig copyOC4JDir
+CONFIG: Finished copying OC4J config files
+17.04.2013 16:26:34 oracle.sysman.emcp.util.FileUtil _copyFile
+CONFIG: Copying file D:\oracle\OraHome\oc4j\j2ee\OC4J_DBConsole_s-msk34-alpha-s_UNOC\config\jms.xml.emca.util.tmp to D:\oracle\OraHome\oc4j\j2ee\OC4J_DBConsole_s-msk34-alpha-s_UNOC\config\jms.xml
+17.04.2013 16:26:34 oracle.sysman.emcp.util.FileUtil _copyFile
+CONFIG: Copying file D:\oracle\OraHome\oc4j\j2ee\OC4J_DBConsole_s-msk34-alpha-s_UNOC\config\rmi.xml.emca.util.tmp to D:\oracle\OraHome\oc4j\j2ee\OC4J_DBConsole_s-msk34-alpha-s_UNOC\config\rmi.xml
+17.04.2013 16:26:34 oracle.sysman.emcp.util.FileUtil _copyFile
+CONFIG: Copying file D:\oracle\OraHome\oc4j\j2ee\OC4J_DBConsole_s-msk34-alpha-s_UNOC\config\http-web-site.xml.emca.util.tmp to D:\oracle\OraHome\oc4j\j2ee\OC4J_DBConsole_s-msk34-alpha-s_UNOC\config\http-web-site.xml
+17.04.2013 16:26:34 oracle.sysman.emcp.ParamsManager getParam
+CONFIG: No value was set for the parameter MAIL_SERVER_SENDER_NAME.
+17.04.2013 16:26:34 oracle.sysman.emcp.ParamsManager getParam
+CONFIG: No value was set for the parameter EMAIL_ADDRESS.
+17.04.2013 16:26:34 oracle.sysman.emcp.EMAgentConfig updateEmdProps
+CONFIG: Updating file D:\oracle\OraHome\\sysman\config\emd.properties ...
+17.04.2013 16:26:34 oracle.sysman.emcp.util.FileUtil _copyFile
+CONFIG: Copying file D:\oracle\OraHome\sysman\config\emd.properties.emca to D:\oracle\OraHome\sysman\config\emd.properties
+17.04.2013 16:26:34 oracle.sysman.emcp.util.FileUtil _copyFile
+CONFIG: Copying file D:\oracle\OraHome\sysman\config\emd.properties.emca.util.tmp to D:\oracle\OraHome\sysman\config\emd.properties
+17.04.2013 16:26:34 oracle.sysman.emcp.EMAgentConfig updateAgentConfigFiles
+CONFIG: Updating file D:\oracle\OraHome\\sysman\config\emd.properties ...
+17.04.2013 16:26:34 oracle.sysman.emcp.ParamsManager getParam
+CONFIG: No value was set for the parameter LISTENER_OH.
+17.04.2013 16:26:34 oracle.sysman.emcp.ParamsManager getListenerHome
+CONFIG: LISTENER_OH not set. Using ORACLE_HOME as listener's home.
+17.04.2013 16:26:34 oracle.sysman.emcp.ParamsManager getParam
+CONFIG: No value was set for the parameter LISTENER.
+17.04.2013 16:26:34 oracle.sysman.emcp.ParamsManager getParam
+CONFIG: No value was set for the parameter LISTENER_OH.
+17.04.2013 16:26:34 oracle.sysman.emcp.ParamsManager getListenerHome
+CONFIG: LISTENER_OH not set. Using ORACLE_HOME as listener's home.
+17.04.2013 16:26:34 oracle.sysman.emcp.ParamsManager getParam
+CONFIG: No value was set for the parameter LISTENER_OH.
+17.04.2013 16:26:34 oracle.sysman.emcp.ParamsManager getListenerHome
+CONFIG: LISTENER_OH not set. Using ORACLE_HOME as listener's home.
+17.04.2013 16:26:34 oracle.sysman.emcp.ParamsManager getLocalListener
+WARNING: Error retrieving listener for s-msk34-alpha-s
+17.04.2013 16:26:34 oracle.sysman.emcp.ParamsManager getLocalListener
+CONFIG: Stack trace: 
+oracle.sysman.emcp.exception.EMConfigException: <Error CONTEXT="class java.lang.NullPointerException" >
+null
+</Error>
+
+	at oracle.sysman.emcp.target.ListenerTargetDiscovery.getListenerTarget(ListenerTargetDiscovery.java:182)
+	at oracle.sysman.emcp.target.ListenerTargetDiscovery.getListenerTarget(ListenerTargetDiscovery.java:97)
+	at oracle.sysman.emcp.ParamsManager.getLocalListener(ParamsManager.java:853)
+	at oracle.sysman.emcp.EMAgentConfig.updateTargets(EMAgentConfig.java:2747)
+	at oracle.sysman.emcp.EMAgentConfig.updateAgentConfigFiles(EMAgentConfig.java:2544)
+	at oracle.sysman.emcp.EMAgentConfig.performConfiguration(EMAgentConfig.java:1166)
+	at oracle.sysman.emcp.EMAgentConfig.invoke(EMAgentConfig.java:207)
+	at oracle.sysman.emcp.EMAgentConfig.invoke(EMAgentConfig.java:185)
+	at oracle.sysman.emcp.EMConfig.perform(EMConfig.java:146)
+	at oracle.sysman.emcp.EMConfigAssistant.invokeEMCA(EMConfigAssistant.java:479)
+	at oracle.sysman.emcp.EMConfigAssistant.performConfiguration(EMConfigAssistant.java:1123)
+	at oracle.sysman.emcp.EMConfigAssistant.statusMain(EMConfigAssistant.java:463)
+	at oracle.sysman.emcp.EMConfigAssistant.main(EMConfigAssistant.java:412)
+17.04.2013 16:26:34 oracle.sysman.emcp.ParamsManager getLocalListener
+CONFIG: Using default listener name
+17.04.2013 16:26:34 oracle.sysman.emcp.EMAgentConfig updateAgentConfigFiles
+CONFIG: Updating file D:\oracle\OraHome\\sysman\emd\targets.xml ...
+17.04.2013 16:26:34 oracle.sysman.emcp.EMAgentConfig instantiateEMConfigFiles
+CONFIG: Local host name: s-msk34-alpha-s
+17.04.2013 16:26:34 oracle.sysman.emcp.util.ClusterUtil getLocalNode
+CONFIG: isLocalNodeDone: true localNode: null
+17.04.2013 16:26:34 oracle.sysman.emcp.util.PlatformInterface getSortedEnvArray
+CONFIG: New Env List: [COMPUTERNAME=S-MSK34-ALPHA-S, NEED_EXIT_CODE=1, ORACLE_HOSTNAME=s-msk34-alpha-s, ORACLE_SID=UNOC, PATH=D:\oracle\OraHome\\jdk\jre\bin\server;D:\oracle\OraHome\bin;C:\Program Files\HP\NCU;C:\WINDOWS\system32;C:\WINDOWS;C:\WINDOWS\System32\Wbem;D:\oracle\OraHome\perl\5.8.3\bin\MSWin32-X64-multi-thread;C:\Program Files (x86)\IBM\Client Access\Emulator;C:\Program Files (x86)\IBM\Client Access\Shared;C:\Program Files (x86)\IBM\Client Access\;C:\Program Files\Common Files\System\Ole DB;C:\Program Files\Common Files\System\ado ;, SystemRoot=C:\WINDOWS, TZ=, WINDIR=C:\WINDOWS]
+17.04.2013 16:26:34 oracle.sysman.emcp.util.PlatformInterface executeCommand
+CONFIG: Starting execution: CMD /C D:\oracle\OraHome\\bin\emctl.bat deploy dbconsole D:\oracle\OraHome\\s-msk34-alpha-s_UNOC s-msk34-alpha-s:3938 s-msk34-alpha-s UNOC 
+17.04.2013 16:26:34 oracle.sysman.emcp.util.PlatformInterface executeCommand
+CONFIG: Exit value of 0
+17.04.2013 16:26:34 oracle.sysman.emcp.util.PlatformInterface executeCommand
+CONFIG: Execution of CMD /C D:\oracle\OraHome\\bin\emctl.bat deploy dbconsole D:\oracle\OraHome\\s-msk34-alpha-s_UNOC s-msk34-alpha-s:3938 s-msk34-alpha-s UNOC  completed successfully
+17.04.2013 16:26:34 oracle.sysman.emcp.util.PlatformInterface executeCommand
+CONFIG: Creating shared install...
+Source location: D:\oracle\OraHome
+Destination (shared install) : D:\oracle\OraHome\\s-msk34-alpha-s_UNOC
+DeployMode : dbconsole
+
+Creating directories...
+Setting console properties ... 
+Setting log and trace files locations for Console ... 
+Setting log and trace files locations for Agent ... 
+Service "OracleDBConsoleUNOC" create SUCCESS
+
+17.04.2013 16:26:34 oracle.sysman.emcp.util.FileUtil _copyFile
+CONFIG: Copying file D:\oracle\OraHome\s-msk34-alpha-s_UNOC\sysman\config\emoms.properties.emca.util.tmp to D:\oracle\OraHome\s-msk34-alpha-s_UNOC\sysman\config\emoms.properties
+17.04.2013 16:26:34 oracle.sysman.emcp.util.FileUtil _copyFile
+CONFIG: Copying file D:\oracle\OraHome\s-msk34-alpha-s_UNOC\sysman\config\emd.properties.emca.util.tmp to D:\oracle\OraHome\s-msk34-alpha-s_UNOC\sysman\config\emd.properties
+17.04.2013 16:26:34 oracle.sysman.emcp.util.FileUtil _copyFile
+CONFIG: Copying file D:\oracle\OraHome\s-msk34-alpha-s_UNOC\sysman\config\emd.properties.emca.util.tmp to D:\oracle\OraHome\s-msk34-alpha-s_UNOC\sysman\config\emd.properties
+17.04.2013 16:26:34 oracle.sysman.emcp.util.PlatformInterface getSortedEnvArray
+CONFIG: New Env List: [LD_LIBRARY_PATH=D:\oracle\OraHome\\lib32;D:\oracle\OraHome\\lib;D:\oracle\OraHome\\perl\lib;null, PERL5LIB=D:\oracle\OraHome\\sysman\admin\scripts;D:\oracle\OraHome\\bin;]
+17.04.2013 16:26:34 oracle.sysman.emcp.util.PlatformInterface executeCommand
+CONFIG: Starting execution: D:/oracle/OraHome/perl/5.8.3/bin/MSWin32-x64-multi-thread\perl.exe D:\oracle\OraHome\\bin\targetdeploy.pl D:\oracle\OraHome\\s-msk34-alpha-s_UNOC s-msk34-alpha-s UNOC 
+17.04.2013 16:26:34 oracle.sysman.emcp.util.PlatformInterface executeCommand
+CONFIG: Exit value of 0
+17.04.2013 16:26:34 oracle.sysman.emcp.util.PlatformInterface executeCommand
+CONFIG: Execution of D:/oracle/OraHome/perl/5.8.3/bin/MSWin32-x64-multi-thread\perl.exe D:\oracle\OraHome\\bin\targetdeploy.pl D:\oracle\OraHome\\s-msk34-alpha-s_UNOC s-msk34-alpha-s UNOC  completed successfully
+17.04.2013 16:26:34 oracle.sysman.emcp.util.PlatformInterface executeCommand
+CONFIG: Creating targets.xml in state directories...
+Source location: D:/oracle/OraHome
+Destination : D:\oracle\OraHome\\s-msk34-alpha-s_UNOC
+
+Creating directories...
+Creating targets.xml...
+Done.
+
+17.04.2013 16:26:34 oracle.sysman.emcp.EMAgentConfig instantiateEMConfigFiles
+CONFIG: Successfully deployed state dirs for s-msk34-alpha-s
+17.04.2013 16:26:34 oracle.sysman.emcp.EMAgentConfig performConfiguration
+CONFIG: Successfully updated agent config files
+17.04.2013 16:26:34 oracle.sysman.emcp.util.FileUtil _copyFile
+CONFIG: Copying file D:\oracle\OraHome\sysman\config\emd.properties.emca.tmp to D:\oracle\OraHome\sysman\config\emd.properties
+17.04.2013 16:26:34 oracle.sysman.emcp.util.FileUtil backupFile
+CONFIG: The original file D:\oracle\OraHome\\sysman\config\emd.properties.emca.tmp has been copied to D:\oracle\OraHome\\sysman\config\emd.properties
+17.04.2013 16:26:35 oracle.sysman.emcp.util.FileUtil _copyFile
+CONFIG: Copying file D:\oracle\OraHome\sysman\emd\targets.xml.emca.tmp to D:\oracle\OraHome\sysman\emd\targets.xml
+17.04.2013 16:26:35 oracle.sysman.emcp.util.FileUtil backupFile
+CONFIG: The original file D:\oracle\OraHome\\sysman\emd\targets.xml.emca.tmp has been copied to D:\oracle\OraHome\\sysman\emd\targets.xml
+17.04.2013 16:26:35 oracle.sysman.emcp.util.ClusterUtil getLocalNode
+CONFIG: isLocalNodeDone: true localNode: null
+17.04.2013 16:26:35 oracle.sysman.emcp.util.ClusterUtil getLocalNode
+CONFIG: isLocalNodeDone: true localNode: null
+17.04.2013 16:26:35 oracle.sysman.emcp.util.PortManager addPortEntries
+CONFIG: Updating file D:\oracle\OraHome\\install\portlist.ini ...
+17.04.2013 16:26:35 oracle.sysman.emcp.util.FileUtil _copyFile
+CONFIG: Copying file D:\oracle\OraHome\install\portlist.ini to D:\oracle\OraHome\install\portlist.ini.emca.util.tmp
+17.04.2013 16:26:35 oracle.sysman.emcp.util.FileUtil backupFile
+CONFIG: The original file D:\oracle\OraHome\\install\portlist.ini has been copied to D:\oracle\OraHome\\install\portlist.ini.emca.util.tmp
+17.04.2013 16:26:35 oracle.sysman.emcp.util.PortManager addPortEntries
+CONFIG: Writing the selected ports to portlist.ini
+17.04.2013 16:26:35 oracle.sysman.emcp.util.FileUtil _copyFile
+CONFIG: Copying file D:\oracle\OraHome\install\portlist.ini.emca.util.tmp to D:\oracle\OraHome\install\portlist.ini
+17.04.2013 16:26:35 oracle.sysman.emcp.util.PortManager addPortEntries
+CONFIG: File D:\oracle\OraHome\\install\portlist.ini is successfully updated
+17.04.2013 16:26:35 oracle.sysman.emcp.util.PortManager addPortEntries
+CONFIG: Updating file D:\oracle\OraHome\\install\portlist.ini ...
+17.04.2013 16:26:35 oracle.sysman.emcp.util.FileUtil _copyFile
+CONFIG: Copying file D:\oracle\OraHome\install\portlist.ini to D:\oracle\OraHome\install\portlist.ini.emca.util.tmp
+17.04.2013 16:26:35 oracle.sysman.emcp.util.FileUtil backupFile
+CONFIG: The original file D:\oracle\OraHome\\install\portlist.ini has been copied to D:\oracle\OraHome\\install\portlist.ini.emca.util.tmp
+17.04.2013 16:26:35 oracle.sysman.emcp.util.PortManager addPortEntries
+CONFIG: Writing the selected ports to portlist.ini
+17.04.2013 16:26:35 oracle.sysman.emcp.util.FileUtil _copyFile
+CONFIG: Copying file D:\oracle\OraHome\install\portlist.ini.emca.util.tmp to D:\oracle\OraHome\install\portlist.ini
+17.04.2013 16:26:35 oracle.sysman.emcp.util.PortManager addPortEntries
+CONFIG: File D:\oracle\OraHome\\install\portlist.ini is successfully updated
+17.04.2013 16:26:35 oracle.sysman.emcp.util.DBControlUtil startOMS
+INFO: Starting Database Control (this may take a while) ...
+17.04.2013 16:26:35 oracle.sysman.emcp.util.PlatformInterface serviceCommand
+CONFIG: cmdType: 0
+17.04.2013 16:26:35 oracle.sysman.emcp.util.PlatformInterface serviceCommand
+CONFIG: Starting Windows service...OracleDBConsoleUNOC
+17.04.2013 16:26:35 oracle.sysman.emcp.util.PlatformInterface serviceCommand
+CONFIG: Waiting for service 'OracleDBConsoleUNOC' to fully start
+17.04.2013 16:26:45 oracle.sysman.emcp.util.PlatformInterface serviceCommand
+CONFIG: Waiting for service 'OracleDBConsoleUNOC' to fully start
+17.04.2013 16:26:55 oracle.sysman.emcp.util.PlatformInterface serviceCommand
+CONFIG: Waiting for service 'OracleDBConsoleUNOC' to fully start
+17.04.2013 16:27:05 oracle.sysman.emcp.util.PlatformInterface serviceCommand
+CONFIG: Waiting for service 'OracleDBConsoleUNOC' to fully start
+17.04.2013 16:27:15 oracle.sysman.emcp.util.PlatformInterface serviceCommand
+CONFIG: Waiting for service 'OracleDBConsoleUNOC' to fully start
+17.04.2013 16:27:15 oracle.sysman.emcp.EMDBPostConfig performConfiguration
+INFO: Database Control started successfully
+17.04.2013 16:27:15 oracle.sysman.emcp.util.ClusterUtil getLocalNode
+CONFIG: isLocalNodeDone: true localNode: null
+17.04.2013 16:27:15 oracle.sysman.emcp.util.ClusterUtil getLocalNode
+CONFIG: isLocalNodeDone: true localNode: null
+17.04.2013 16:27:15 oracle.sysman.emcp.EMDBPostConfig addUrl
+CONFIG: Updating file D:\oracle\OraHome\\install\readme.txt ...
+17.04.2013 16:27:15 oracle.sysman.emcp.util.FileUtil _copyFile
+CONFIG: Copying file D:\oracle\OraHome\install\readme.txt to D:\oracle\OraHome\install\readme.txt.emca.util.tmp
+17.04.2013 16:27:15 oracle.sysman.emcp.util.FileUtil backupFile
+CONFIG: The original file D:\oracle\OraHome\\install\readme.txt has been copied to D:\oracle\OraHome\\install\readme.txt.emca.util.tmp
+17.04.2013 16:27:15 oracle.sysman.emcp.EMDBPostConfig addUrl
+CONFIG: Writing the selected url to readme.txt 
+17.04.2013 16:27:15 oracle.sysman.emcp.EMDBPostConfig addUrl
+CONFIG: Removing existing entries from readme.txt Enterprise Manager Database Control URL - (UNOC) :
+17.04.2013 16:27:15 oracle.sysman.emcp.util.FileUtil _copyFile
+CONFIG: Copying file D:\oracle\OraHome\install\readme.txt.emca.util.tmp to D:\oracle\OraHome\install\readme.txt
+17.04.2013 16:27:15 oracle.sysman.emcp.EMDBPostConfig addUrl
+CONFIG: File D:\oracle\OraHome\\install\readme.txt is successfully updated
+17.04.2013 16:27:15 oracle.sysman.emcp.util.ClusterUtil getLocalNode
+CONFIG: isLocalNodeDone: true localNode: null
+17.04.2013 16:27:15 oracle.sysman.emcp.util.PlatformInterface getOracleHomeShortcutLocation
+CONFIG: oracleKey: SOFTWARE\ORACLE\KEY_OraHome
+17.04.2013 16:27:15 oracle.sysman.emcp.util.PlatformInterface getOracleHomeShortcutLocation
+CONFIG: programMenuLoc: C:\Documents and Settings\All Users\Start Menu\Programs
+17.04.2013 16:27:15 oracle.sysman.emcp.util.PlatformInterface getOracleHomeShortcutLocation
+CONFIG: oracleGroupName: Oracle - OraHome
+17.04.2013 16:27:15 oracle.sysman.emcp.EMDBPostConfig performConfiguration
+CONFIG: Database Control shortcut created successfully
+17.04.2013 16:27:15 oracle.sysman.emcp.util.ClusterUtil getLocalNode
+CONFIG: isLocalNodeDone: true localNode: null
+17.04.2013 16:27:15 oracle.sysman.emcp.util.ClusterUtil getLocalNode
+CONFIG: isLocalNodeDone: true localNode: null
+17.04.2013 16:27:15 oracle.sysman.emcp.EMDBPostConfig performConfiguration
+INFO: >>>>>>>>>>> The Database Control URL is http://s-msk34-alpha-s:5500/em <<<<<<<<<<<

@@ -1,0 +1,37 @@
+Problem at domU on Exadata:
+
+"ntpd[27847]: Deleting interface #xx ethX , x.x.x.x#123, interface stats: received=0, sent=0, dropped=0, active_time=xxx secs" in /var/log/messages
+
+Solution (Doc ID 2157958.1, https://access.redhat.com/solutions/261123):
+
+add " -L " option in file /etc/sysconfig/ntpd
+cat /etc/sysconfig/ntpd
+service ntpd restart
+
+Problem:
+
+after change the listener is still restarting
+
+Change MTU for loopback adapter to 65520 (Doc ID 2091782.1)
+
+ifconfig lo
+ifconfig lo mtu 65520
+ifconfig lo
+
+-- смотреть время последних подобных ошибок в логе listener
+
+grep 12537 /u01/app/oracle/diag/tnslsnr/`hostname -s`/listener/trace/listener.log | tail -35 | grep -v PORT=
+
+# Решение проблемы (на каждом из domU выполнить)
+# Изменение pingtarget для Сlusterware на localhost для устранения ошибки с перезагрузкой сетевого интерфейса
+# при этом listener становится недоступен (перезапускается)
+
+crsctl stat res -t
+crsctl stop res ora.net1.network -f -unsupported
+srvctl modify network -netnum 1 -pingtarget '127.0.0.1'
+srvctl start scan_listener
+srvctl start listener
+srvctl start vip -vip mr01vm05 -verbose
+srvctl start cvu
+crsctl start res ora.ons -unsupported
+crsctl stat res -t

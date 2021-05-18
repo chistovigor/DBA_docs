@@ -1,0 +1,70 @@
+Простое
+
+emca -config dbcontrol db
+
+если не работает:
+
+emca -deconfig dbcontrol db
+
+emca -config dbcontrol db
+
+Пересоздание репозитория
+
+emca -deconfig dbcontrol db
+
+(!!! БД переходит во время удаления репозитория в ограниченный режим)
+
+или
+
+emca -deconfig dbcontrol db -repos drop
+
+emca -config dbcontrol db -repos recreate
+
+создание:
+
+emca -config dbcontrol db -repos create
+
+emca -config dbcontrol db
+
+Нужны файлы в каталоге (они одинаковы для одинаковых версий Oracle)
+
+/usr/oracle/app/product/11.2.0/dbhome_1/oc4j/j2ee/OC4J_DBConsole/
+
+Запуск консоли
+
+/usr/oracle/app/product/11.2.0/dbhome_1/bin/emctl start dbconsole
+
+остановка 
+
+/usr/oracle/app/product/11.2.0/dbhome_1/bin/emctl stop dbconsole
+
+Адрес консоли 
+
+https://s-msk08-ultra-la:5500/em
+
+http://s-msk00-ultra-lb:1158/em
+
+ATM
+
+https://s-msk00-atmdb02:1158/em
+
+Unsecure (включение http вместо https)
+
+/usr/oracle/app/product/11.2.0/dbhome_1/bin/emctl unsecure dbconsole
+
+http://s-msk08-ultra-la:5500/em
+
+http://s-msk00-ultra-lb:1158/em
+
+http://10.243.100.237:5501/em - альфа
+
+где s-msk00-ultra-lb - сервер и 1158 - порт
+
+Статус консоли 
+
+/usr/oracle/app/product/11.2.0/dbhome_1/bin/emctl status dbconsole
+/usr/oracle/app/product/11.2.0/dbhome_1/bin/emctl status agent
+
+Просмотр текущих параметров
+
+select * from sysman.mgmt_targets

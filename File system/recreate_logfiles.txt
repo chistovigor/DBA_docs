@@ -1,0 +1,56 @@
+Просмотр информации о логах:
+
+show parameter db_create_online_log_dest
+show parameter standby_
+
+select BYTES,STATUS,GROUP# from V$LOG;
+
+номера и названия онлайн логов для добавления стендбай логов:
+
+set linesize 250
+column MEMBER format a80;
+select type,group#,member,STATUS from v$logfile order by 1,2;
+
+1) устанавливаем параметр(несколько для дублицирования логов в группе)
+логи создадутся в /mnt/oracle/temp/<DB_NAME>/onlinelog:
+
+alter system set db_create_online_log_dest_1 = '/mnt/oracle/temp'
+
+добавление логов при OMF (будут созданы в заданных db_create_online_log_dest):
+
+alter system set db_create_online_log_dest_1 = '/mnt/oracle/temp' (логи создадутся в /mnt/oracle/temp/<DB_NAME>/onlinelog):
+
+2) Добавляем логи (и стендбай логиЮ, если они нужны):
+
+ALTER DATABASE ADD LOGFILE GROUP 4 SIZE 1G;
+ALTER DATABASE ADD LOGFILE GROUP 5 SIZE 1G;
+ALTER DATABASE ADD LOGFILE GROUP 6 SIZE 1G;
+ALTER DATABASE ADD LOGFILE GROUP 7 SIZE 1G;
+
+ALTER DATABASE ADD STANDBY LOGFILE GROUP 7 SIZE 1G;
+ALTER DATABASE ADD STANDBY LOGFILE GROUP 8 SIZE 1G;
+ALTER DATABASE ADD STANDBY LOGFILE GROUP 9 SIZE 1G;
+ALTER DATABASE ADD STANDBY LOGFILE GROUP 10 SIZE 1G;
+
+3) Удаляем старые логи:
+
+alter system switch logfile;
+alter system checkpoint;
+
+ALTER DATABASE DROP LOGFILE GROUP 1;
+ALTER DATABASE DROP LOGFILE GROUP 2;
+ALTER DATABASE DROP LOGFILE GROUP 3;
+ALTER DATABASE DROP STANDBY LOGFILE GROUP 9;
+ALTER DATABASE DROP STANDBY LOGFILE GROUP 10;
+ALTER DATABASE DROP STANDBY LOGFILE GROUP 11;
+
+4) Проверяем текущие логи
+
+Можно создать логи автоматически (записи о них (размер и имена) будут взяты из control файла), удалив старые логи, но для этого нужно перезапускать БД и открывать ее в режиме resetlogs:
+
+1) shutdown immediate;
+2) удаляем старые логи, создаем каталог(и) для новых (параметры db_create_online_log_dest_n)
+3) startup mount;
+4) recover database until cancel;
+5) alter database open resetlogs;
+

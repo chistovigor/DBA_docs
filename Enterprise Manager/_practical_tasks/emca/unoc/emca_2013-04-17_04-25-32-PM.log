@@ -1,0 +1,272 @@
+17.04.2013 16:25:32 oracle.sysman.emcp.ParamsManager setFlag
+CONFIG: Flag '-deconfig' set to true
+17.04.2013 16:25:32 oracle.sysman.emcp.ParamsManager setFlag
+CONFIG: Flag 'dbcontrol' set to true
+17.04.2013 16:25:32 oracle.sysman.emcp.ParamsManager setFlag
+CONFIG: Flag 'db' set to true
+17.04.2013 16:25:32 oracle.sysman.emcp.ParamsManager setParam
+CONFIG: Setting param: ORACLE_HOSTNAME value: s-msk34-alpha-s
+17.04.2013 16:25:32 oracle.sysman.emcp.ParamsManager setParam
+CONFIG: Setting param: ORACLE_HOME value: D:\oracle\OraHome\
+17.04.2013 16:25:32 oracle.sysman.emcp.ParamsManager setParam
+CONFIG: Setting param: SID value: UNOC
+17.04.2013 16:25:32 oracle.sysman.emcp.ParamsManager setParam
+CONFIG: Setting param: PORT value: 1521
+17.04.2013 16:25:32 oracle.sysman.emcp.ParamsManager setParam
+CONFIG: Setting param: MAIL_SERVER_NAME value: ''
+17.04.2013 16:25:32 oracle.sysman.emcp.ParamsManager setParam
+CONFIG: Setting param: CONFIRMATION ANSWER value: 
+17.04.2013 16:25:35 oracle.sysman.emcp.ParamsManager setParam
+CONFIG: Setting param: CONFIRMATION ANSWER value: yes
+17.04.2013 16:25:35 oracle.sysman.emcp.ParamsManager getParam
+CONFIG: No value was set for the parameter LOG_FILE.
+17.04.2013 16:25:35 oracle.sysman.emcp.ParamsManager getParam
+CONFIG: No value was set for the parameter DB_UNIQUE_NAME.
+17.04.2013 16:25:35 oracle.sysman.emcp.ParamsManager getParam
+CONFIG: No value was set for the parameter DB_UNIQUE_NAME.
+17.04.2013 16:25:35 oracle.sysman.emcp.util.GeneralUtil initSQLEngine
+CONFIG: SQLEngine connecting with SID: UNOC, oracleHome: D:\oracle\OraHome\, and user: SYS
+17.04.2013 16:25:36 oracle.sysman.emcp.util.GeneralUtil initSQLEngine
+CONFIG: SQLEngine created successfully and connected
+17.04.2013 16:25:36 oracle.sysman.emcp.DatabaseChecks getDbUniqueName
+CONFIG: No Database unique name available. Will try to retrieve it from DB itself
+17.04.2013 16:25:36 oracle.sysman.emcp.ParamsManager setParam
+CONFIG: Setting param: DB_UNIQUE_NAME value: unoc
+17.04.2013 16:25:36 oracle.sysman.emcp.EMConfig perform
+INFO: This operation is being logged at D:\oracle\OraHome\\cfgtoollogs\emca\unoc\emca_2013-04-17_04-25-32-PM.log.
+17.04.2013 16:25:36 oracle.sysman.emcp.ParamsManager setParam
+CONFIG: Setting param: EM_HOME value: D:\oracle\OraHome\
+17.04.2013 16:25:36 oracle.sysman.emcp.ParamsManager getParam
+CONFIG: No value was set for the parameter MODIFY_SID.
+17.04.2013 16:25:36 oracle.sysman.emcp.ParamsManager getParam
+CONFIG: No value was set for the parameter MODIFY_SID.
+17.04.2013 16:25:36 oracle.sysman.emcp.ParamsManager getParam
+CONFIG: No value was set for the parameter GLOBAL_DB_UNIQUE_NAME.
+17.04.2013 16:25:36 oracle.sysman.emcp.DatabaseChecks getGlobalDbUniqueName
+CONFIG: No Global database unique name available. Will try to retrieve it from DB itself
+17.04.2013 16:25:36 oracle.sysman.emcp.util.GeneralUtil initSQLEngine
+CONFIG: SQLEngine connecting with SID: UNOC, oracleHome: D:\oracle\OraHome\, and user: SYS
+17.04.2013 16:25:37 oracle.sysman.emcp.util.GeneralUtil initSQLEngine
+CONFIG: SQLEngine created successfully and connected
+17.04.2013 16:25:37 oracle.sysman.emcp.ParamsManager getParam
+CONFIG: No value was set for the parameter DB_DOMAIN.
+17.04.2013 16:25:37 oracle.sysman.emcp.DatabaseChecks getDbDomain
+CONFIG: No db domain available. Will query db for db_domain parameter
+17.04.2013 16:25:37 oracle.sysman.emcp.ParamsManager setParam
+CONFIG: Setting param: GLOBAL_DB_UNIQUE_NAME value: unoc
+17.04.2013 16:25:37 oracle.sysman.emcp.ParamsManager getLocalHost
+CONFIG: Value for parameter ORACLE_HOSTNAME: s-msk34-alpha-s
+17.04.2013 16:25:37 oracle.sysman.emcp.ParamsManager getLocalHost
+CONFIG: Current value for env variable ORACLE_HOSTNAME: null
+17.04.2013 16:25:37 oracle.sysman.emcp.ParamsManager getLocalHost
+CONFIG: Setting the env variable ORACLE_HOSTNAME to s-msk34-alpha-s
+17.04.2013 16:25:37 oracle.sysman.emcp.util.ClusterUtil getLocalNode
+CONFIG: Cluster.isCluster: false. Skip call to getLocalNode
+17.04.2013 16:25:37 oracle.sysman.emcp.util.ClusterUtil getLocalNode
+CONFIG: isLocalNodeDone: true localNode: null
+17.04.2013 16:25:37 oracle.sysman.emcp.util.CentralAgentUtil isCentralAgentConfigured
+CONFIG: Sid: UNOC Host: s-msk34-alpha-s Node: null OH: D:\oracle\OraHome\ agentHome: null isCentral: false
+17.04.2013 16:25:37 oracle.sysman.emcp.util.DBControlUtil isDBConsoleConfigured
+CONFIG: Sid: UNOC Host: s-msk34-alpha-s Node: null OH: D:\oracle\OraHome\ isDBC: true
+17.04.2013 16:25:37 oracle.sysman.emcp.ParamsManager setFlag
+CONFIG: Flag 'IS_CENTRAL_AGENT_CONFIGURED' set to false
+17.04.2013 16:25:37 oracle.sysman.emcp.ParamsManager setFlag
+CONFIG: Flag 'IS_DBCONTROL_CONFIGURED' set to true
+17.04.2013 16:25:37 oracle.sysman.emcp.util.DBControlUtil stopOMS
+INFO: Stopping Database Control (this may take a while) ...
+17.04.2013 16:25:37 oracle.sysman.emcp.util.PlatformInterface serviceCommand
+CONFIG: cmdType: 1
+17.04.2013 16:25:37 oracle.sysman.emcp.util.PlatformInterface serviceCommand
+CONFIG: Stopping Windows service...OracleDBConsoleUNOC
+17.04.2013 16:25:37 oracle.sysman.emcp.util.PlatformInterface serviceCommand
+CONFIG: Waiting for service 'OracleDBConsoleUNOC' to fully stop
+17.04.2013 16:25:47 oracle.sysman.emcp.util.PlatformInterface serviceCommand
+CONFIG: Waiting for service 'OracleDBConsoleUNOC' to fully stop
+17.04.2013 16:25:57 oracle.sysman.emcp.util.PlatformInterface serviceCommand
+CONFIG: Waiting for service 'OracleDBConsoleUNOC' to fully stop
+17.04.2013 16:25:57 oracle.sysman.emcp.util.ClusterUtil getLocalNode
+CONFIG: isLocalNodeDone: true localNode: null
+17.04.2013 16:25:57 oracle.sysman.emcp.target.TargetManager listTargets
+CONFIG: Failed to get targets from home: D:\oracle\OraHome\\s-msk34-alpha-s_UNOC of type: oracle_database
+oracle.sysman.emSDK.conf.TargetListException: No targets.xml file at D:\oracle\OraHome\s-msk34-alpha-s_UNOC\sysman\emd\targets.xml
+	at oracle.sysman.emSDK.conf.TargetInstaller.listAllTargets(TargetInstaller.java:1908)
+	at oracle.sysman.emSDK.conf.TargetInstaller.listTargets(TargetInstaller.java:1870)
+	at oracle.sysman.emSDK.conf.TargetInstaller.listTargets(TargetInstaller.java:1849)
+	at oracle.sysman.emSDK.conf.TargetInstaller.listTargets(TargetInstaller.java:1831)
+	at oracle.sysman.emcp.target.TargetManager.listTargets(TargetManager.java:900)
+	at oracle.sysman.emcp.util.DBControlUtil.stopNmccollector(DBControlUtil.java:266)
+	at oracle.sysman.emcp.util.DBControlUtil.stopOMS(DBControlUtil.java:81)
+	at oracle.sysman.emcp.EMDBPreConfig.performDeconfiguration(EMDBPreConfig.java:640)
+	at oracle.sysman.emcp.EMDBPreConfig.invoke(EMDBPreConfig.java:229)
+	at oracle.sysman.emcp.EMDBPreConfig.invoke(EMDBPreConfig.java:160)
+	at oracle.sysman.emcp.EMConfig.perform(EMConfig.java:141)
+	at oracle.sysman.emcp.EMConfigAssistant.invokeEMCA(EMConfigAssistant.java:479)
+	at oracle.sysman.emcp.EMConfigAssistant.performConfiguration(EMConfigAssistant.java:1123)
+	at oracle.sysman.emcp.EMConfigAssistant.statusMain(EMConfigAssistant.java:463)
+	at oracle.sysman.emcp.EMConfigAssistant.main(EMConfigAssistant.java:412)
+17.04.2013 16:25:57 oracle.sysman.emcp.util.PlatformInterface executeSgastop
+CONFIG: Invalid arguments. OH: D:\oracle\OraHome\ host: s-msk34-alpha-s sid: UNOC port: null
+17.04.2013 16:25:57 oracle.sysman.emcp.util.DBControlUtil stopNmccollector
+CONFIG: Failed to stop nmc-collector process
+17.04.2013 16:25:57 oracle.sysman.emcp.util.PlatformInterface serviceCommand
+CONFIG: cmdType: 2
+17.04.2013 16:25:57 oracle.sysman.emcp.util.PlatformInterface serviceCommand
+CONFIG: Deleting Windows service...OracleDBConsoleUNOC
+17.04.2013 16:25:57 oracle.sysman.emcp.util.PlatformInterface executeCommand
+CONFIG: Starting execution: CMD /C D:\oracle\OraHome\\bin\nmesrvops.exe delete OracleDBConsoleUNOC 
+17.04.2013 16:25:57 oracle.sysman.emcp.util.PlatformInterface executeCommand
+CONFIG: Exit value of 0
+17.04.2013 16:25:57 oracle.sysman.emcp.util.PlatformInterface executeCommand
+CONFIG: Execution of CMD /C D:\oracle\OraHome\\bin\nmesrvops.exe delete OracleDBConsoleUNOC  completed successfully
+17.04.2013 16:25:57 oracle.sysman.emcp.util.PlatformInterface executeCommand
+CONFIG: Service "OracleDBConsoleUNOC" delete SUCCESS
+
+17.04.2013 16:26:00 oracle.sysman.emcp.util.PlatformInterface deleteLocalWindowsService
+CONFIG: Failed to remove the registry entries.
+17.04.2013 16:26:00 oracle.sysman.emcp.util.PlatformInterface deleteLocalWindowsService
+CONFIG: Error Message: PRKC-1117 : Failed to delete registry subkey "SOFTWARE\Oracle\SYSMAN\OracleDBConsoleUNOC" under key "HKEY_LOCAL_MACHINE" on node "s-msk34-alpha-s.raiffeisen.ru", [The system cannot read from the specified device.
+]
+oracle.ops.mgmt.cluster.ClusterException: PRKC-1117 : Failed to delete registry subkey "SOFTWARE\Oracle\SYSMAN\OracleDBConsoleUNOC" under key "HKEY_LOCAL_MACHINE" on node "s-msk34-alpha-s.raiffeisen.ru", [The system cannot read from the specified device.
+]
+	at oracle.ops.mgmt.cluster.ClusterWindows.deleteRegKeyOnNode(ClusterWindows.java:480)
+	at oracle.sysman.emcp.util.ClusterUtil.deleteRegKeyOnNode(ClusterUtil.java:1097)
+	at oracle.sysman.emcp.util.PlatformInterface.deleteLocalWindowsService(PlatformInterface.java:780)
+	at oracle.sysman.emcp.util.PlatformInterface.serviceCommand(PlatformInterface.java:620)
+	at oracle.sysman.emcp.EMDBPreConfig.performDeconfiguration(EMDBPreConfig.java:643)
+	at oracle.sysman.emcp.EMDBPreConfig.invoke(EMDBPreConfig.java:229)
+	at oracle.sysman.emcp.EMDBPreConfig.invoke(EMDBPreConfig.java:160)
+	at oracle.sysman.emcp.EMConfig.perform(EMConfig.java:141)
+	at oracle.sysman.emcp.EMConfigAssistant.invokeEMCA(EMConfigAssistant.java:479)
+	at oracle.sysman.emcp.EMConfigAssistant.performConfiguration(EMConfigAssistant.java:1123)
+	at oracle.sysman.emcp.EMConfigAssistant.statusMain(EMConfigAssistant.java:463)
+	at oracle.sysman.emcp.EMConfigAssistant.main(EMConfigAssistant.java:412)
+17.04.2013 16:26:00 oracle.sysman.emcp.util.ClusterUtil getLocalNode
+CONFIG: isLocalNodeDone: true localNode: null
+17.04.2013 16:26:00 oracle.sysman.emcp.util.GeneralUtil initSQLEngine
+CONFIG: SQLEngine connecting with SID: UNOC, oracleHome: D:\oracle\OraHome\, and user: SYSMAN
+17.04.2013 16:26:01 oracle.sysman.emcp.util.GeneralUtil initSQLEngine
+CONFIG: ORA-28000: the account is locked
+
+oracle.sysman.assistants.util.sqlEngine.SQLFatalErrorException: ORA-28000: the account is locked
+
+	at oracle.sysman.assistants.util.sqlEngine.SQLEngine.executeImpl(SQLEngine.java:1467)
+	at oracle.sysman.assistants.util.sqlEngine.SQLEngine.connect(SQLEngine.java:814)
+	at oracle.sysman.assistants.util.sqlEngine.SQLEngine.connect(SQLEngine.java:777)
+	at oracle.sysman.emcp.util.GeneralUtil.initSQLEngine(GeneralUtil.java:359)
+	at oracle.sysman.emcp.util.GeneralUtil.initSQLEngine(GeneralUtil.java:384)
+	at oracle.sysman.emcp.EMReposConfig.stopDBMSJobs(EMReposConfig.java:671)
+	at oracle.sysman.emcp.EMReposConfig.invoke(EMReposConfig.java:145)
+	at oracle.sysman.emcp.EMReposConfig.invoke(EMReposConfig.java:124)
+	at oracle.sysman.emcp.EMConfig.perform(EMConfig.java:142)
+	at oracle.sysman.emcp.EMConfigAssistant.invokeEMCA(EMConfigAssistant.java:479)
+	at oracle.sysman.emcp.EMConfigAssistant.performConfiguration(EMConfigAssistant.java:1123)
+	at oracle.sysman.emcp.EMConfigAssistant.statusMain(EMConfigAssistant.java:463)
+	at oracle.sysman.emcp.EMConfigAssistant.main(EMConfigAssistant.java:412)
+17.04.2013 16:26:01 oracle.sysman.emcp.EMReposConfig stopDBMSJobs
+WARNING: Error initializing SQL connection. SQL operations cannot be performed
+17.04.2013 16:26:01 oracle.sysman.emcp.EMReposConfig invoke
+WARNING: Unable to remove DBMS jobs.
+17.04.2013 16:26:01 oracle.sysman.emcp.EMDBCConfig deleteOC4JDir
+CONFIG: Deleting state directories
+17.04.2013 16:26:01 oracle.sysman.emcp.util.ClusterUtil getLocalNode
+CONFIG: isLocalNodeDone: true localNode: null
+17.04.2013 16:26:01 oracle.sysman.emcp.util.FileUtil _deleteDirectory
+CONFIG: Done deleting D:\oracle\OraHome\oc4j\j2ee\OC4J_DBConsole_s-msk34-alpha-s_UNOC\application-deployments\default\defaultWebApp
+17.04.2013 16:26:01 oracle.sysman.emcp.util.FileUtil _deleteDirectory
+CONFIG: Done deleting D:\oracle\OraHome\oc4j\j2ee\OC4J_DBConsole_s-msk34-alpha-s_UNOC\application-deployments\default
+17.04.2013 16:26:01 oracle.sysman.emcp.util.FileUtil _deleteDirectory
+CONFIG: Done deleting D:\oracle\OraHome\oc4j\j2ee\OC4J_DBConsole_s-msk34-alpha-s_UNOC\application-deployments
+17.04.2013 16:26:01 oracle.sysman.emcp.util.FileUtil _deleteDirectory
+CONFIG: Done deleting D:\oracle\OraHome\oc4j\j2ee\OC4J_DBConsole_s-msk34-alpha-s_UNOC\config
+17.04.2013 16:26:01 oracle.sysman.emcp.util.FileUtil _deleteDirectory
+CONFIG: Done deleting D:\oracle\OraHome\oc4j\j2ee\OC4J_DBConsole_s-msk34-alpha-s_UNOC\log
+17.04.2013 16:26:01 oracle.sysman.emcp.util.FileUtil _deleteDirectory
+CONFIG: Done deleting D:\oracle\OraHome\oc4j\j2ee\OC4J_DBConsole_s-msk34-alpha-s_UNOC\META-INF
+17.04.2013 16:26:01 oracle.sysman.emcp.util.FileUtil _deleteDirectory
+CONFIG: Done deleting D:\oracle\OraHome\oc4j\j2ee\OC4J_DBConsole_s-msk34-alpha-s_UNOC\persistence
+17.04.2013 16:26:01 oracle.sysman.emcp.util.FileUtil _deleteDirectory
+CONFIG: Done deleting D:\oracle\OraHome\oc4j\j2ee\OC4J_DBConsole_s-msk34-alpha-s_UNOC
+17.04.2013 16:26:01 oracle.sysman.emcp.util.ClusterUtil getLocalNode
+CONFIG: isLocalNodeDone: true localNode: null
+17.04.2013 16:26:01 oracle.sysman.emcp.EMAgentConfig performDeconfiguration
+CONFIG: Deleting state directories
+17.04.2013 16:26:01 oracle.sysman.emcp.util.ClusterUtil getLocalNode
+CONFIG: isLocalNodeDone: true localNode: null
+17.04.2013 16:26:01 oracle.sysman.emcp.target.TargetManager getAgentTargetName
+CONFIG: No targets.xml file at D:\oracle\OraHome\s-msk34-alpha-s_UNOC\sysman\emd\targets.xml
+oracle.sysman.emSDK.conf.TargetListException: No targets.xml file at D:\oracle\OraHome\s-msk34-alpha-s_UNOC\sysman\emd\targets.xml
+	at oracle.sysman.emSDK.conf.TargetInstaller.listAllTargets(TargetInstaller.java:1908)
+	at oracle.sysman.emSDK.conf.TargetInstaller.listTargets(TargetInstaller.java:1870)
+	at oracle.sysman.emSDK.conf.TargetInstaller.listTargets(TargetInstaller.java:1849)
+	at oracle.sysman.emSDK.conf.TargetInstaller.listTargets(TargetInstaller.java:1831)
+	at oracle.sysman.emcp.target.TargetManager.getAgentTargetName(TargetManager.java:282)
+	at oracle.sysman.emcp.EMAgentConfig.cleanupAgentImpl(EMAgentConfig.java:3663)
+	at oracle.sysman.emcp.EMAgentConfig.cleanupAgent(EMAgentConfig.java:3626)
+	at oracle.sysman.emcp.EMAgentConfig.performDeconfiguration(EMAgentConfig.java:1515)
+	at oracle.sysman.emcp.EMAgentConfig.invoke(EMAgentConfig.java:203)
+	at oracle.sysman.emcp.EMAgentConfig.invoke(EMAgentConfig.java:185)
+	at oracle.sysman.emcp.EMConfig.perform(EMConfig.java:146)
+	at oracle.sysman.emcp.EMConfigAssistant.invokeEMCA(EMConfigAssistant.java:479)
+	at oracle.sysman.emcp.EMConfigAssistant.performConfiguration(EMConfigAssistant.java:1123)
+	at oracle.sysman.emcp.EMConfigAssistant.statusMain(EMConfigAssistant.java:463)
+	at oracle.sysman.emcp.EMConfigAssistant.main(EMConfigAssistant.java:412)
+17.04.2013 16:26:01 oracle.sysman.emcp.util.GeneralUtil initSQLEngine
+CONFIG: SQLEngine connecting with SID: UNOC, oracleHome: D:\oracle\OraHome\, and user: SYS
+17.04.2013 16:26:02 oracle.sysman.emcp.util.GeneralUtil initSQLEngine
+CONFIG: SQLEngine created successfully and connected
+17.04.2013 16:26:02 oracle.sysman.emcp.target.TargetManager cleanupAgent
+CONFIG: Check agt tgt sql: select count(*) from sysman.mgmt_targets where lower(target_name)  = lower('null')
+17.04.2013 16:26:02 oracle.sysman.emcp.target.TargetManager cleanupAgent
+CONFIG: Target Name: null Type: oracle_emd not found.
+17.04.2013 16:26:02 oracle.sysman.emcp.EMAgentConfig cleanupAgentImpl
+CONFIG: Successfully cleaned up agent: null from the repository. 
+17.04.2013 16:26:02 oracle.sysman.emcp.EMAgentConfig deleteEMConfigFiles
+CONFIG: Local host name: s-msk34-alpha-s
+17.04.2013 16:26:02 oracle.sysman.emcp.util.ClusterUtil getLocalNode
+CONFIG: isLocalNodeDone: true localNode: null
+17.04.2013 16:26:02 oracle.sysman.emcp.util.FileUtil _deleteDirectory
+CONFIG: Done deleting D:\oracle\OraHome\s-msk34-alpha-s_UNOC\sysman\config
+17.04.2013 16:26:02 oracle.sysman.emcp.util.FileUtil _deleteDirectory
+CONFIG: Done deleting D:\oracle\OraHome\s-msk34-alpha-s_UNOC\sysman\emd\collection
+17.04.2013 16:26:02 oracle.sysman.emcp.util.FileUtil _deleteDirectory
+CONFIG: Done deleting D:\oracle\OraHome\s-msk34-alpha-s_UNOC\sysman\emd\state
+17.04.2013 16:26:02 oracle.sysman.emcp.util.FileUtil _deleteDirectory
+CONFIG: Done deleting D:\oracle\OraHome\s-msk34-alpha-s_UNOC\sysman\emd\upload
+17.04.2013 16:26:02 oracle.sysman.emcp.util.FileUtil _deleteDirectory
+CONFIG: Done deleting D:\oracle\OraHome\s-msk34-alpha-s_UNOC\sysman\emd
+17.04.2013 16:26:02 oracle.sysman.emcp.util.FileUtil _deleteDirectory
+CONFIG: Done deleting D:\oracle\OraHome\s-msk34-alpha-s_UNOC\sysman\log
+17.04.2013 16:26:02 oracle.sysman.emcp.util.FileUtil _deleteDirectory
+CONFIG: Done deleting D:\oracle\OraHome\s-msk34-alpha-s_UNOC\sysman\recv
+17.04.2013 16:26:02 oracle.sysman.emcp.util.FileUtil _deleteDirectory
+CONFIG: Done deleting D:\oracle\OraHome\s-msk34-alpha-s_UNOC\sysman
+17.04.2013 16:26:02 oracle.sysman.emcp.util.FileUtil _deleteDirectory
+CONFIG: Done deleting D:\oracle\OraHome\s-msk34-alpha-s_UNOC
+17.04.2013 16:26:02 oracle.sysman.emcp.EMAgentConfig performDeconfiguration
+CONFIG: Deletion of state directories successful
+17.04.2013 16:26:02 oracle.sysman.emcp.util.PortManager removePortEntries
+CONFIG: Removing entry from portlist.ini for Enterprise Manager Console HTTP Port (UNOC)
+17.04.2013 16:26:02 oracle.sysman.emcp.util.FileUtil _copyFile
+CONFIG: Copying file D:\oracle\OraHome\install\portlist.ini.emca.util.tmp to D:\oracle\OraHome\install\portlist.ini
+17.04.2013 16:26:02 oracle.sysman.emcp.util.PortManager removePortEntries
+CONFIG: File D:\oracle\OraHome\\install\portlist.ini is successfully updated
+17.04.2013 16:26:02 oracle.sysman.emcp.util.PortManager removePortEntries
+CONFIG: Removing entry from portlist.ini for Enterprise Manager Agent Port (UNOC)
+17.04.2013 16:26:02 oracle.sysman.emcp.util.FileUtil _copyFile
+CONFIG: Copying file D:\oracle\OraHome\install\portlist.ini.emca.util.tmp to D:\oracle\OraHome\install\portlist.ini
+17.04.2013 16:26:02 oracle.sysman.emcp.util.PortManager removePortEntries
+CONFIG: File D:\oracle\OraHome\\install\portlist.ini is successfully updated
+17.04.2013 16:26:02 oracle.sysman.emcp.util.PlatformInterface getOracleHomeShortcutLocation
+CONFIG: oracleKey: SOFTWARE\ORACLE\KEY_OraHome
+17.04.2013 16:26:02 oracle.sysman.emcp.util.PlatformInterface getOracleHomeShortcutLocation
+CONFIG: programMenuLoc: C:\Documents and Settings\All Users\Start Menu\Programs
+17.04.2013 16:26:02 oracle.sysman.emcp.util.PlatformInterface getOracleHomeShortcutLocation
+CONFIG: oracleGroupName: Oracle - OraHome
+17.04.2013 16:26:02 oracle.sysman.emcp.util.PlatformInterface getOracleHomeShortcutLocation
+CONFIG: oracleKey: SOFTWARE\ORACLE\KEY_OraHome
+17.04.2013 16:26:02 oracle.sysman.emcp.util.PlatformInterface getOracleHomeShortcutLocation
+CONFIG: programMenuLoc: C:\Documents and Settings\All Users\Start Menu\Programs
+17.04.2013 16:26:02 oracle.sysman.emcp.util.PlatformInterface getOracleHomeShortcutLocation
+CONFIG: oracleGroupName: Oracle - OraHome
+17.04.2013 16:26:02 oracle.sysman.emcp.EMDBPostConfig performDeconfiguration
+CONFIG: Database Control shortcut removed successfully

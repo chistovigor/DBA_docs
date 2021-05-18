@@ -1,0 +1,146 @@
+RECREATE EM REPOSITORY
+======================
+
+################################################################################
+# warning: 1. emca put database into quiesced mode, only DBA transaction 
+#             continues,the other waits, on production db there must be downtime
+#              
+#           2. if some emca process fails, make a manual check and clean
+#              - check OS processes,is java app running emca, RepManagerand,kill
+#
+#              - is database in quiesced mode? 
+#                => SQL> select active_state from v$instance 
+#                => you can send 
+#                   SQL> ALTER SYSTEM UNQUIESCED;
+#              
+################################################################################              
+ 
+emca help - see full syntax
+ 
+emctl stop dbconsole
+emca -deconfig dbcontrol db
+emca -repos recreate
+emca -config dbcontrol db 
+
+emctl start agent
+emctl stop agent
+
+check log files $ORACLE_HOME/sysman/log:
+tail -f $ORACLE_HOME/sysman/log/emdctl.trc
+
+
+if there is problem in timezone:
+=================================
+
+emctl resetTZ agent
+
+    edit file $ORACLE_HOME/sysman/config/emd.properties and find field:
+    agentTZRegion=Europe/Berlin
+
+    Identify agentName 'hostname:port'
+    cat $ORACLE_HOME/sysman/config/emd.properties | grep EMD_URL
+
+update repository with new timezone
+
+    emctl stop agent
+    
+    sqlplus sysman
+    SQL> exec mgmt_target.set_agent_tzrgn('teamtest:3939','Europe/Berlin');
+
+
+exec mgmt_target.set_agent_tzrgn('teamtest:3938','Europe/Berlin');
+* if you recieve an error here, look on metalink 388280.1 (agent name)
+* 
+wrong agent name can be fault by now records in table
+
+select target_name, target_type from sysman.mgmt_targets; 
+
+SQL> col target_name for a40
+SQL> col target_type for a40
+SQL> /
+
+TARGET_NAME                              TARGET_TYPE
+---------------------------------------- ----------------------------------------
+psprod                                   host
+pstte                                    oracle_database
+psprod:3938                              oracle_emd
+Management Services and Repository       oracle_emrep
+LISTENER_psprod                          oracle_listener
+
+
+if there problems with ports (already use sockets)
+=================================================
+emca -reconfig ports -DBCONTROL_HTTP_PORT 1159 -RMI_PORT 5522 -AGENT_PORT 3939
+
+cuurent port list could be found here:
+    $ORACLE_HOME/install/portlist.ini
+
+
+message log in: (419586.1)
+09/10/07 10:37:57 Error starting ORMI-Server.  Unable to bind socket: Address already in use
+
+LOGS
+====
+/*
+Log files that aid in troubleshooting
+- ORACLE_HOME/hostname_sid/sysman/log/emdb.nohup - contains the standard output from the Console main Java process at each start/exit (dbconsole and agent). It is appended with each new output of the Console main Java process.
+- ORACLE_HOME/hostname_sid/sysman/log/emagent.log and emagent.trc - main agent log & trace files
+- ORACLE_HOME/hostname_sid/sysman/log/emoms.log and emoms.trc - main management service log & trace files
+- ORACLE_HOME/hostname_SID/sysman/log/emdctl.log and emdctl.trc - emctl log & trace files
+- ORACLE_HOME/hostname_SID/sysman/log/emagentfetchlet.trc and emagentfetchlet.log - log and trace file for Java Fetchlets
+
+
+CONFIGS
+=======
+ORACLE_HOME/<hostname_sid>/sysman/emd.properties. Check properties:
+
+    REPOSITORY_URL=http://<valid fully qualified domain name>:<port - usually 1158>/em/upload/
+    EMD_URL=http://<valid fully qualified domain name>:<port - usually 3938>/emd/main
+
+ORACLE_HOME/<hostname_sid>/sysman/emoms.properties. Check properties:
+    oracle.sysman.eml.mntr.emdRepConnectDescriptor - must have a valid connection string
+    oracle.sysman.eml.mntr.emdRepPort=<valid listener port>
+    oracle.sysman.eml.mntr.emdRepDBName=<valid db name>
+    oracle.sysman.emSDK.svlt.ConsoleServerPort=<valid port>
+    oracle.sysman.emSDK.svlt.ConsoleServerHost=<valid hostname>
+    oracle.sysman.emSDK.svlt.ConsoleServerHTTPSPort=<valid HTTP port>
+
+
+*/
+
+PORT RECONFIGURATION
+====================
+
+-- no java process under orapst
+-- ps -ef | grep dbconsole
+
+
+iSQL*Plus HTTP port number =5561
+Enterprise Manager Console HTTP Port (pstte) = 1159
+Enterprise Manager Agent Port (pstte) = 3940
+
+find $ORACLE_HOME/* -name "rmi.xml"
+find $ORACLE_HOME/* -name "jms.xml"
+
+    cat /oracle/prostore/product/10.2.0/oc4j/j2ee/OC4J_DBConsole_teamtest_pstte/config/rmi.xml 
+    rmi-server port="5522
+
+    cat /oracle/prostore/product/10.2.0/oc4j/j2ee/isqlplus/config/rmi.xml
+    rmi-server port=5581
+
+    cat /oracle/prostore/product/10.2.0/oc4j/j2ee/OC4J_DBConsole_teamtest_pstte/config/jms.xml
+
+sqlplus netstat -tan | grep ".5581"
+rmi     netstat -tan | grep ".5522" -- 5523
+jms     netstat -tan | grep ".5540" -- 5541
+www     netstat -tan | grep ".1159" -- 1160
+netstat -tan | grep ".3940"         -- 3941
+
+
+emca -reconfig ports -DBCONTROL_HTTP_PORT 1160 -RMI_PORT 5523 -JMS_PORT 5541 -AGENT_PORT 3941
+
+vi /oracle/prostore/product/10.2.0/sysman/config/emd.properties
+- repair EMD_URL (agent port)
+- emctl reload
+emctl status agent
+emctl start agent

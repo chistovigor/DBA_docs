@@ -1,0 +1,7 @@
+1) Certificates file located at
+$ORACLE_HOME/hostname_dbname/sysman/config
+its
+b64InternetCertificate.txt and b64LocalCertificate.txt
+
+2) Run IE, go to internet options > config > certificates > Trusted Root Certification Authorities > import
+Import file described below
