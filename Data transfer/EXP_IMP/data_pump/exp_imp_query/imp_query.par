@@ -1,0 +1,5 @@
+DIRECTORY = DATA_PUMP_DIR
+DUMPFILE  = router_query_1.dmp
+LOGFILE   = imp_router_query_1.log
+PARALLEL  = 4
+TABLE_EXISTS_ACTION=APPEND

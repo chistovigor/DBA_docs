@@ -1,0 +1,39 @@
+create or replace directory EXP_DIR as '/mnt/data2/dump';
+GRANT READ, WRITE ON DIRECTORY EXP_DIR TO VSMC3DS;
+
+expdp VSMC3DS/VSMC3DS tables=DDDSPROC_TRNATTR_INFO_ARC DIRECTORY=EXP_DIR DUMPFILE=DDDSPROC_TRNATTR_INFO_ARC.dmp LOGFILE=DDDSPROC_TRNATTR_INFO_ARC.LOG content=ALL QUERY=VSMC3DS.DDDSPROC_TRNATTR_INFO_ARC:'"where ID < (select max(ID) from DDDSPROC_TRANSACT_INFO_ARC where TRANSDATE < sysdate - 365*2)"' parallel=4
+
+expdp dbman/DUO@DUO schemas=dbman ESTIMATE_ONLY=y logfile=expdpTESTDB.log
+
+exp IVR_AUTH/IVR_AUTH_PWD file=d:\IVR_AUTH.dmp LOG=d:\IVR_AUTH.log grants=y indexes=y rows=y constraints=y
+
+imp IVR_AUTH/iwr_auth_pwd file=IVR_AUTH.dmp LOG=IVR_AUTH.log fromuser=IVR_AUTH touser=IVR_AUTH
+
+Для uniх
+
+Импорт из ULTRA-LA в WEB-B:
+
+exp USERID=vsmc3ds/vsmc3ds@ULTRASTN file=/mnt/data1/script/exp_abo_comp_ecom.dmp LOG=/mnt/data1/script/exp_abo_comp_ecom.log tables=abo_comp_ecom grants=y indexes=y rows=y constraints=y
+
+imp USERID=PROXY3DS/PROXY3DS@WEBDB_B file=/tmp/exp_abo_comp_ecom.dmp LOG=/tmp/imp_abo_comp_ecom.log fromuser=vsmc3ds touser=PROXY3DS
+
+в WEB-A:
+
+imp file=/tmp/exp_abo_comp_ecom.dmp LOG=/tmp/imp_abo_comp_ecom.log fromuser=vsmc3ds touser=PROXY3DS
+затем на запрос Username: ввести 
+sys/Revenr0n as sysdba
+
+Импорт из ULTRA-LB в WEB-A:
+
+exp USERID=vsmc3ds/vsmc3ds@ULTRALB file=/mnt/data2/scripts/exp_de_users.dmp LOG=/mnt/data2/scripts/exp_de_users.log tables=de_users,de_users_ip grants=y indexes=y rows=y constraints=y
+imp file=/tmp/exp_de_users.dmp LOG=/tmp/imp_de_users.log fromuser=vsmc3ds touser=PROXY3DS ignore=y
+затем на запрос Username: ввести 
+sys/Revenr0n as sysdba
+
+
+expdp RC_ICBSPROXY/RC_ICBSPROXY schemas=RC_ICBSPROXY logfile=expdpRC_ICBSPROXY.log dumpfile=expdpRC_ICBSPROXY.dmp
+
+imp USERID=RC_ICBSPROXY/RC_ICBSPROXY file=/tmp/expRC_ICBSPROXY.dmp LOG=/tmp/imp_expRC_ICBSPROXY.log fromuser=RC_ICBSPROXY touser=RC_ICBSPROXY
+
+exp USERID=RC_ICBSPROXY/RC_ICBSPROXY file=D:\expRC_ICBSPROXY.dmp LOG=D:\expRC_ICBSPROXY.log grants=y indexes=y rows=y constraints=y
+

@@ -1,0 +1,35 @@
+Process Overview:
+
+1. In the primary disable log shipping to the standby site.
+
+alter system set log_archive_dest_state_2 = 'DEFER' scope=BOTH;
+
+2. Shutdown the standby site and apply interim patchsets to the RDBMS binaries as per the README. This includes Patchset/Patchset Update(PSU)/Critical Patch Update (CPU). You will not be able to and do not need to run the scripts(catpatch.sql etc) against the standby rdbms itself.  Start the standby site to mount only, do not restart managed recovery.
+
+shutdown immediate;
+
+silent_install.cmd
+
+startup nomount;
+
+alter database mount standby database;
+
+3. Shutdown the primary site, apply the Patchset/PSU/CPU patch to the RDBMS binaries and patch the RDBMS itself using the instructions in the README (run catpatch/catbundle/catcpu etc).
+
+shutdown immediate;
+
+silent_install.cmd
+
+upgrade_database.cmd
+
+4. Start the primary site, re-enable log shipping to the standby.
+
+alter database open;
+
+alter system set log_archive_dest_state_2 = 'ENABLE' scope=BOTH;
+
+5. At the standby site restart redo apply/managed recovery and the RDBMS changes implemented in the Primary Site through catpatch/catbundle/catcpu will also be applied to the standby.
+
+ALTER DATABASE RECOVER MANAGED STANDBY DATABASE DISCONNECT FROM SESSION;
+
+6. Checks to perform to ensure the patch has been applied successfully at the primary and standby sites.

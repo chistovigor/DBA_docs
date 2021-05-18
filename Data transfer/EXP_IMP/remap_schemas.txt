@@ -1,0 +1,31 @@
+sqlplus / as sysdba
+create user rc_aq identified by "rc_aq" default tablespace ICBS_DATA;
+grant dba to rc_aq;
+
+create user RC_VSMC identified by "rc_vsmc" default tablespace ICBS_DATA;
+grant dba to RC_VSMC;
+ 
+exp userid=aqjava/aqjava file=EXP_aqjava.dmp  LOG=EXP_aqjava.LOG OWNER=aqjava GRANTS=y INDEXES=y ROWS=n CONSTRAINTS=y COMPRESS=n
+imp userid=rc_aq file=EXP_aqjava.dmp  LOG=IMP_rc_aq.LOG FROMUSER=aqjava TOUSER=rc_aq
+
+
+Через dataPUMP
+
+CREATE OR REPLACE DIRECTORY dpump_dir1 AS '/usr/local/bin/scripts/data_pump';
+
+GRANT read, write ON DIRECTORY dpump_dir1 TO <user>;
+
+select * from all_directories;
+
+на запрос с ora-28009 ввести
+sys as sysdba
+пароль sys
+
+expdp sys/trjvthc schemas=aqjava DIRECTORY=DPUMP_DIR1 dumpfile=aqjava.dmp logfile=aqjava.log CONTENT=METADATA_ONLY
+
+impdp sys/trjvthc schemas=aqjava DIRECTORY=DPUMP_DIR1 CONTENT=METADATA_ONLY remap_schema=aqjava:rc_aq dumpfile=aqjava.dmp logfile=imp_aqjava.log
+
+expdp sys/trjvthc schemas=vsmc3ds DIRECTORY=DPUMP_DIR1 dumpfile=vsmc3ds.dmp logfile=vsmc3ds.log CONTENT=METADATA_ONLY
+
+impdp sys/trjvthc schemas=vsmc3ds DIRECTORY=DPUMP_DIR1 CONTENT=METADATA_ONLY remap_schema=vsmc3ds:rc_vsmc dumpfile=vsmc3ds.dmp logfile=imp_vsmc3ds.log
+

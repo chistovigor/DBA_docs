@@ -1,0 +1,1 @@
+expdp dbman/DUO@DUO schemas=dbman ESTIMATE_ONLY=y logfile=expdpTESTDB.log

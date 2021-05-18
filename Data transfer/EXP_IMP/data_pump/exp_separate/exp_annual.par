@@ -1,0 +1,15 @@
+DIRECTORY = EXPORT
+DUMPFILE  = router_annual.dmp
+LOGFILE   = router_annual.log
+PARALLEL  = 2
+ESTIMATE  = BLOCKS
+INCLUDE   = TABLE:"LIKE '__201403%'"
+#QUERY     = router.CB201403:"WHERE SZDTIME < '2014-03-02 00:00:00'"
+SILENT    = ALL 
+#SCHEMAS  = hr, scott
+
+# QUERY EXAMPLE
+# place following 3 lines on one single line:
+#QUERY     = hr.departments:"WHERE department_id IN (SELECT DISTINCT
+#department_id FROM hr.employees e, hr.jobs j WHERE e.job_id=j.job_id
+#AND UPPER(j.job_title) = 'ANALYST' OR e.salary >= 3000)"

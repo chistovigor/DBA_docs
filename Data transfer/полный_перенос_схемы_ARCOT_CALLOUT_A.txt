@@ -1,0 +1,5 @@
+Выполнить на ULTRA-test
+
+exp userid='sys/trjvthc@ULTRA_PREVIEW as sysdba' file=E:\NEW_EXP\ARCOT_CALLOUT_A.dmp LOG=E:\NEW_EXP\ARCOT_CALLOUT_A.LOG OWNER=ARCOT_CALLOUT_A GRANTS=y INDEXES=y ROWS=y CONSTRAINTS=y
+
+imp userid='sys/trjvthc@ULTRA_T as sysdba' file=E:\NEW_EXP\ARCOT_CALLOUT_A.dmp LOG=E:\NEW_EXP\IMP_ARCOT_CALLOUT_A.LOG fromuser=ARCOT_CALLOUT_A touser=ARCOT_CALLOUT_A ignore=y

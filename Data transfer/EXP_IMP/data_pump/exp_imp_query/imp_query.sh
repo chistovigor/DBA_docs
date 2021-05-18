@@ -1,0 +1,1 @@
+impdp router/loopexamspit parfile=imp_query.par

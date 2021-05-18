@@ -1,0 +1,1 @@
+expdp router/loopexamspit parfile=exp_query.par

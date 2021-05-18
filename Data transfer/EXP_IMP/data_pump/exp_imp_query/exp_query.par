@@ -1,0 +1,6 @@
+DIRECTORY = DATA_PUMP_DIR
+DUMPFILE  = router_query_1.dmp
+LOGFILE   = router_query_1.log
+PARALLEL  = 4
+INCLUDE   = TABLE:"='CB201404'"
+QUERY     = router.CB201404:"WHERE SZDTIME < '2014-04-18 14:47:39'"

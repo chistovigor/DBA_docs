@@ -1,0 +1,14 @@
+DIRECTORY = EXPORT
+DUMPFILE  = router_const.dmp
+LOGFILE   = router_const.log
+PARALLEL  = 2
+ESTIMATE  = BLOCKS
+EXCLUDE   = TABLE:"LIKE '__201%'",DB_LINK,TRIGGER,SYNONYM,PROCEDURE,JOB
+EXCLUDE   = TABLE:"LIKE 'SYS%'"
+SILENT    = ALL
+
+# QUERY EXAMPLE
+# place following 3 lines on one single line:
+#QUERY     = hr.departments:"WHERE department_id IN (SELECT DISTINCT
+#department_id FROM hr.employees e, hr.jobs j WHERE e.job_id=j.job_id
+#AND UPPER(j.job_title) = 'ANALYST' OR e.salary >= 3000)"

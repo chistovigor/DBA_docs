@@ -1,0 +1,1 @@
+expdp infoware/infoware DUMPFILE=EXP_INFOWARE_dumpfile_`date '+%d_%m_%y_%H_%M_%S'`.DMP DIRECTORY=DATA_PUMP_DIR SCHEMAS=infoware COMPRESSION=ALL REUSE_DUMPFILES=Y PARALLEL=4
