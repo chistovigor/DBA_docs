@@ -1217,6 +1217,12 @@ SELECT dbms_stats.get_stats_history_retention FROM dual;
 --if available can be compared (clob output as report)
 select  * from table(dbms_stats.diff_table_stats_in_history('OWS','DOC',systimestamp-2,systimestamp));
 
+-- see column usage for the particular table:
+
+select dbms_stats.report_col_usage('OWS', 'ACNT_CONTRACT') from dual; --or use SYS.COL_USAGE$ table
+--(do before in order to flust all data into dictionary)
+execute dbms_stats.flush_database_monitoring_info();
+
 --change retention period for the stats
 
 exec dbms_stats.alter_stats_history_retention(31); --The default is 31 days
@@ -2315,6 +2321,10 @@ BEGIN
 END;
 
 --SQL Plan Directives (https://oracle-base.com/articles/12c/sql-plan-directives-12cr1)
+--https://yasu-khan.github.io/SQL-Plan-Directives-(Part-2)
+
+The optimizer use of SQL plan directives is controlled by the database initialization parameter
+optimizer_adaptive_statistics, which has the default value of FALSE. This setting is recommended for most systems.
 
   SELECT TO_CHAR (D.DIRECTIVE_ID) DIR_ID,
          O.OWNER,
@@ -2334,6 +2344,8 @@ ORDER BY 1,
          4,
          5;
          
+select * from DBA_SQL_PLAN_DIRECTIVES order by created desc;
+         
 -- find WHICH directives as used by particular SQL:
 
 explain plan for --below the SQL statement for which you need to find an information
@@ -2346,7 +2358,7 @@ P$ETSM_CNTNREF P                  WHERE p.container_id = 2 ) K where
        df.FILE_ID = fs.FILE# and   DF.TABLESPACE_NAME=K.TABLESPACE_NAME 
 group by   df.TABLESPACE_NAME;
 
-SELECT * FROM TABLE(DBMS_XPLAN.DISPLAY(null, null, '+metrics'));
+SELECT * FROM TABLE(DBMS_XPLAN.DISPLAY(null, null,'+metrics'));
 
 --directives will be in the "Sql Plan Directive information" section
 
@@ -2355,3 +2367,64 @@ EXEC DBMS_SPD.DROP_SQL_PLAN_DIRECTIVE(10091005918999074784);
 --lock SQL plan directive usage
 
 exec DBMS_SPD.ALTER_SQL_PLAN_DIRECTIVE (11378594116199125643, 'ENABLED','NO');
+
+--disable all (directive_id issue)
+
+SET SERVEROUTPUT ON TERMOUT ON FEEDBACK ON TIMING ON
+
+DECLARE
+    V_DIR_ID   NUMBER;
+BEGIN
+    DBMS_OUTPUT.ENABLE;
+
+    FOR REC IN (SELECT DIRECTIVE_ID FROM DBA_SQL_PLAN_DIRECTIVES)
+    LOOP
+        V_DIR_ID := REC.DIRECTIVE_ID;
+        DBMS_SPD.ALTER_SQL_PLAN_DIRECTIVE (V_DIR_ID, 'ENABLED', 'NO');
+        DBMS_OUTPUT.PUT_LINE ('directive ' || V_DIR_ID || ' disabled');
+    END LOOP;
+END;
+/
+
+--Repairing SQL Performance Regression with SQL Plan Management (were first introduced in Oracle Database 12c Release 2)
+--https://blogs.oracle.com/optimizer/repairing-sql-performance-regression-with-sql-plan-management
+-- !!! Exadata only
+
+BEGIN 
+   --
+   -- Create a SQL plan baseline for the problem query plan
+   -- (in this case assuming that it is in the cursor cache)
+   -- 
+   n := dbms_spm.load_plans_from_cursor_cache(
+                  sql_id => '<problem_SQL_ID>', 
+                  plan_hash_value=> <problem_plan_hash_value>, 
+                  enabled => 'no');
+   --
+   -- Set up evolve
+   --
+   tname := DBMS_SPM.CREATE_EVOLVE_TASK(sql_handle=>handle); 
+
+   DBMS_SPM.SET_EVOLVE_TASK_PARAMETER( 
+      task_name => tname,
+      parameter => 'ALTERNATE_PLAN_BASELINE', 
+      value     => 'EXISTING');
+
+   DBMS_SPM.SET_EVOLVE_TASK_PARAMETER( 
+      task_name => tname,
+      parameter => 'ALTERNATE_PLAN_SOURCE', 
+      value     => 'CURSOR_CACHE+AUTOMATIC_WORKLOAD_REPOSITORY+SQL_TUNING_SET');
+
+   DBMS_SPM.SET_EVOLVE_TASK_PARAMETER( 
+      task_name => tname,
+      parameter => 'ALTERNATE_PLAN_LIMIT', 
+      value     => 'UNLIMITED');
+   --
+   -- Evolve
+   --
+   ename := DBMS_SPM.EXECUTE_EVOLVE_TASK(tname);
+   --
+   -- Optionally, choose to implement immediately
+   --
+   n := DBMS_SPM.IMPLEMENT_EVOLVE_TASK(tname);
+END; 
+/
