@@ -1843,6 +1843,8 @@ SELECT DISTINCT GRANTEE DB_USER, PRIVILEGE, ADMIN_OPTION
                             (SELECT MIN (CREATED) FROM DBA_USERS) + 2 / 24));	
 
 -- add monitoring for business operation in PL SQL code:
+-- https://docs.oracle.com/en/database/oracle/oracle-database/19/tgsql/monitoring-database-operations.html#GUID-47840D0F-55E2-433B-8B43-7C9942B91FFD
+
 
 v_oper_id number;
 
@@ -1852,7 +1854,7 @@ select dbms_sql_monitor.begin_operation(dbop_name => 'OPERATION_1',forced_tracki
 
 ... monitored code
 
-dbms_sql_monitor.end_operation(v_oper_id);
+dbms_sql_monitor.end_operation(dbop_name => 'OPERATION_1', v_oper_id);
 
 end;
 /
