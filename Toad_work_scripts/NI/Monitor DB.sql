@@ -1844,7 +1844,7 @@ SELECT DISTINCT GRANTEE DB_USER, PRIVILEGE, ADMIN_OPTION
 
 -- add monitoring for business operation in PL SQL code:
 -- https://docs.oracle.com/en/database/oracle/oracle-database/19/tgsql/monitoring-database-operations.html#GUID-47840D0F-55E2-433B-8B43-7C9942B91FFD
-
+--https://yasu-khan.github.io/Oracle12c-History-Reports-of-RealTimeSQLMonitoring - how to select data post monitoring
 
 v_oper_id number;
 
@@ -1879,4 +1879,27 @@ dbms_application_info.set_module('TIBCO direct DB call','OPERATION name - from T
 
     --your code
     DBMS_SQL_MONITOR.END_OPERATION (V_TIBCO_OPERATION_ID);
-END;                          
+END;    
+
+--how to check later:
+
+--report
+
+SELECT DBMS_SQL_MONITOR.report_sql_monitor(
+  dbop_name    => 'OPERATION name - from TIBCO app',
+  type         => 'HTML',
+  report_level => 'ALL') AS report
+FROM dual; 
+
+--all reports for monitored SQLs
+
+SELECT DBMS_SQL_MONITOR.report_sql_monitor_list(
+  type         => 'TEXT',
+  report_level => 'ALL') AS report
+FROM dual;
+
+select STATUS,SQL_ID,DBOP_NAME,DBOP_EXEC_ID,CON_NAME,ELAPSED_TIME from v$sql_monitor;                     
+
+--ASH
+
+select module,action,dbop_name,dbop_exec_id from v$active_session_history where module = 'TIBCO direct DB call' order by sample_time;
