@@ -1903,3 +1903,32 @@ select STATUS,SQL_ID,DBOP_NAME,DBOP_EXEC_ID,CON_NAME,ELAPSED_TIME from v$sql_mon
 --ASH
 
 select module,action,dbop_name,dbop_exec_id from v$active_session_history where module = 'TIBCO direct DB call' order by sample_time;
+
+
+--Monthly Growth of the Database (Doc ID 1987509.1)
+
+--rough in datafiles (faster)
+
+  SELECT TO_CHAR (CREATION_TIME, 'RRRR')     YEAR,
+         TO_CHAR (CREATION_TIME, 'MM')       MONTH,
+         round(SUM (BYTES) / 1024 / 1024 / 1024)   GROWTH_GB
+    FROM V$DATAFILE
+GROUP BY TO_CHAR (CREATION_TIME, 'RRRR'), TO_CHAR (CREATION_TIME, 'MM')
+ORDER BY 1, 2;
+
+--Growth of Specific database Schema in the past days based on the AWR snapshots (long running):
+
+SELECT SUM (SPACE_USED_DELTA) / 1024 / 1024                              "Space used (M)",
+       SUM (C.BYTES) / 1024 / 1024                                       "Total Schema Size (M)",
+       ROUND (SUM (SPACE_USED_DELTA) / SUM (C.BYTES) * 100, 2) || '%'    "Percent of Total Disk Usage"
+  FROM DBA_HIST_SNAPSHOT  SN,
+       DBA_HIST_SEG_STAT  A,
+       DBA_OBJECTS        B,
+       DBA_SEGMENTS       C
+ WHERE     END_INTERVAL_TIME > TRUNC (SYSDATE) - 365
+       AND SN.SNAP_ID = A.SNAP_ID
+       AND B.OBJECT_ID = A.OBJ#
+       AND B.OWNER = C.OWNER
+       AND B.OBJECT_NAME = C.SEGMENT_NAME
+       AND C.OWNER = '&schema_name'
+       AND SPACE_USED_DELTA > 0;
