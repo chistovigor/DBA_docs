@@ -799,7 +799,7 @@ SHOW PARAMETER statistics_level
 
 SELECT /*+ MONITOR */
 
---then generate the report
+--then generate the report (OEM style)
 
 SET LONG 1000000
 SET LONGCHUNKSIZE 1000000
@@ -1822,7 +1822,20 @@ EXEC :RES := DBMS_SPM.LOAD_PLANS_FROM_CURSOR_CACHE(SQL_ID => '9qyvcbc8tqgda', PL
 EXEC DBMS_OUTPUT.PUT_LINE('Number of plans loaded: ' || :RES);
 select DBMS_SPM.LOAD_PLANS_FROM_CURSOR_CACHE(SQL_ID => '9qyvcbc8tqgda', PLAN_HASH_VALUE => 2320859913, SQL_HANDLE => 'SQL_bdc872a12dc08c92') from dual;
 
--- FIX problems in SQL using SQL patch - wrong result of SQL statem�nts
+-- create baseline for the particular STMT with good plan in curor cache:
+
+select count(*) from dba_sql_plan_baselines;
+
+DECLARE
+ret binary_integer;
+BEGIN
+RET:=DBMS_SPM.LOAD_PLANS_FROM_CURSOR_CACHE(sql_id => '&sql_id',plan_hash_value =>&plan_hash_value,fixed=>'YES',enabled =>'YES');
+END;
+/
+
+select count(*) from dba_sql_plan_baselines; --must be +1 in comparison with the above execution
+
+-- FIX problems in SQL using SQL patch - wrong result of SQL statments
 
 --1) execute select (exactly as it exists in application)
 
@@ -2386,9 +2399,10 @@ BEGIN
 END;
 /
 
---Repairing SQL Performance Regression with SQL Plan Management (were first introduced in Oracle Database 12c Release 2)
+--Repairing SQL Performance Regression with SQL Plan Management (rdbms version >=18c)
 --https://blogs.oracle.com/optimizer/repairing-sql-performance-regression-with-sql-plan-management
--- !!! Exadata only
+-- ?? Exadata only
+--Database 12c Release 2 includes the parameter settings used above but the task will sometimes fail with ORA-01422 due to bug number 29539794
 
 BEGIN 
    --
@@ -2428,3 +2442,5 @@ BEGIN
    n := DBMS_SPM.IMPLEMENT_EVOLVE_TASK(tname);
 END; 
 /
+
+--19c approach: https://blogs.oracle.com/optimizer/what-is-automatic-sql-plan-management-and-why-should-you-care
