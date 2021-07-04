@@ -1353,8 +1353,8 @@ WHERE PARAMETER_NAME = 'SPACE_BUDGET_PERCENT';
 
 SELECT PARAMETER_NAME, PARAMETER_VALUE FROM DBA_SQL_MANAGEMENT_CONFIG WHERE PARAMETER_NAME = 'PLAN_RETENTION_WEEKS';
 
-exec exec DBMS_SPM.CONFIGURE('PLAN_RETENTION_WEEKS',32); --configure plan retention weeks (default 53)
-exec exec DBMS_SPM.CONFIGURE('SPACE_BUDGET_PERCENT',25); --configure space % inside SYSAUX TS (default 10)
+exec DBMS_SPM.CONFIGURE('PLAN_RETENTION_WEEKS',32); --configure plan retention weeks (default 53)
+exec DBMS_SPM.CONFIGURE('SPACE_BUDGET_PERCENT',25); --configure space % inside SYSAUX TS (default 10)
 
 
 -- init parameters related to that functionality
@@ -1822,6 +1822,10 @@ EXEC :RES := DBMS_SPM.LOAD_PLANS_FROM_CURSOR_CACHE(SQL_ID => '9qyvcbc8tqgda', PL
 EXEC DBMS_OUTPUT.PUT_LINE('Number of plans loaded: ' || :RES);
 select DBMS_SPM.LOAD_PLANS_FROM_CURSOR_CACHE(SQL_ID => '9qyvcbc8tqgda', PLAN_HASH_VALUE => 2320859913, SQL_HANDLE => 'SQL_bdc872a12dc08c92') from dual;
 
+-- load plans for PARTICULAR schema
+
+select DBMS_SPM.LOAD_PLANS_FROM_CURSOR_CACHE(attribute_name => 'PARSING_SCHEMA_NAME', attribute_value => 'APP_SHEMA', fixed => 'YES') from dual;
+
 -- create baseline for the particular STMT with good plan in curor cache:
 
 select count(*) from dba_sql_plan_baselines;
@@ -1832,6 +1836,84 @@ BEGIN
 RET:=DBMS_SPM.LOAD_PLANS_FROM_CURSOR_CACHE(sql_id => '&sql_id',plan_hash_value =>&plan_hash_value,fixed=>'YES',enabled =>'YES');
 END;
 /
+
+--Query to get SQL_ID from DBA_SQL_PLAN_BASELINES
+/* from https://carlos-sierra.net/2013/09/12/function-to-compute-sql_id-out-of-sql_text/ */
+/* based on http://www.slaviks-blog.com/2010/03/30/oracle-sql_id-and-hash-value/ */
+-- run from sys or dbms_crypto run grant must be given to PUBLIC
+
+WITH
+    FUNCTION COMPUTE_SQL_ID (SQL_TEXT IN CLOB)
+        RETURN VARCHAR2
+    IS
+        BASE_32   CONSTANT VARCHAR2 (32)
+                               := '0123456789abcdfghjkmnpqrstuvwxyz' ;
+        L_RAW_128          RAW (128);
+        L_HEX_32           VARCHAR2 (32);
+        L_LOW_16           VARCHAR (16);
+        L_Q3               VARCHAR2 (8);
+        L_Q4               VARCHAR2 (8);
+        L_LOW_16_M         VARCHAR (16);
+        L_NUMBER           NUMBER;
+        L_IDX              INTEGER;
+        L_SQL_ID           VARCHAR2 (13);
+    BEGIN
+        L_RAW_128 := /* use md5 algorithm on sql_text and produce 128 bit hash */
+            SYS.DBMS_CRYPTO.HASH (TRIM (CHR (0) FROM SQL_TEXT) || CHR (0),
+                                  SYS.DBMS_CRYPTO.HASH_MD5);
+        L_HEX_32 := RAWTOHEX (L_RAW_128);              /* 32 hex characters */
+        L_LOW_16 := SUBSTR (L_HEX_32, 17, 16);     /* we only need lower 16 */
+        L_Q3 := SUBSTR (L_LOW_16, 1, 8);  /* 3rd quarter (8 hex characters) */
+        L_Q4 := SUBSTR (L_LOW_16, 9, 8);  /* 4th quarter (8 hex characters) */
+        /* need to reverse order of each of the 4 pairs of hex characters */
+        L_Q3 :=
+               SUBSTR (L_Q3, 7, 2)
+            || SUBSTR (L_Q3, 5, 2)
+            || SUBSTR (L_Q3, 3, 2)
+            || SUBSTR (L_Q3, 1, 2);
+        L_Q4 :=
+               SUBSTR (L_Q4, 7, 2)
+            || SUBSTR (L_Q4, 5, 2)
+            || SUBSTR (L_Q4, 3, 2)
+            || SUBSTR (L_Q4, 1, 2);
+        /* assembly back lower 16 after reversing order on each quarter */
+        L_LOW_16_M := L_Q3 || L_Q4;
+
+        /* convert to number */
+        SELECT TO_NUMBER (L_LOW_16_M, 'xxxxxxxxxxxxxxxx')
+          INTO L_NUMBER
+          FROM DUAL;
+
+        /* 13 pieces base-32 (5 bits each) make 65 bits. we do have 64 bits */
+        FOR I IN 1 .. 13
+        LOOP
+            L_IDX := TRUNC (L_NUMBER / POWER (32, (13 - I))); /* index on BASE_32 */
+            L_SQL_ID := L_SQL_ID || SUBSTR (BASE_32, (L_IDX + 1), 1); /* stitch 13 characters */
+            L_NUMBER := L_NUMBER - (L_IDX * POWER (32, (13 - I))); /* for next piece */
+        END LOOP;
+
+        RETURN L_SQL_ID;
+    END COMPUTE_SQL_ID;
+
+SELECT COMPUTE_SQL_ID (SQL_TEXT) SQL_ID, SIGNATURE
+  FROM DBA_SQL_PLAN_BASELINES
+/
+
+--match with SQL_ID for plan baseline
+
+select sql_id, sql_text from v$sql
+where exact_matching_signature =(select signature from dba_sql_plan_baselines where sql_handle ='SQL_fb094e7f1ae24931');
+
+Or
+
+SELECT sql_handle, plan_name,ENABLED,ACCEPTED,FIXED,REPRODUCED,OPTIMIZER_COST,to_char(Created,'DD-MON-YY') Created
+FROM dba_sql_plan_baselines
+WHERE signature IN (
+SELECT exact_matching_signature FROM v$sql WHERE sql_id='&SQL_ID')
+
+-- display plan in the baseline
+
+select * from table(dbms_xplan.DISPLAY_SQL_PLAN_BASELINE('SQL_fb094e7f1ae24931'));
 
 select count(*) from dba_sql_plan_baselines; --must be +1 in comparison with the above execution
 
