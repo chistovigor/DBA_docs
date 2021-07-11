@@ -3600,3 +3600,27 @@ sqlplus sys@"(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=10.131.17.70)(PORT=1552))
 
 #Script PXHCDR.SQL: Parallel Execution Health-Checks and Diagnostics Reports (Doc ID 1460440.1)
 
+# example of SQL Trace/10046 trace file from 
+#SRDC - Data Collection for Parallel Execution Performance Issues (Doc ID 2076943.1)
+
+When the expected DOP is not used, the SQL statement is not running in parallel, or slaves are not joining, complete this step and then continue to next steps.  This gives us necessary information about how the slaves are interacting with the query coordinator (QC), the optimizer, and the OS.
+
+Capture a 10046 trace with px_tracing turned on for the particular SQL statement of issue.  Replace the string '<sql_id to be traced>' below with the sql_id of the statement at issue.
+
+$ sqlplus /nolog
+  connect username/password
+     alter session set statistics_level=all;
+     alter session set max_dump_file_size = unlimited;
+     alter session set tracefile_identifier = '&TRACEFILE_IDENTIFIER';
+     alter session set events '10046 trace name context forever, level 12';
+     alter session set events 'trace[PX_Control][sql:<sql_id to be traced>] disk medium';
+     alter session set events 'trace[PX_Messaging][sql:<sql_id to be traced>] disk medium';
+     alter session set events 'trace[SQL_Compiler][sql:<sql_id to be traced>] disk high';
+     alter session set events 'trace[PX_Scheduler][sql:<sql_id to be traced>] disk high';
+     alter session set events 'trace[SQL_Parallel_Compilation | SQL_Parallel_Optimization][sql:<sql_id to be traced>] disk high';
+     alter session set events 'trace[SQL_Code_Generator][sql:<sql_id to be traced>] disk high';
+     [[ Run the SQL statement ]]
+     select 'close the cursor' from dual;
+     exec dbms_session.reset_package;
+     alter session set events '10046 trace name context off';
+
