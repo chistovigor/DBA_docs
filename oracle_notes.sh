@@ -67,9 +67,9 @@ dbca -silent -createDatabase \
 -templateName General_Purpose.dbc \
 -gdbname jordbill -sid jordbill -responseFile NO_VALUE \
 -characterSet AL32UTF8 \
--sysPassword "passw0rd$" \
--systemPassword "passw0rd$" \
--DBSNMPPASSWORD "Dubai2019#" \
+-sysPassword "NIdubai1#" \
+-systemPassword "NIdubai1#" \
+-DBSNMPPASSWORD "NIdubai1#" \
 -createAsContainerDatabase false \
 -databaseType MULTIPURPOSE \
 -automaticMemoryManagement false \
@@ -79,7 +79,79 @@ dbca -silent -createDatabase \
 -INITPARAMS "sga_max_size=3G,sga_target=3G,pga_aggregate_limit=4G,pga_aggregate_target=2G,open_cursors=1200,session_cached_cursors=400,cursor_sharing=force"
 -ignorePreReqs
 
+--FS without responce file with General_Purpose.dbc template (working in 18c/19c), move OFA controlfile after creation
+
+ dbca \
+ -silent \
+ -createDatabase \
+ -gdbName upfdbuat \
+ -databaseConfigType SI \
+ -templateName /u01/app/oracle/product/19.0.0/dbhome_1/assistants/dbca/templates/General_Purpose.dbc \
+ -sysPassword "NIdubai1#" \
+ -systemPassword "NIdubai1#" \
+ -DBSNMPPASSWORD "NIdubai1#" \
+ -createAsContainerDatabase false \
+ -numberOfPDBs 0 \
+ -useLocalUndoForPDBs true \
+ -emConfiguration DBEXPRESS \
+ -emExpressPort 5500 \
+ -omsPort 0 \
+ -datafileDestination /{DB_NAME} \
+ -useOMF true \
+ -storageType FS \
+ -characterSet AL32UTF8 \
+ -nationalCharacterSet AL16UTF16 \
+ -variables DB_NAME=upfdbuat,ORACLE_HOME=/u01/app/oracle/product/19.0.0/dbhome_1 \
+ -initParams db_name=upfdbuat,undo_tablespace=UNDOTBS1,db_block_size=8192,nls_language=AMERICAN,diagnostic_dest=/{DB_NAME},remote_login_passwordfile=EXCLUSIVE,audit_file_dest=/{DB_NAME}/adump,processes=500,nls_territory=AMERICA,sga_target=3G,pga_aggregate_target=2G,open_cursors=300,audit_trail=db \
+ -sampleSchema false \
+ -databaseType MULTIPURPOSE \
+ -automaticMemoryManagement false \
+ -redoLogFileSize 1024
+ 
+ --FS without responce file with General_Purpose.dbc template with SGA+PGA=given memory_target (working in 18c/19c), move OFA controlfile after creation
+ 
+   dbca \
+ -silent \
+ -createDatabase \
+ -gdbName ctlmdbpp \
+ -databaseConfigType SI \
+ -templateName /u01/app/oracle/product/19.0.0/dbhome_1/assistants/dbca/templates/General_Purpose.dbc \
+ -sysPassword "NIdubai1#" \
+ -systemPassword "NIdubai1#" \
+ -DBSNMPPASSWORD "NIdubai1#" \
+ -createAsContainerDatabase false \
+ -numberOfPDBs 0 \
+ -useLocalUndoForPDBs true \
+ -emConfiguration DBEXPRESS \
+ -emExpressPort 5500 \
+ -omsPort 0 \
+ -datafileDestination /{DB_NAME} \
+ -useOMF true \
+ -storageType FS \
+ -characterSet AL32UTF8 \
+ -nationalCharacterSet AL16UTF16 \
+ -variables DB_NAME=ctlmdbpp,ORACLE_HOME=/u01/app/oracle/product/19.0.0/dbhome_1 \
+ -initParams db_name=ctlmdbpp,undo_tablespace=UNDOTBS1,db_block_size=8192,nls_language=AMERICAN,diagnostic_dest=/{DB_NAME},remote_login_passwordfile=EXCLUSIVE,audit_file_dest=/{DB_NAME}/adump,processes=500,nls_territory=AMERICA,memory_target=8G,open_cursors=300,audit_trail=os \
+ -sampleSchema false \
+ -databaseType MULTIPURPOSE \
+ -automaticMemoryManagement false \
+ -redoLogFileSize 1024
+ 
+-- drop this DB
+
+dbca -silent -deleteDatabase -sourceDB upfdbuat -sysDBAUserName sys -sysDBAPassword "NIdubai1#"
+
 dbca -silent -deleteDatabase -sourceDB dwhlmdsp -sysDBAUserName sys -sysDBAPassword "passw0rd$"
+
+-- autoupgrade utility (recomended way for upgrade up to 19c by oracle) examples:
+
+https://docs.oracle.com/en/database/oracle/oracle-database/19/upgrd/examples-of-autoupgrade-workflows.html#GUID-1A9651AE-854F-47F4-8BAE-166F0A35FB16
+
+--analyze only
+java -jar autoupgrade.jar -config config.txt -mode analyze
+
+--deploy upgrade
+java -jar autoupgrade.jar -config config.txt -mode deploy
 
 Lastest patches for Oracle Products:
 
@@ -1704,6 +1776,11 @@ alter session set tracefile_identifier='10046_10053';
 alter session set events '10046 trace name context forever, level 12';
 alter session set events '10053 trace name context forever, level 1';
 --run sql_id
+
+--run dummy query to close cursor
+select 1 from dual;
+exit;
+
 alter SESSION set events '10046 trace name context off';
 alter SESSION set events '10053 trace name context off';
 
@@ -1731,6 +1808,9 @@ variable B5 VARCHAR2(40);
 exec :B5:=sysdate;
 
 SELECT NEW_SCHEME FROM USAGE_ACTION WHERE ACNT_CONTRACT__ID = :B4 AND NEW_SCHEME IS NOT NULL AND POSTING_STATUS IN (:B3 , :B2 , :B1 ) ORDER BY ID DESC;
+
+--run dummy query to close cursor
+select 1 from dual;
 
 alter SESSION set events '10046 trace name context off';
 alter SESSION set events '10053 trace name context off';
@@ -2249,7 +2329,7 @@ java -jar oswbba.jar -i /u01/OSwatcher/oswbb/archive -b Jun 11 23:00:00 2020 -e 
 
 --run in bg:
 cd /grid/OSwatcher/oswbb
-nohup java -jar oswbba.jar -i /grid/OSwatcher/oswbb/output -b Feb 14 00:00:00 2021 -e Feb 16 13:00:00 2021 -s >> analysis_`date +%Y%m%d_%H%M%S`.log 2>&1 &
+nohup java -jar oswbba.jar -i /grid/OSwatcher/oswbb/output -b Apr 26 00:00:00 2021 -e Apr 27 09:55:00 2021 -s >> analysis_`date +%Y%m%d_%H%M%S`.log 2>&1 &
 
 SQL Monitoring (отчеты по sql, которые есть в мониториге)
 SQL Monitoring (reports for sql exists in monitoring)
@@ -2974,6 +3054,10 @@ set long 200000 pages 0 lines 131 feedback off
 select dbms_metadata.get_ddl('PROCEDURE','CUST_ACNT_NUMBER','OWS') from dual;
 spo off
 
+--schema DDL
+
+select dbms_metadata.get_ddl(object_type=>'USER',name=>'IRIS') from dual;
+
 #find ORACLE_HOME for INSTANCE on linux (in this example instance_name is irisdbdr)
 
 pwdx `ps -ef | grep pmon | grep irisdbdr | cut -f4 -d' '` | cut -f2 -d':'
@@ -3503,4 +3587,16 @@ alter diskgroup W4PRF01_DATA_DG mount force;
 
 select name,path,state,header_status from v$asm_disk where group_number=0;
 
+-- connect to PARTICULAR SID (instead of service_name which is default) with sqlplus:
+
+sqlplus igor_oem@"(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=10.229.100.204)(PORT=1666))(CONNECT_DATA=(SID=way4db2)))"
+sqlplus sys@"(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=10.229.100.204)(PORT=1666))(CONNECT_DATA=(SID=way4db2)))" as sysdba
+sqlplus sys@"(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=10.131.17.70)(PORT=1552))(CONNECT_DATA=(SID=upfdbuat)))" as sysdba
+
+# init parameters required for Enterprise manager express setup for oracle DB:
+
+*.local_listener='(ADDRESS=(PROTOCOL=TCP)(HOST=xx.2xx.115.125)(PORT=1585))'#EM EXPRESS
+*.dispatchers='(PROTOCOL=TCP) (SERVICE=way4dbXDB)'#EM EXPRESS
+
+#Script PXHCDR.SQL: Parallel Execution Health-Checks and Diagnostics Reports (Doc ID 1460440.1)
 
