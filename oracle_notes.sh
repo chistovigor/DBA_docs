@@ -3623,4 +3623,23 @@ $ sqlplus /nolog
      select 'close the cursor' from dual;
      exec dbms_session.reset_package;
      alter session set events '10046 trace name context off';
+     
+--Tracing Parallel Execution with _px_trace (Doc ID 444164.1)
+
+Here are some examples :
+
+In the init.ora file:
+
+_px_trace="high","execution","medium","buffer","time"
+Or, more usually, at the session level:
+
+SQL> alter session set "_px_trace"="high","execution","medium","buffer","time";
+To get the full trace:
+
+SQL>alter session set "_px_trace"="all";
+Note : Put the verbosity level followed by the areas to be traced at that level of verbosity.
+
+To switch off the trace :
+
+SQL> alter session set "_px_trace"="none";
 
