@@ -776,6 +776,109 @@ https://www.mongodb.com/docs/drivers/node/current/reference/compatibility/
 switch from primary to secondary - use method:
 https://www.mongodb.com/docs/manual/reference/method/rs.stepDown/#mongodb-method-rs.stepDown
 
+Code Summary: MongoDB Server Upgrades
+Review the following code, which demonstrates how to upgrade MongoDB versions on a replica set.
+
+Check the Version of a MongoDB Database
+The following code shows how to check the version of your database when connected to a MongoDB database:
+
+mongosh
+
+db.version();
+Confirm the Feature Compatibility Version
+The following code shows how to check the feature compatibility version of your database by issuing an adminCommand with getParameter and featureCompatibilityVersion parameters. Use dot notation to select only the featureCompatibilityVersion field.
+
+db.adminCommand( { getParameter: 1, featureCompatibilityVersion: 1 } ).featureCompatibilityVersion
+
+Determine the oplog Window
+To determine the oplog window, use the printReplicationInfo() command. It will print a field called log length start to end, which tells you the oplog window.
+
+db.printReplicationInfo()
+Confirm Secondaries’ Replication Lag
+Confirm that the secondaries are not trying to catch up from a previous event by using the rs.printSecondaryReplicationInfo() command:
+
+rs.printSecondaryReplicationInfo()
+Upgrade Secondaries
+The following code shows how to upgrade the secondaries.
+
+First, log in to the server for one of the secondaries.
+
+Stop the MongoDB service on Linux by using the following command:
+
+sudo systemctl stop mongod
+Next, import the GPG keys by using the following command:
+
+curl -fsSL https://pgp.mongodb.com/server-6.0.asc | \
+   sudo gpg -o /usr/share/keyrings/mongodb-server-6.0.gpg \
+   --dearmor
+Then, create a list file for the new 6.0 package repository by using the following command:
+
+echo "deb [ arch=amd64,arm64 signed-by=/usr/share/keyrings/mongodb-server-6.0.gpg ] https://repo.mongodb.org/apt/ubuntu focal/mongodb-org/6.0 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-6.0.list
+
+Next, reload the local package database:
+
+sudo apt-get update
+Install the latest version by running the following code. Because this is the community edition, we use the mongodb-org package.
+
+sudo apt-get --only-upgrade install mongodb-org*
+Restart the MongoDB service by using the following command:
+
+sudo systemctl restart mongod
+Finally, confirm the MongoDB database was upgraded:
+
+mongosh –quiet –eval ‘db.version()
+Then repeat these steps for each secondary
+
+Elect a New Primary
+The following code shows how to elect a new primary.
+
+First, log in to the primary server. Confirm that you are logged in to the primary by using the following command:
+
+print({CurrentNode: rs.hello().me, Primary: rs.hello().primary})
+Use the rs.stepDown() command to call for an election to change the primary:
+
+rs.stepDown()
+Confirm that a new primary was elected and then exit the MongoDB Shell by using the following command:
+
+print({CurrentNode: rs.hello().me, Primary: rs.hello().primary})
+
+exit
+Upgrade the Primary
+The following code shows how to upgrade the primary.
+
+First, stop the MongoDB service on Linux by using the following command:
+
+sudo systemctl stop mongod
+Next, import the GPG keys:
+
+curl -fsSL https://pgp.mongodb.com/server-6.0.asc | \
+   sudo gpg -o /usr/share/keyrings/mongodb-server-6.0.gpg \
+   --dearmor
+Then, create a list file for the new 6.0 package repository:
+
+echo "deb [ arch=amd64,arm64 signed-by=/usr/share/keyrings/mongodb-server-6.0.gpg ] https://repo.mongodb.org/apt/ubuntu focal/mongodb-org/6.0 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-6.0.list
+
+Reload the local package database by using the following command:
+
+sudo apt-get update
+Install the latest version by using the following code. Because this is the community edition, we use the mongodb-org package.
+
+sudo apt-get --only-upgrade install mongodb-org*
+Restart the MongoDB service:
+
+sudo systemctl restart mongod
+Finally, confirm the MongoDB database was upgraded by using the following command:
+
+mongosh –quiet –eval ‘db.version()
+Set the Feature Compatibility Version
+To set the feature compatibility version, connect to your replica set with the MongoDB Shell and issue an adminCommand. Pass in an object with a key of setFeatureCompatibilityVersion and a value that represents the desired version.
+
+Here’s the code:
+
+mongosh "mongodb://dba-admin@mongod0.replset.com:27017,mongod1.replset.com:27017,mongod2.replset.com:27017/?authSource=admin&replicaSet=replset"
+
+db.adminCommand( { setFeatureCompatibilityVersion: "6.0" } )
+
 
 
 
