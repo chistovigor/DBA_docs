@@ -1193,4 +1193,75 @@ auditLog:
   format: JSON
   path: /var/log/mongodb/auditLog.json
 
+-- Enable TLS for connection
+
+Enabling Network Encryption for a Self-Managed MongoDB Deployment
+Review the following code, which demonstrates how to deploy and test a three-member replica set that uses and accepts only connections encrypted with Transport Layer Security (TLS) transport encryption on a self-managed deployment.
+
+Update the Configuration File for Each Server to Enable TLS
+The first part of this process is to update the configuration file for each server to enable TLS.
+
+First, open the mongod config file:
+
+sudo vi /etc/mongod.conf
+
+i
+Set the net.tls.mode to requireTLS:
+
+net:
+  tls:
+    mode: requireTLS
+    certificateKeyFile: /etc/tls/mongodb.pem
+Then set the path of the file that contains both the TLS certificate and the private key in the net.tls.certitificateKeyFile setting:
+
+net:
+  tls:
+    mode: requireTLS
+    certificateKeyFile: /etc/tls/mongodb.pem
+Assign a name to the replica set by setting replication.replSetName to TLSEnabledReplSet:
+
+replication:
+  replSetName: TLSEnabledReplSet
+Finally, save changes to the configuration file:
+
+:x
+Restart the MongoDB Service on Each Server
+The next step is to restart the MongoDB service on each server. To do so, use sudo:
+
+sudo systemctl restart mongod
+Initiate the Replica Set
+To initiate the replica set, first connect to mongod by using a connection string that includes TLS options:
+
+mongosh "mongodb://mongod0.replset.com/?tls=true&tlsCAFile=/etc/tls/root-ca.pem"
+Then switch to the admin database:
+
+use admin
+Use the rs.initiate() method to create a replica set:
+
+rs.initiate(
+  {
+     _id: "TLSEnabledReplSet",
+     version: 1
+     members: [
+        { _id: 0, host : "mongod0.replset.com" },
+        { _id: 1, host : "mongod1.replset.com" },
+        { _id: 2, host : "mongod2.replset.com" }
+     ]
+  }
+)
+Test the TLS Requirement
+To test the requirement to use TLS is working, first exit mongosh:
+
+exit
+Log back in to the replica set:
+
+mongosh "mongodb://mongod0.replset.com,mongod1.replset.com,mongod2.replset.com/?replicaSet=TLSEnabledReplSet&tls=true&tlsCAFile=/etc/tls/root-ca.pem"
+
+Now exit mongosh again:
+
+exit
+Try to connect again, this time without TLS:
+
+mongosh "mongodb://mongod0.replset.com,mongod1.replset.com,mongod2.replset.com/?replicaSet=TLSEnabledReplSet" 
+
 
