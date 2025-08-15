@@ -879,6 +879,216 @@ mongosh "mongodb://dba-admin@mongod0.replset.com:27017,mongod1.replset.com:27017
 
 db.adminCommand( { setFeatureCompatibilityVersion: "6.0" } )
 
+15) replication
+
+Retrieve the Most Recent Entries in the oplog
+The following code shows how to retrieve the most recent entries in the oplog. First, insert multiple documents into the sample_supplies database to populate the oplog collection with data. To do so, use the following code:
+
+use sample_supplies
+
+db.sales.updateMany({}, {$inc: {"customer.satisfaction": 1}});
+Then switch to the local database and examine its collections by using the following commands:
+
+use local
+
+show collections
+Next, use the find() command on the oplog.rs collection. Query the namespace field, which is abbreviated with "ns", followed by the name of the desired database and collection, by using dot notation.
+
+Then, sort by the natural descending order by using the $natural operator followed by -1. Finally, limit the results to 5 by using limit() followed by 5. Here’s an example:
+
+db.oplog.rs.find({"ns" : "sample_supplies.sales"}).sort({$natural: -1}).limit(5)
+Retrieve Information About the oplog
+Use the rs.printReplicationInfo() command to retrieve information about the oplog, including its size and certain events. Here’s an example:
+
+rs.printReplicationInfo()
+Retrieve Information About the Secondaries’ oplog
+Use the rs.printSecondaryReplicationInfo() command to retrieve information about the secondaries’ oplog:
+
+rs.printSecondaryReplicationInfo()
+
+-- set read / write concerns for replica set
+
+db.adminCommand({
+    setDefaultRWConcern : 1,
+    defaultReadConcern: { level : "majority" },
+    defaultWriteConcern: { w: "majority" }
+  })
+
+Set the Read Preference
+To set the read preference, append it to the options in the connection string. In this example, we’re reading from the secondary. Additionally, we can set the time limit for how stale our data can be.
+
+mongodb://db0.example.com,db1.example.com,db2.example.com/?replicaSet=myRepl&readPreference=secondary&maxStalenessSeconds=120
+
+Deploy a Three-Member Replica Set
+This section demonstrates how to deploy a three-member replica set and is broken into the following steps:
+
+Update the mongod configuration files
+Create security files
+Initiate an election
+Create an admin user
+Update the mongod Configuration Files
+The first step in deploying a three-member replica set is to update the configuration file for each server. In the mongod config file on all three servers, update the network, security, and replication settings. The following sections show this process for each server.
+
+Update the mongod Config File for Server One
+The following code shows how to update the mongod configuration file for server one:
+
+# mongod.conf
+
+# for documentation of all options, see:
+#   http://docs.mongodb.org/manual/reference/configuration-options/
+
+# Where and how to store data.
+storage:
+  dbPath: /var/lib/mongodb
+#  engine:
+#  wiredTiger:
+
+# where to write logging data.
+systemLog:
+  destination: file
+  logAppend: true
+  path: /var/log/mongodb/mongod.log
+
+# network interfaces
+net:
+  port: 27017
+  bindIp: 127.0.0.1,<mongodb.repl.member.one.domain>
+
+
+# how the process runs
+processManagement:
+  timeZoneInfo: /usr/share/zoneinfo
+
+security:
+  keyFile: /etc/mongodb/pki/mongod-keyfile
+  authorization: enabled
+
+#operationProfiling:
+
+replication:
+  replSetName: mongodb-repl-example
+
+
+#sharding:
+
+## Enterprise-Only Options:
+
+#auditLog:
+
+#snmp:
+
+Create Security Files
+The next step in deploying the three-member replica set is to create a new directory and generate a new security key, which will be used by the replica set. Then, restart mongod. These steps are shown by the following code:
+
+# Create a new directory to hold the security key
+sudo mkdir -p /etc/mongodb/pki
+
+# Generate the security key using openssl only on server 1
+
+openssl rand -base64 756 > /tmp/keyfile
+
+# Open the correct permissions
+
+chmod 0400 /tmp/keyfile
+
+# Move the keyfile to the pki directory
+
+sudo mv /tmp/mongod-keyfile /etc/mongodb/pki/
+
+# Give the mongodb user ownership of the pki directory
+
+sudo chown -R mongodb. /etc/mongodb/pki
+
+# Restart the mongod process
+
+sudo systemctl restart mongod
+Copy the Key
+Copy the newly created key by using the spc command. Here’s an example:
+
+scp /tmp/keyfile mongod1.replset.com:/tmp
+
+scp /tmp/keyfile mongod2.replset.com:/tmp
+
+Initiate the Replica Set
+Connect on server one by using the mongosh command and switch to the admin database. Use rs.initiate() with a document that contains the replica set as the _id and the hosts’ names. Here’s an example:
+
+mongosh
+
+use admin
+
+rs.initiate(
+  {
+     _id: "mongodb-repl-example",
+     version: 1,
+     members: [
+        { _id: 0, host : "mongod0.replset.com" },
+        { _id: 1, host : "mongod1.replset.com" },
+        { _id: 2, host : "mongod2.replset.com" }
+     ]
+  }
+)
+Create an Admin User
+On server one, create an admin user that’s able to authenticate to the replica set. Here’s an example:
+
+db.createUser({
+   user: "dba-admin",
+   pwd: "dba-pass",
+   roles: [
+     {role: "root", db: "admin"}
+   ]
+ })
+Exit mongosh and then log back in to the replica set. For example:
+
+exit
+
+mongosh "mongodb://dba-admin:dba-pass@<server-one-ip:port>,<server-two-ip:port>,<server-three-ip:port>/?authSource=admin&replicaSet=mongodb-repl-example"
+
+Once connected, run rs.status() in the shell to check the members array.
+
+Initiate an Election
+To initiate an election, use the rs.stepDown() command:
+
+rs.stepDown()
+
+-- reconfig replica set
+
+Retrieve the Status of a mongod Instance
+Use the db.hello() command to retrieve information about a replica set, including:
+
+The host of each member
+The name of the replica set
+The name of the primary
+The election id
+
+Reconfigure a Running Replica Set
+To reconfigure a running replica set, use rs.conf(). Assign the rs.conf() command to a variable to retrieve the replica set configuration object:
+
+config = rs.conf()
+Set the Priority of a Replica Set
+Set the priority of a replica set by assigning a priority value for each member. For example:
+
+config.members[2].priority = 10
+Add a Member to a Replica Set
+To add a new member to a replica set, define the new member’s _id and host name in an object. Then, push this new member to the members array in the configuration object. Here’s an example:
+
+member = {"_id": 3, "host": "mongod3.replset.com:27017"}
+
+config.members.push(member)
+Alternatively, you can use the rs.add() wrapper followed by the host to add a member to the replica set. For example:
+
+rs.add("mongod3.replset.com:27017")
+Remove a Member from a Replica Set
+To remove a member from a replica set, use the JavaScript splice() method. Pass in as arguments the index of the starting member and the number of elements being removed:
+
+config.members.splice(1, 1)
+Alternatively, you can use the rs.remove() wrapper followed by the host to remove a member from the replica set:
+
+rs.remove("mongod1.replset.com:27017")
+To apply the changes, use the rs.reconfig() command, passing in the config variable as an argument. For example:
+
+rs.reconfig(config)
+Retrieve the Status of a Replica Set
+Use the db.status()
 
 
 
