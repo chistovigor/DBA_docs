@@ -1140,3 +1140,48 @@ Then query for all users in the admin database by using the db.getUsers() user m
 db.getUsers()
 
 
+Assign a Built-In Role to a Database User
+To assign a built-in role to a database user, first connect to the instance to authenticate as the user administrator:
+
+mongosh --username globalUserAdmin
+When prompted, enter the globalUserAdmin password. Then switch to the admin database:
+
+use admin
+Use the db.createUser method to create the analystUser:
+
+db.createUser(
+  {
+    user: "analystUser",
+    pwd: passwordPrompt(),        
+    roles: [
+      { role: "read", db: "sample_analytics" },
+    ]
+  }
+
+Remove a Built-In Role from a Database User
+The following code demonstrates how to remove a built-in role from a database user. In this example, we’re removing a role from financeUser.
+
+First, authenticate as the user administrator by connecting to the MongoDB instance using mongosh:
+
+mongosh --username globalUserAdmin
+When prompted, enter the password.
+
+Use the admin database, because that’s where financeUser was created.
+
+use admin
+Confirm financeUser’s current roles by using the db.getUser method to retrieve user information about financeUser:
+
+db.getUser("financeUser")
+Remove financeUser’s read role on sample_training by using the db.revokeRolesFromUser method:
+
+db.revokeRolesFromUser(
+    "financeUser",
+    [
+      { role: "read", db: "sample_training" }
+    ]
+)
+Finally, review the updated information about financeUser’s roles by running db.getUser again:
+
+db.getUser("financeUser")
+
+
