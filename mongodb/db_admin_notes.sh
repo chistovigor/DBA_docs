@@ -1184,4 +1184,13 @@ Finally, review the updated information about financeUser’s roles by running d
 
 db.getUser("financeUser")
 
+Auditing - ONLY for enterprise version (!) 
+
+setting in the /etc/mongod.conf file
+
+auditLog:
+  destination: file
+  format: JSON
+  path: /var/log/mongodb/auditLog.json
+
 
