@@ -1090,5 +1090,53 @@ rs.reconfig(config)
 Retrieve the Status of a Replica Set
 Use the db.status()
 
+16) db security
+
+nabling Authentication for a Self-Managed MongoDB Deployment
+Review the following code, which demonstrates how to enable authentication on a standalone mongod instance using SCRAM, MongoDB’s default authentication mechanism.
+
+Enable Access Control
+To enable access control, first open the mongod configuration file by running the following command:
+
+sudo vi /etc/mongod.conf
+Then enter insert mode:
+
+i
+Next, add the security.authorization setting under the security section of the configuration file:
+
+security:
+ authorization: enabled
+
+Save the file, and then restart mongod, now with access control enabled, by running the following command:
+
+sudo systemctl restart mongod
+Create the User Administrator
+To create the user administrator, first connect to the mongod with mongosh:
+
+mongosh localhost:27017
+
+use admin
+Next, use the createUser() method, with the username set to globalUserAdmin, the password set to passwordPrompt(), and the role set to userAdminAnyDatabase:
+
+db.createUser(
+{
+user: "globalUserAdmin",
+pwd: passwordPrompt(),
+roles: [
+{ role: "userAdminAnyDatabase", db: "admin" }
+]
+}
+)
+When prompted, enter a password for globalUserAdmin. Then quit the current shell session:
+
+quit()
+
+Verify the User Administrator
+To verify the user administrator, first switch to the admin database:
+
+use admin
+Then query for all users in the admin database by using the db.getUsers() user management method:
+
+db.getUsers()
 
 
