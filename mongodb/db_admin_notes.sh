@@ -773,6 +773,8 @@ mongorestore \
 
 https://www.mongodb.com/docs/drivers/node/current/reference/compatibility/
 
+switch from primary to secondary - use method:
+https://www.mongodb.com/docs/manual/reference/method/rs.stepDown/#mongodb-method-rs.stepDown
 
 
 
