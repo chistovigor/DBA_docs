@@ -1264,4 +1264,14 @@ Try to connect again, this time without TLS:
 
 mongosh "mongodb://mongod0.replset.com,mongod1.replset.com,mongod2.replset.com/?replicaSet=TLSEnabledReplSet" 
 
+17) bloated documents
+
+Code Summary: Bloated Documents
+To retrieve the number of documents in a collection using the stats() method in mongosh, use the following:
+
+db.collection.stats().count
+To retrieve the average size of documents in a collection using the stats() method in mongosh, use the following:
+
+db.collection.stats().avgObjSize
+
 
