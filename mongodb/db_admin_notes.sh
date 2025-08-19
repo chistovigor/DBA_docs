@@ -33,6 +33,39 @@ mongodb+srv://adm-chistovi:!4QrAfZv @cluster0.srplwou.mongodb.net/
 mongosh connection:
 mongosh "mongodb+srv://cluster0.srplwou.mongodb.net/" --apiVersion 1 --username adm-chistovi
 
+-- заполнение БД тестовыми данными:
+
+//faker.js - generate massive amounts of fake data
+//usage: https://v6.fakerjs.dev/
+faker.locale = "en"; // en|es|de|fr|it|ja|ko|ru|zh_CN, more https://v6.fakerjs.dev/api/localization.html
+
+
+function isRandomBlank(blankWeight) {
+    return Math.random() * 100 <= blankWeight;
+};
+
+
+const COLLECTION = "testcoll2";
+const BATCH_COUNT = 1000;
+const STEP_LEN = 1000; //total 1000 * 1000 = 1000000
+
+for (let i = 0; i < STEP_LEN; i++) {
+    db.getCollection(COLLECTION).insertMany(
+        _.times(BATCH_COUNT, () => {
+            return {
+                "name": faker.finance.accountName(),
+                "amount": Double(faker.finance.amount()),
+                "date": faker.date.past(),
+                "business": isRandomBlank(5) ? null : faker.company.companyName(),
+                "type": isRandomBlank(2) ? null : faker.finance.transactionType(),
+                "account": faker.finance.account()
+            }
+        })
+    )
+
+    console.log(db.getName() + "." + COLLECTION, `${(i + 1) * BATCH_COUNT} docs inserted`);
+}
+
 1) вставка документа:
 
 -- один (пример javascript кода из deepSeek)
