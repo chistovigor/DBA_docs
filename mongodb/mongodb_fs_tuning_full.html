@@ -1,0 +1,88 @@
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>MongoDB: Настройка файловых систем</title>
+<style>
+  body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.6; }
+  h1, h2, h3 { color: #2c3e50; }
+  table { border-collapse: collapse; width: 100%; margin-bottom: 20px; }
+  th, td { border: 1px solid #333; padding: 8px; text-align: left; }
+  th { background-color: #eee; }
+  pre { background: #f4f4f4; padding: 10px; border: 1px solid #ddd; overflow-x: auto; }
+</style>
+</head>
+<body>
+<h1>MongoDB: Настройка файловых систем (ext4 vs XFS)</h1>
+
+<p>MongoDB может работать как с ext4, так и с XFS. 
+Начиная с версии 3.2 официальная рекомендация — использовать XFS, особенно с движком WiredTiger.
+Ниже приведены рекомендуемые параметры монтирования и их влияние на производительность и надежность.</p>
+
+<h2>EXT4 – рекомендуемые опции</h2>
+<table>
+<tr><th>Опция</th><th>Значение</th><th>Описание</th></tr>
+<tr><td>noatime,nodiratime</td><td>Отключить обновление времени доступа</td><td>Снижает нагрузку на диск при чтении</td></tr>
+<tr><td>data=ordered</td><td>По умолчанию</td><td>Метаданные пишутся после данных, баланс скорость/надежность</td></tr>
+<tr><td>barrier=1</td><td>Включено</td><td>Защита от потери данных при сбое питания</td></tr>
+<tr><td>discard</td><td>По выбору (SSD/NVMe)</td><td>Передает TRIM-команды (поддержка SSD)</td></tr>
+<tr><td>fsck (поле 6)</td><td>0</td><td>Не проверять автоматически при загрузке</td></tr>
+</table>
+
+<h2>XFS – рекомендуемые опции</h2>
+<table>
+<tr><th>Опция</th><th>Значение</th><th>Описание</th></tr>
+<tr><td>noatime,nodiratime</td><td>Отключить</td><td>Исключает лишние записи при чтении</td></tr>
+<tr><td>logbufs=8</td><td>Максимум (по умолчанию 8)</td><td>Увеличивает количество буферов журнала</td></tr>
+<tr><td>logbsize=256k</td><td>Максимум</td><td>Увеличивает размер буфера журнала</td></tr>
+<tr><td>discard</td><td>По выбору (SSD/NVMe)</td><td>Передает TRIM-команды (поддержка SSD)</td></tr>
+<tr><td>inode64</td><td>Включено</td><td>Поддержка больших ФС (>1 ТБ)</td></tr>
+<tr><td>fsck (поле 6)</td><td>0</td><td>Автопроверка отключена, использовать xfs_repair вручную</td></tr>
+</table>
+
+<h2>Сравнение EXT4 и XFS</h2>
+<table>
+<tr><th>Критерий</th><th>ext4</th><th>XFS</th></tr>
+<tr><td>Рекомендация MongoDB</td><td>Допустимо</td><td>✅ Предпочтительно</td></tr>
+<tr><td>Производительность записи</td><td>Средняя</td><td>Высокая</td></tr>
+<tr><td>fsync() при нагрузке</td><td>Медленнее</td><td>Быстрее</td></tr>
+<tr><td>Поддержка больших файлов (&gt;16TB)</td><td>Ограничена</td><td>✅ Оптимизировано</td></tr>
+<tr><td>Автопроверка (fsck)</td><td>Да</td><td>Нет (xfs_repair вручную)</td></tr>
+</table>
+
+<h2>Примеры создания ФС и монтирования</h2>
+
+<h3>1. Подготовка диска</h3>
+<pre><code># EXT4
+sudo mkfs.ext4 -F /dev/sdb
+sudo mkdir -p /data/mongodb
+
+# XFS
+sudo apt install -y xfsprogs
+sudo mkfs.xfs -f /dev/sdb
+sudo mkdir -p /data/mongodb
+</code></pre>
+
+<h3>2. /etc/fstab (EXT4)</h3>
+<pre><code>/dev/sdb   /data/mongodb   ext4   noatime,nodiratime,data=ordered,barrier=1   0 0
+</code></pre>
+
+<h3>3. /etc/fstab (XFS)</h3>
+<pre><code>/dev/sdb   /data/mongodb   xfs   noatime,nodiratime,logbufs=8,logbsize=256k,inode64   0 0
+</code></pre>
+
+<h3>4. Проверка</h3>
+<pre><code>sudo mount -a
+df -h | grep /data/mongodb
+</code></pre>
+
+<h2>Источники</h2>
+<ul>
+<li>MongoDB Production Notes – File System</li>
+<li>man fstab</li>
+<li>man xfs</li>
+<li>RedHat XFS Performance Tuning Guide</li>
+</ul>
+</body>
+</html>
