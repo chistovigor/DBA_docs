@@ -1,0 +1,72 @@
+---
+- name: Ensure installation directories exist
+  file:
+    path: "{{ item }}"
+    state: directory
+    mode: '0755'
+  loop:
+    - /usr/local/bin
+
+- name: Download MongoDB Exporter
+  get_url:
+    url: "https://github.com/percona/mongodb_exporter/releases/download/v{{ mongodb_exporter_version }}/mongodb_exporter-{{ mongodb_exporter_version }}.linux-amd64.tar.gz"
+    dest: /tmp/mongodb_exporter.tar.gz
+    mode: '0644'
+
+- name: Extract MongoDB Exporter
+  unarchive:
+    src: /tmp/mongodb_exporter.tar.gz
+    dest: /tmp
+    remote_src: yes
+    creates: "/tmp/mongodb_exporter-{{ mongodb_exporter_version }}.linux-amd64/mongodb_exporter"
+
+- name: Install MongoDB Exporter binary
+  copy:
+    src: "/tmp/mongodb_exporter-{{ mongodb_exporter_version }}.linux-amd64/mongodb_exporter"
+    dest: /usr/local/bin/mongodb_exporter
+    owner: root
+    group: root
+    mode: '0755'
+  notify: restart mongodb_exporter
+
+- name: Create environment configuration file
+  template:
+    src: mongodb_exporter.env.j2
+    dest: /etc/default/mongodb_exporter
+    owner: root
+    group: root
+    mode: '0600'
+  notify: restart mongodb_exporter
+
+- name: Create systemd service
+  template:
+    src: mongodb_exporter.service.j2
+    dest: /etc/systemd/system/mongodb_exporter.service
+    owner: root
+    group: root
+    mode: '0644'
+  notify:
+    - reload systemd
+    - restart mongodb_exporter
+
+- name: Enable and start MongoDB Exporter service
+  systemd:
+    name: mongodb_exporter
+    enabled: yes
+    state: started
+    daemon_reload: yes
+
+- name: Clean up temporary files
+  file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - /tmp/mongodb_exporter.tar.gz
+    - "/tmp/mongodb_exporter-{{ mongodb_exporter_version }}.linux-amd64"
+
+- name: Ensure firewall port is open
+  ufw:
+    port: "{{ mongodb_exporter_port }}"
+    state: enabled
+    proto: tcp
+  when: ansible_os_family == "Debian"
