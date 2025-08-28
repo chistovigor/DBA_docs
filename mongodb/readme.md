@@ -31,6 +31,7 @@ ansible-playbook -i inventory install_mongodb_exporter.yml --ask-vault-pass
 Ansible имеет доступ к целевым серверам
 
 
+
 Bash script
 
 
