@@ -90,6 +90,45 @@ if command -v ufw >/dev/null 2>&1 && ufw status | grep -q "Status: active"; then
     ufw allow ${EXPORTER_PORT}/tcp comment "MongoDB Exporter"
 fi
 
+# Find nftables config files
+CONFIG_FILES=(
+    "/etc/nftables.conf"
+    "/etc/nftables/ipv4-filter.nft" 
+    "/etc/nftables/ipv6-filter.nft"
+    "/etc/nftables.nft"
+)
+
+for config_file in "${CONFIG_FILES[@]}"; do
+    if [ -f "$config_file" ]; then
+        echo "Found config file: $config_file"
+        
+        # Check if port already exists
+        if grep -q "elements = {.*${EXPORTER_PORT}.*}" "$config_file"; then
+            echo "Port ${EXPORTER_PORT} already exists in $config_file"
+        else
+            # Add port to firewall_open_tcp_ports set
+            sed -i '/set firewall_open_tcp_ports {/,/}/ {
+                /elements = {/ {
+                    s/elements = { \(.*\) }/elements = { \1, '"${EXPORTER_PORT}"' }/
+                }
+            }' "$config_file"
+            echo "Port ${EXPORTER_PORT} added to $config_file"
+        fi
+    fi
+done
+
+# Restart nftables
+systemctl restart nftables
+
+# Verify
+if nft list ruleset | grep -q "${EXPORTER_PORT}"; then
+    echo "SUCCESS: Port ${EXPORTER_PORT} is now open in nftables"
+else
+    echo "WARNING: Port ${EXPORTER_PORT} not found in nftables ruleset"
+    echo "Current rules:"
+    nft list ruleset | grep -A5 -B5 "tcp"
+fi
+
 # Cleanup
 rm -rf "/tmp/mongodb_exporter-${EXPORTER_VERSION}.linux-amd64.tar.gz" "/tmp/mongodb_exporter-${EXPORTER_VERSION}.linux-amd64"
 
