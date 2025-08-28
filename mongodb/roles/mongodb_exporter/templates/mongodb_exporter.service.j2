@@ -12,7 +12,7 @@ ExecStart=/usr/local/bin/mongodb_exporter \
   {% for flag in mongodb_exporter_flags %}
   {{ flag }} \
   {% endfor %}
-  --web.listen-address={{ mongodb_exporter_web_address }}
+  --web.listen-address=0.0.0.0:{{ mongodb_exporter_port }}
 Restart=always
 RestartSec=5
 StartLimitInterval=0
