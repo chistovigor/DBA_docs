@@ -1,7 +1,0 @@
----
-- hosts: all
-  become: yes
-  vars:
-    mongodb_exporter_password: "{{ vault_mongodb_password }}"
-  roles:
-    - mongodb_exporter
