@@ -1,3 +1,5 @@
+Ansible
+
 
 install_mongodb_exporter.yml
 
@@ -27,3 +29,31 @@ ansible-playbook -i inventory install_mongodb_exporter.yml --ask-vault-pass
 Пользователь MongoDB (zabbix) с правами мониторинга уже создан
 Хосты добавлены в inventory файл Ansible
 Ansible имеет доступ к целевым серверам
+
+
+Bash script
+
+
+Инструкция по использованию:
+Сохраните скрипт как install_mongodb_exporter.sh
+
+Сделайте исполняемым: chmod +x install_mongodb_exporter.sh
+
+Запустите с правами root: sudo ./install_mongodb_exporter.sh
+
+Особенности скрипта:
+Запрашивает пароль пользователя zabbix при запуске
+
+Автоматически скачивает и устанавливает экспортер
+Настраивает systemd сервис с автоперезапуском
+Проверяет успешность запуска службы
+Открывает порт в firewall (если используется ufw)
+Очищает временные файлы после установки
+
+Требования перед запуском:
+
+Убедитесь, что пользователь zabbix создан в MongoDB с нужными правами
+Убедитесь, что MongoDB запущен и доступен на localhost:27017
+Установите зависимости: sudo apt-get install wget (для Debian/Ubuntu)
+
+После установки экспортер будет доступен по адресу http://сервер:9216/metrics
