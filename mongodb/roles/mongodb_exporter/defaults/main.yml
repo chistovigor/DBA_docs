@@ -1,0 +1,21 @@
+---
+# Версия MongoDB Exporter
+mongodb_exporter_version: "0.40.0"
+
+# Порт для прослушивания
+mongodb_exporter_port: 9216
+
+# Пользователь MongoDB для мониторинга
+mongodb_exporter_user: "zabbix"
+
+# Пароль пользователя (должен быть переопределен)
+mongodb_exporter_password: ""
+
+# URI подключения к MongoDB
+mongodb_uri: "mongodb://{{ mongodb_exporter_user }}:{{ mongodb_exporter_password }}@localhost:27017/?authSource=admin&tls=false"
+
+# Дополнительные флаги экспортера
+mongodb_exporter_flags:
+  - "--collector.diagnosticdata"
+  - "--collector.replicasetstatus"
+  - "--collector.topmetrics"
