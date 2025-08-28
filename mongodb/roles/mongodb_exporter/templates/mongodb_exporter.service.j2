@@ -1,0 +1,21 @@
+[Unit]
+Description=MongoDB Exporter
+After=network.target
+Wants=mongod.service
+
+[Service]
+User=mongodb
+Group=mongodb
+EnvironmentFile=/etc/default/mongodb_exporter
+ExecStart=/usr/local/bin/mongodb_exporter \
+  --mongodb.uri=${MONGODB_URI} \
+  {% for flag in mongodb_exporter_flags %}
+  {{ flag }} \
+  {% endfor %}
+  --web.listen-address=:{{ mongodb_exporter_port }}
+Restart=always
+RestartSec=5
+StartLimitInterval=0
+
+[Install]
+WantedBy=multi-user.target
