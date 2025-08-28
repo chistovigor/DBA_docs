@@ -59,7 +59,7 @@ ExecStart=/usr/local/bin/mongodb_exporter \
   --collector.diagnosticdata \
   --collector.replicasetstatus \
   --collector.topmetrics \
-  --web.listen-address=:${EXPORTER_PORT}
+  --web.listen-address=0.0.0.0:${EXPORTER_PORT}
 Restart=always
 RestartSec=5
 StartLimitInterval=0
