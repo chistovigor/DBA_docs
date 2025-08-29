@@ -84,7 +84,9 @@
   systemd:
     name: nftables
     state: restarted
-  when: nftables_dir.stat.exists
+  when:
+    - nftables_dir.stat.exists
+    - port_exists.rc != 0
 
 - name: Enable and start MongoDB Exporter service
   systemd:
