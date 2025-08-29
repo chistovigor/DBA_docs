@@ -1,0 +1,182 @@
+---
+- name: Secure MongoDB WiredTiger Configuration with Authentication
+  hosts: all
+  become: yes
+  vars_files:
+    - vars/secrets.yml
+  vars:
+    mongo_auth_db: "admin"
+    mongo_db_path: "/opt/mongodb"
+    wt_cache_percent: 60
+    mongod_conf_path: "/etc/mongod.conf"
+    mongod_service: "mongod"
+    mongosh_path: "/usr/bin/mongosh"
+
+  tasks:
+    - name: Verify mongosh is installed
+      ansible.builtin.stat:
+        path: "{{ mongosh_path }}"
+      register: mongosh_installed
+
+    - name: Install mongosh if missing (Debian)
+      ansible.builtin.apt:
+        name: mongodb-mongosh
+        state: present
+      when: 
+        - not mongosh_installed.stat.exists
+        - ansible_os_family == 'Debian'
+
+    - name: Install mongosh if missing (RHEL)
+      ansible.builtin.yum:
+        name: mongodb-mongosh
+        state: present
+      when: 
+        - not mongosh_installed.stat.exists
+        - ansible_os_family == 'RedHat'
+
+    - name: Verify MongoDB authentication
+      ansible.builtin.command: >
+        {{ mongosh_path }} --username "{{ vault_mongo_admin_user }}"
+        --password "{{ vault_mongo_admin_password }}"
+        --authenticationDatabase "{{ mongo_auth_db }}"
+        --eval "db.adminCommand({ping:1})"
+      register: mongo_auth_check
+      ignore_errors: yes
+      changed_when: false
+      no_log: true
+
+    - name: Fail if authentication failed
+      ansible.builtin.fail:
+        msg: "MongoDB authentication failed. Check credentials and connection."
+      when: mongo_auth_check.rc != 0
+
+    - name: Get current MongoDB config
+      ansible.builtin.shell: >
+        {{ mongosh_path }} --username "{{ vault_mongo_admin_user }}"
+        --password "{{ vault_mongo_admin_password }}"
+        --authenticationDatabase "{{ mongo_auth_db }}" --quiet --eval '
+          function toGB(bytes) { return (bytes/(1024*1024*1024)).toFixed(1); }
+          try {
+            var ss = db.serverStatus();
+            var cacheGB = toGB(ss.wiredTiger.cache["maximum bytes configured"]);
+            print("CURRENT_CACHE_GB=" + cacheGB);
+          } catch(e) {
+            print("ERROR: " + e);
+          } 
+        '
+      register: current_config
+      changed_when: false
+     # no_log: true
+      ignore_errors: true
+
+    - name: Validate MongoDB config output
+      block:
+        - name: Check for errors
+          ansible.builtin.fail:
+            msg: "MongoDB error: {{ current_config.stdout | regex_replace('ERROR: ', '') }}"
+          when: "'ERROR:' in current_config.stdout"
+
+        - name: Check empty output
+          ansible.builtin.fail:
+            msg: "Empty response from MongoDB configuration query"
+          when: current_config.stdout == ""
+
+    - name: Extract current configuration
+      ansible.builtin.set_fact:
+        current_cache_gb: "{{ current_config.stdout_lines | select('match', '^CURRENT_CACHE_GB=') | first | regex_replace('^CURRENT_CACHE_GB=', '') }}"
+      when:
+        - "'ERROR:' not in current_config.stdout"
+        - current_config.stdout != ""
+
+    - name: Get system memory info
+      ansible.builtin.shell: >
+        free -m | awk '/Mem:/ {print $2}'
+      register: total_mem_mb
+      changed_when: false
+
+    - name: Calculate new cache size
+      ansible.builtin.set_fact:
+        new_cache_size_gb: "{{ (total_mem_mb.stdout|int * (wt_cache_percent|int)/100/1024)|round(1) }}"
+      when: total_mem_mb.stdout|int > 0
+
+    - name: Display configuration changes
+      ansible.builtin.debug:
+        msg: "Current config: {{ current_cache_gb }}GB → Proposed changes: {{ new_cache_size_gb }}GB ({{ wt_cache_percent }}% of {{ (total_mem_mb.stdout|int/1024)|round(1) }}GB RAM)"
+
+    - name: Check MongoDB config file
+      ansible.builtin.stat:
+        path: "{{ mongod_conf_path }}"
+      register: mongod_conf
+
+    # Блок подтверждения с явной остановкой при ответе 'no'
+    - name: Get confirmation for changes
+      block:
+        - name: Prompt for confirmation
+          ansible.builtin.pause:
+            prompt: "Apply these changes on ALL hosts? (yes/no)"
+            echo: yes
+          register: apply_changes
+          run_once: true
+          delegate_to: localhost
+          ignore_errors: yes  # Разрешаем прерывание
+
+        - name: Fail if user answered 'no'
+          ansible.builtin.fail:
+            msg: "Changes canceled by user"
+          when: 
+            - apply_changes.user_input is defined
+            - apply_changes.user_input|lower != 'yes'
+          run_once: true
+
+        - name: Set confirmation flag if 'yes'
+          ansible.builtin.set_fact:
+            confirm_changes: true
+          when: 
+            - apply_changes.user_input is defined
+            - apply_changes.user_input|lower == 'yes'
+          run_once: true
+      when: not ansible_check_mode
+
+    - name: Backup current config
+      ansible.builtin.copy:
+        src: "{{ mongod_conf_path }}"
+        dest: "{{ mongod_conf_path }}.bak-{{ ansible_date_time.iso8601 }}"
+        remote_src: yes
+      when: 
+        - apply_changes.user_input|lower == 'yes'
+        - mongod_conf.stat.exists
+
+    - name: Clean existing storage config
+      ansible.builtin.replace:
+        path: "{{ mongod_conf_path }}"
+        regexp: '^(\s*)storage:.*$'
+        replace: '\1#STORAGE_PLACEHOLDER#'
+      when: mongod_conf.stat.exists
+
+    - name: Insert new storage config
+      ansible.builtin.blockinfile:
+        path: "{{ mongod_conf_path }}"
+        marker: "# {mark} ANSIBLE MANAGED STORAGE CONFIG"
+        block: |
+          storage:
+            dbPath: {{ mongo_db_path }}
+            wiredTiger:
+              engineConfig:
+                cacheSizeGB: {{ new_cache_size_gb }}
+        insertbefore: '#STORAGE_PLACEHOLDER'
+      notify: Restart MongoDB
+
+    - name: Cleanup placeholder
+      ansible.builtin.replace:
+        path: "{{ mongod_conf_path }}"
+        regexp: '#STORAGE_PLACEHOLDER#'
+        replace: ''
+      when: mongod_conf.stat.exists
+
+  handlers:
+    - name: Restart MongoDB
+      ansible.builtin.service:
+        name: "{{ mongod_service }}"
+        state: restarted
+      async: 120
+      poll: 0
