@@ -18,4 +18,12 @@ mongodb_uri: "mongodb://{{ mongodb_exporter_user }}:{{ mongodb_exporter_password
 mongodb_exporter_flags:
   - "--collector.diagnosticdata"
   - "--collector.replicasetstatus"
+  - "--collector.dbstats"
+  - "--collector.dbstatsfreestorage"
   - "--collector.topmetrics"
+  - "--collector.currentopmetrics"
+  - "--collector.indexstats"
+  - "--collector.collstats"
+  - "--collector.profile"
+  - "--discovering-mode"
+  - "--compatible-mode"
