@@ -17,7 +17,7 @@
   unarchive:
     src: /tmp/mongodb_exporter.tar.gz
     dest: /tmp
-    remote_src: yes
+    remote_src: true
     creates: "/tmp/mongodb_exporter-{{ mongodb_exporter_version }}.linux-amd64/mongodb_exporter"
 
 - name: Install MongoDB Exporter binary
@@ -27,6 +27,7 @@
     owner: root
     group: root
     mode: '0755'
+    remote_src: true
   notify: restart mongodb_exporter
 
 - name: Create environment configuration file
@@ -60,35 +61,24 @@
       find:
         paths: /etc/nftables
         patterns: "*-filter.nft"
-        use_regex: yes
       register: nftables_config_files
 
-    - name: Set config file path
-      set_fact:
-        nftables_config: "{{ (nftables_config_files.files | first).path | default('/etc/nftables/ipv4-filter.nft') }}"
+- name: Set config file path
+  set_fact:
+    nftables_config: "{{ (nftables_config_files.files | first).path | default('/etc/nftables/ipv4-filter.nft') }}"
 
-    - name: Check if port already exists in config
-      command: grep -q "elements = {.*{{ mongodb_exporter_port }}.*}" "{{ nftables_config }}"
-      register: port_exists
-      failed_when: false
-      changed_when: false
+- name: Check if port already exists in config
+  command: grep -q "elements = {.*{{ mongodb_exporter_port }}.*}" "{{ nftables_config }}"
+  register: port_exists
+  failed_when: false
+  changed_when: false
 
-    - name: Add port to firewall_open_tcp_ports set
-      replace:
-        path: "{{ nftables_config }}"
-        regexp: '(set firewall_open_tcp_ports \{[^}]*elements = { ([^}]*) )\})'
-        replace: '\1, {{ mongodb_exporter_port }} }'
-      when: not port_exists.rc == 0
-
-    - name: Alternative method - add port using lineinfile
-      lineinfile:
-        path: "{{ nftables_config }}"
-        regexp: '^(\s*elements = {)(.*)(}\s*)$'
-        line: '\1\2, {{ mongodb_exporter_port }} }'
-        backrefs: yes
-      when: not port_exists.rc == 0 and nftables_config is defined
-
-  when: nftables_dir.stat.exists
+- name: Ensure MongoDB Exporter port is present ONLY in firewall_open_tcp_ports
+  replace:
+    path: "{{ nftables_config }}"
+    regexp: '(^\s*set firewall_open_tcp_ports\s*\{[^}]*elements\s*=\s*\{)([^}]*)\}'
+    replace: '\1\2, {{ mongodb_exporter_port }}}'
+  when: port_exists.rc != 0
 
 - name: Restart nftables to apply changes
   systemd:
@@ -99,22 +89,39 @@
 - name: Enable and start MongoDB Exporter service
   systemd:
     name: mongodb_exporter
-    enabled: yes
+    enabled: true
     state: started
-    daemon_reload: yes
+    daemon_reload: true
 
 - name: Check if UFW is active
   stat:
     path: /etc/ufw/ufw.conf
   register: ufw_config
 
+# Проверяем наличие UFW
+- name: Check if UFW is installed
+  stat:
+    path: /etc/ufw/ufw.conf
+  register: ufw_config
+
+# Получаем статус UFW (не падаем, если UFW выключен)
+- name: Get UFW status
+  command: ufw status
+  register: ufw_status
+  changed_when: false
+  failed_when: false
+  when: ufw_config.stat.exists
+
+# Настраиваем правило только если UFW реально активен
 - name: Configure UFW for MongoDB Exporter
   ufw:
     rule: allow
     port: "{{ mongodb_exporter_port }}"
     proto: tcp
     comment: "MongoDB Exporter"
-  when: ufw_config.stat.exists and ansible_facts.ufw.status == "active"
+  when:
+    - ufw_config.stat.exists
+    - "'Status: active' in ufw_status.stdout"
 
 - name: Clean up temporary files
   file:
@@ -142,9 +149,10 @@
     msg: "MongoDB Exporter is listening on IPv4: {{ ipv4_check.stdout }}"
 
 - name: Verify port is in nftables rules
-  command: nft list ruleset | grep "{{ mongodb_exporter_port }}" || true
+  shell: nft list ruleset | grep -q "{{ mongodb_exporter_port }}"
   register: nftables_port_check
   changed_when: false
+  failed_when: false
 
 - name: Display nftables port verification
   debug:
