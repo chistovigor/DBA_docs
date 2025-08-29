@@ -30,6 +30,23 @@ ansible-playbook -i inventory install_mongodb_exporter.yml --ask-vault-pass
 Хосты добавлены в inventory файл Ansible
 Ansible имеет доступ к целевым серверам
 
+проверка работы экспортера:
+
+выполняем со стороны хоста, который будет забирать метрики
+
+curl http://fqdn_of_host:9216/metrics 
+ожидается вывод списка метрик
+
+локальная конфигурация / проверка работы экспортера:
+
+конфиг: 
+vim /etc/systemd/system/mongodb_exporter.service
+
+перезапуск сервиса:
+systemctl daemon-reload && systemctl restart mongodb_exporter && systemctl status mongodb_exporter
+
+проверка выводимых метрик:
+curl http://127.0.0.1:9216/metrics > /tmp/mongo_metrics_list_2.log && cat /tmp/mongo_metrics_list_2.log | wc -l
 
 
 Bash script
