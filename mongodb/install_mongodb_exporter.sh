@@ -58,7 +58,15 @@ ExecStart=/usr/local/bin/mongodb_exporter \
   --mongodb.uri=\${MONGODB_URI} \
   --collector.diagnosticdata \
   --collector.replicasetstatus \
+  --collector.dbstats \
+  --collector.dbstatsfreestorage \
   --collector.topmetrics \
+  --collector.currentopmetrics \
+  --collector.indexstats \  
+  --collector.collstats \
+  --collector.profile \
+  --discovering-mode \
+  --compatible-mode \
   --web.listen-address=0.0.0.0:${EXPORTER_PORT}
 Restart=always
 RestartSec=5
