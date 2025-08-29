@@ -1,7 +1,6 @@
-Ansible
-
-
 install_mongodb_exporter.yml
+
+Ansible
 
 Использование
 Создайте файл с защищенными переменными (паролем):
@@ -51,7 +50,6 @@ curl http://127.0.0.1:9216/metrics > /tmp/mongo_metrics_list_2.log && cat /tmp/m
 
 Bash script
 
-
 Инструкция по использованию:
 Сохраните скрипт как install_mongodb_exporter.sh
 
@@ -75,3 +73,23 @@ Bash script
 Установите зависимости: sudo apt-get install wget (для Debian/Ubuntu)
 
 После установки экспортер будет доступен по адресу http://сервер:9216/metrics
+
+
+update_ram_mongo.yml
+
+# создать файл паролей перед этим (в нем - параметры, которые указаны в основном playbook):
+
+ansible-vault edit vars/secrets.yml
+
+vault_mongo_admin_user: ***
+vault_mongo_admin_password: ***
+
+запуск:
+
+# выполнение в использованием шифрованного файла поролей для ansible-vault
+
+ansible-playbook ~/Desktop/work_files/update_ram_mongo.yml -i ~/git_repos/infrastructure/mongodb --limit x_test_chistov -D --ask-vault-pass
+
+# переопределить значение для % выделенной памяти (60% по умолчанию)
+
+ansible-playbook ~/Desktop/work_files/update_ram_mongo.yml -i ~/git_repos/infrastructure/mongodb --limit x_test_chistov -D --ask-vault-pass --extra-vars "wt_cache_percent 70"
