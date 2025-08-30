@@ -14,7 +14,7 @@ vault_mongodb_password: "your_secure_password_here"
 Запустите playbook:
 
 bash
-ansible-playbook -i inventory install_mongodb_exporter.yml --ask-vault-pass
+ansible-playbook -i ~/git_repos/infrastructure/mongodb install_mongodb_exporter.yml --limit some_host_name / group -D --ask-vault-pass 
 Особенности роли
 Безопасность: Пароль передается через ansible-vault
 
@@ -38,14 +38,17 @@ curl http://fqdn_of_host:9216/metrics
 
 локальная конфигурация / проверка работы экспортера:
 
-конфиг: 
+конфиги: 
 vim /etc/systemd/system/mongodb_exporter.service
+vim /etc/systemd/system/node_exporter.service
 
 перезапуск сервиса:
 systemctl daemon-reload && systemctl restart mongodb_exporter && systemctl status mongodb_exporter
+systemctl daemon-reload && systemctl restart node_exporter && systemctl status node_exporter
 
 проверка выводимых метрик:
 curl http://127.0.0.1:9216/metrics > /tmp/mongo_metrics_list_2.log && cat /tmp/mongo_metrics_list_2.log | wc -l
+curl http://127.0.0.1:9100/metrics > /tmp/exporter_metrics_list_2.log && cat /tmp/exporter_metrics_list_2.log | wc -l
 
 
 Bash script

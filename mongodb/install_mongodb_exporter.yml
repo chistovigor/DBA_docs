@@ -6,4 +6,4 @@
   vars:
     mongodb_exporter_password: "{{ vault_mongodb_password }}"
   roles:
-    - mongodb_exporter
+    - install_mongodb_exporter

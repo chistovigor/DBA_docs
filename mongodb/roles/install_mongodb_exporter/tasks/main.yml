@@ -7,6 +7,10 @@
   loop:
     - /usr/local/bin
 
+#####################
+# MongoDB Exporter
+#####################
+
 - name: Download MongoDB Exporter
   get_url:
     url: "https://github.com/percona/mongodb_exporter/releases/download/v{{ mongodb_exporter_version }}/mongodb_exporter-{{ mongodb_exporter_version }}.linux-amd64.tar.gz"
@@ -50,6 +54,53 @@
     - reload systemd
     - restart mongodb_exporter
 
+#####################
+# Node Exporter
+#####################
+
+- name: Download Node Exporter
+  get_url:
+    url: "https://github.com/prometheus/node_exporter/releases/download/v{{ node_exporter_version }}/node_exporter-{{ node_exporter_version }}.linux-amd64.tar.gz"
+    dest: /tmp/node_exporter.tar.gz
+    mode: '0644'
+
+- name: Extract Node Exporter
+  unarchive:
+    src: /tmp/node_exporter.tar.gz
+    dest: /tmp
+    remote_src: true
+    creates: "/tmp/node_exporter-{{ node_exporter_version }}.linux-amd64/node_exporter"
+
+- name: Install Node Exporter binary
+  copy:
+    src: "/tmp/node_exporter-{{ node_exporter_version }}.linux-amd64/node_exporter"
+    dest: /usr/local/bin/node_exporter
+    owner: root
+    group: root
+    mode: '0755'
+    remote_src: true
+  notify: restart node_exporter
+
+- name: Create Node Exporter environment configuration file
+  template:
+    src: node_exporter.env.j2
+    dest: /etc/default/node_exporter
+    owner: root
+    group: root
+    mode: '0600'
+  notify: restart node_exporter
+
+- name: Create Node Exporter systemd service
+  template:
+    src: node_exporter.service.j2
+    dest: /etc/systemd/system/node_exporter.service
+    owner: root
+    group: root
+    mode: '0644'
+  notify:
+    - reload systemd
+    - restart node_exporter
+
 - name: Check if nftables config directory exists
   stat:
     path: /etc/nftables
@@ -67,6 +118,7 @@
   set_fact:
     nftables_config: "{{ (nftables_config_files.files | first).path | default('/etc/nftables/ipv4-filter.nft') }}"
 
+# Проверяем и добавляем порт MongoDB Exporter
 - name: Check if port already exists in config
   command: grep -q "elements = {.*{{ mongodb_exporter_port }}.*}" "{{ nftables_config }}"
   register: port_exists
@@ -79,6 +131,20 @@
     regexp: '(^\s*set firewall_open_tcp_ports\s*\{[^}]*elements\s*=\s*\{)([^}]*)\}'
     replace: '\1\2, {{ mongodb_exporter_port }}}'
   when: port_exists.rc != 0
+
+# Проверяем и добавляем порт Node Exporter
+- name: Check if Node Exporter port already exists
+  command: grep -q "elements = {.*{{ node_exporter_port }}.*}" "{{ nftables_config }}"
+  register: node_exporter_port_exists
+  failed_when: false
+  changed_when: false
+
+- name: Ensure Node Exporter port is present ONLY in firewall_open_tcp_ports
+  replace:
+    path: "{{ nftables_config }}"
+    regexp: '(^\s*set firewall_open_tcp_ports\s*\{[^}]*elements\s*=\s*\{)([^}]*)\}'
+    replace: '\1\2, {{ node_exporter_port }}}'
+  when: node_exporter_port_exists.rc != 0
 
 - name: Restart nftables to apply changes
   systemd:
@@ -135,35 +201,43 @@
 
 - name: Verify IPv4 listening
   shell: |
-    # Check if port is listening on IPv4
-    if netstat -tln | grep -E ':{{ mongodb_exporter_port }}\s' | grep -q '0.0.0.0'; then
+    PORT={{ item }}
+    if netstat -tln | grep -E ":${PORT}\s" | grep -q '0.0.0.0'; then
       echo "IPv4_OK"
-    elif ss -tln | grep -E ':{{ mongodb_exporter_port }}\s' | grep -q '0.0.0.0'; then
-      echo "IPv4_OK"  
+    elif ss -tln | grep -E ":${PORT}\s" | grep -q '0.0.0.0'; then
+      echo "IPv4_OK"
     else
       echo "IPv4_FAIL"
     fi
   register: ipv4_check
   changed_when: false
+  loop:
+    - "{{ mongodb_exporter_port }}"
+    - "{{ node_exporter_port }}"
 
 - name: Display IPv4 listening status
   debug:
-    msg: "MongoDB Exporter is listening on IPv4: {{ ipv4_check.stdout }}"
+    msg: "Exporter on port {{ item.item }} is listening on IPv4: {{ item.stdout }}"
+  loop: "{{ ipv4_check.results }}"
 
-- name: Verify port is in nftables rules
-  shell: nft list ruleset | grep -q "{{ mongodb_exporter_port }}"
+- name: Verify ports in nftables rules
+  shell: nft list ruleset | grep -q "{{ item }}"
   register: nftables_port_check
   changed_when: false
   failed_when: false
+  loop:
+    - "{{ mongodb_exporter_port }}"
+    - "{{ node_exporter_port }}"
 
 - name: Display nftables port verification
   debug:
-    msg: "Port {{ mongodb_exporter_port }} found in nftables: {{ nftables_port_check.stdout }}"
+    msg: "Port {{ item.item }} found in nftables: {{ 'yes' if item.rc == 0 else 'no' }}"
+  loop: "{{ nftables_port_check.results }}"
 
 - name: Check external connectivity
   wait_for:
     host: "{{ ansible_default_ipv4.address }}"
-    port: "{{ mongodb_exporter_port }}"
+    port: "{{ item }}"
     timeout: 30
     delay: 5
   delegate_to: localhost
@@ -173,13 +247,17 @@
   retries: 3
   delay: 10
   ignore_errors: yes
+  loop:
+    - "{{ mongodb_exporter_port }}"
+    - "{{ node_exporter_port }}"
 
-- name: Display port check result
+- name: Display port check results
   debug:
-    msg: "Port {{ mongodb_exporter_port }} is accessible externally"
-  when: port_check is success
+    msg: >-
+      Port {{ item.item }} is {{
+        'accessible externally' if item is success
+        else 'NOT accessible externally. Check cloud provider firewall.'
+      }}
+  loop: "{{ port_check.results }}"
 
-- name: Display port check failure
-  debug:
-    msg: "WARNING: Port {{ mongodb_exporter_port }} is not accessible externally. Check cloud provider firewall."
-  when: port_check is failed
+
