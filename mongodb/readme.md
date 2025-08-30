@@ -14,7 +14,7 @@ vault_mongodb_password: "your_secure_password_here"
 Запустите playbook:
 
 bash
-ansible-playbook -i ~/git_repos/infrastructure/mongodb install_mongodb_exporter.yml --limit some_host_name / group -D --ask-vault-pass 
+ansible-playbook -i ~/git_repos/infrastructure/mongodb install_mongodb_exporter.yml --limit server_or_group_name -D --ask-vault-pass 
 Особенности роли
 Безопасность: Пароль передается через ansible-vault
 
@@ -91,8 +91,8 @@ vault_mongo_admin_password: ***
 
 # выполнение в использованием шифрованного файла поролей для ansible-vault
 
-ansible-playbook ~/Desktop/work_files/update_ram_mongo.yml -i ~/git_repos/infrastructure/mongodb --limit x_test_chistov -D --ask-vault-pass
+ansible-playbook ~/Desktop/work_files/update_ram_mongo.yml -i ~/git_repos/infrastructure/mongodb --limit server_or_group_name -D --ask-vault-pass
 
 # переопределить значение для % выделенной памяти (60% по умолчанию)
 
-ansible-playbook ~/Desktop/work_files/update_ram_mongo.yml -i ~/git_repos/infrastructure/mongodb --limit x_test_chistov -D --ask-vault-pass --extra-vars "wt_cache_percent 70"
+ansible-playbook ~/Desktop/work_files/update_ram_mongo.yml -i ~/git_repos/infrastructure/mongodb --limit server_or_group_name -D --ask-vault-pass --extra-vars "wt_cache_percent 70"
