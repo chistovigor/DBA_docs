@@ -1307,4 +1307,96 @@ To retrieve the average size of documents in a collection using the stats() meth
 
 db.collection.stats().avgObjSize
 
+17) query performance tuning
+
+in the db - use do profiler:
+
+use mydb
+db.setProfilingLevel(1, { slowms: 50 }) // default is 100ms
+db.getProfilingStatus()
+
+или через конфиг:
+
+operationProfiling:
+  mode: slowOp
+  slowOpThresholdMs: 50
+
+check work results:
+
+db.system.profile.find().sort({ ts: -1 }).limit(5).pretty() // last 5 operations
+
+find queries running more than 200 ms:
+
+db.system.profile.find({ millis: { $gt: 200 } })
+                 .sort({ millis: -1 })
+                 .limit(10)
+                 .pretty()
+
+top 5 queries by average time:
+
+db.system.profile.aggregate([
+  { $match: { millis: { $gt: 50 } } },
+  { $group: {
+      _id: "$command",
+      avgMillis: { $avg: "$millis" },
+      maxMillis: { $max: "$millis" },
+      count: { $sum: 1 }
+  }},
+  { $sort: { avgMillis: -1 } },
+  { $limit: 5 }
+])
+
+🔹 Пример записи из лога MongoDB
+{"t":{"$date":"2025-08-30T12:00:05.123+03:00"},"s":"I","c":"COMMAND","id":51803,"ctx":"conn123",
+ "msg":"Slow query","attr":{
+   "type":"command",
+   "ns":"mydb.users",
+   "command":{"find":"users","filter":{"age":{"$gt":30}}},
+   "planSummary":"COLLSCAN",
+   "keysExamined":0,
+   "docsExamined":100000,
+   "numYields":10,
+   "queryHash":"ABCD1234",
+   "reslen":200,
+   "locks":{"Global":{"acquireCount":{"r":11}}},
+   "durationMillis":450
+ }}
+
+
+Разбор:
+
+durationMillis: 450 → 450 мс — медленный запрос.
+planSummary: COLLSCAN → полный скан коллекции (нет индекса).
+docsExamined: 100000 → 100 тыс. документов проверено.
+queryHash → хэш шаблона запроса (можно группировать).
+
+1. 🔍 Ручной разбор через утилиты
+grep "Slow query" /var/log/mongodb/mongod.log | jq .
+
+или
+
+cat /var/log/mongodb/mongod.log | jq '.attr | {ns, durationMillis, planSummary, docsExamined}'
+
+2. 📊 Импорт логов в MongoDB для анализа запросами
+
+Собери логи:
+
+cat /var/log/mongodb/mongod.log | jq -c . > logs.json
+
+
+Загрузите в коллекцию:
+
+mongoimport --db=admin --collection=logs --file=logs.json
+
+Примеры запросов:
+
+// Топ-10 самых долгих запросов
+db.logs.find({ "attr.durationMillis": { $gt: 100 } })
+       .sort({ "attr.durationMillis": -1 })
+       .limit(10);
+
+// Запросы без индексов
+db.logs.find({ "attr.planSummary": "COLLSCAN" })
+       .count();
+
 
