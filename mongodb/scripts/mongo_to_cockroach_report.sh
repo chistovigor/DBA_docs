@@ -1,19 +1,19 @@
 #!/bin/bash
 set -e
 
-# === Конфигурация ===
-MONGO_SOURCE_URI="mongodb://user:pass@mongo-source:27017/source_db"
-SOURCE_DB="source_db"
-TARGET_DB="target_db"
-DUMP_DIR="./mongo_dump"
-REPORT_FILE="./migration_report.html"
+# === Загружаем конфиг ===
+if [ ! -f environment ]; then
+  echo "Ошибка: файл environment не найден!"
+  exit 1
+fi
+source environment
 
-COCKROACH_IMAGE="cockroachdb/cockroach:v23.1.11"
-FERRET_IMAGE="ghcr.io/ferretdb/ferretdb:latest"
-CRDB_PORT=26257
-FERRET_PORT=27017
-CRDB_USER="root"
+if [ -z "$MONGO_SOURCE_URI" ] || [ -z "$SOURCE_DB" ] || [ -z "$TARGET_DB" ]; then
+  echo "Ошибка: в environment должны быть заданы MONGO_SOURCE_URI, SOURCE_DB и TARGET_DB"
+  exit 1
+fi
 
+# === Проверка и установка зависимостей ===
 echo ">>> Проверяем наличие необходимых утилит..."
 
 install_if_missing() {
@@ -33,7 +33,6 @@ if ! command -v docker &> /dev/null; then
   echo ">>> Устанавливаем Docker..."
   curl -fsSL https://get.docker.com | sh
   sudo usermod -aG docker $USER
-  echo ">>> Выйдите и войдите снова в систему, чтобы docker заработал без sudo!"
 fi
 
 # Docker Compose
@@ -43,15 +42,15 @@ if ! command -v docker-compose &> /dev/null; then
   sudo apt-get install -y docker-compose-plugin
 fi
 
-# PostgreSQL client (для Cockroach тоже нужен psql)
+# PostgreSQL client (нужен для CockroachDB тоже)
 install_if_missing psql "postgresql-client"
 
 # MongoDB tools
 install_mongo_tools() {
   if ! command -v mongodump &> /dev/null; then
-    echo ">>> Подключаем репозиторий MongoDB..."
+    echo ">>> Подключаем репозиторий MongoDB (jammy, подходит для noble)..."
     wget -qO - https://www.mongodb.org/static/pgp/server-6.0.asc | sudo gpg --dearmor -o /usr/share/keyrings/mongodb.gpg
-    echo "deb [ signed-by=/usr/share/keyrings/mongodb.gpg ] https://repo.mongodb.org/apt/ubuntu $(lsb_release -cs)/mongodb-org/6.0 multiverse" \
+    echo "deb [ signed-by=/usr/share/keyrings/mongodb.gpg ] https://repo.mongodb.org/apt/ubuntu jammy/mongodb-org/6.0 multiverse" \
       | sudo tee /etc/apt/sources.list.d/mongodb-org-6.0.list
     sudo apt-get update -y
     echo ">>> Устанавливаем MongoDB Database Tools..."
@@ -61,6 +60,16 @@ install_mongo_tools() {
   fi
 }
 install_mongo_tools
+
+# === Конфигурация ===
+DUMP_DIR="./mongo_dump"
+REPORT_FILE="./migration_report.html"
+
+COCKROACH_IMAGE="cockroachdb/cockroach:v23.1.11"
+FERRET_IMAGE="ghcr.io/ferretdb/ferretdb:latest"
+CRDB_PORT=26257
+FERRET_PORT=27017
+CRDB_USER="root"
 
 # === 1. Запуск контейнеров CockroachDB и FerretDB ===
 cat > docker-compose.yml <<EOF
@@ -93,11 +102,11 @@ echo ">>> Экспортируем данные из исходной MongoDB...
 rm -rf "$DUMP_DIR"
 mongodump --uri="$MONGO_SOURCE_URI" --out="$DUMP_DIR"
 
-# === 3. Импорт данных в FerretDB (Cockroach backend) ===
+# === 3. Импорт данных в FerretDB ===
 echo ">>> Импортируем данные в FerretDB..."
 mongorestore --uri="mongodb://localhost:$FERRET_PORT/$TARGET_DB" "$DUMP_DIR/$SOURCE_DB"
 
-# === 4. Сравнение количества документов ===
+# === 4. Сравнение и отчёт ===
 echo ">>> Считаем документы в коллекциях..."
 
 COLLECTIONS=$(mongo "$MONGO_SOURCE_URI" --quiet --eval "db.getSiblingDB('$SOURCE_DB').getCollectionNames()" | tr -d '[]" ,' | tr '\n' ' ')
@@ -124,7 +133,6 @@ for COL in $COLLECTIONS; do
   TABLE_ROWS+="<tr><td>$COL</td><td>$SRC_COUNT</td><td>$DST_COUNT</td><td class=\"$CLASS\">$STATUS</td></tr>"
 done
 
-# === 5. Генерация HTML-отчета ===
 cat > $REPORT_FILE <<EOF
 <!DOCTYPE html>
 <html lang="ru">
