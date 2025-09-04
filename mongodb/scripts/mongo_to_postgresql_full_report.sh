@@ -1,6 +1,20 @@
 #!/bin/bash
 set -e
 
+# === Конфигурация ===
+MONGO_SOURCE_URI="mongodb://user:pass@mongo-source:27017/source_db"
+SOURCE_DB="source_db"
+TARGET_DB="target_db"
+DUMP_DIR="./mongo_dump"
+REPORT_FILE="./migration_report.html"
+
+POSTGRES_IMAGE="postgres:15"
+FERRET_IMAGE="ghcr.io/ferretdb/ferretdb:latest"
+POSTGRES_PORT=5432
+FERRET_PORT=27017
+POSTGRES_USER="postgres"
+POSTGRES_PASSWORD="postgres"
+
 # === Проверка и установка зависимостей ===
 echo ">>> Проверяем наличие необходимых утилит..."
 
@@ -49,20 +63,6 @@ install_mongo_tools() {
   fi
 }
 install_mongo_tools
-
-# === Конфигурация ===
-MONGO_SOURCE_URI="mongodb://user:pass@mongo-source:27017/source_db"
-SOURCE_DB="source_db"
-TARGET_DB="target_db"
-DUMP_DIR="./mongo_dump"
-REPORT_FILE="./migration_report.html"
-
-POSTGRES_IMAGE="postgres:15"
-FERRET_IMAGE="ghcr.io/ferretdb/ferretdb:latest"
-POSTGRES_PORT=5432
-FERRET_PORT=27017
-POSTGRES_USER="postgres"
-POSTGRES_PASSWORD="postgres"
 
 # === 1. Запуск контейнеров PostgreSQL и FerretDB ===
 cat > docker-compose.yml <<EOF

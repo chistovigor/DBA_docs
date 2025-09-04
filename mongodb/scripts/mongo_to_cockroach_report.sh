@@ -1,6 +1,19 @@
 #!/bin/bash
 set -e
 
+# === Конфигурация ===
+MONGO_SOURCE_URI="mongodb://user:pass@mongo-source:27017/source_db"
+SOURCE_DB="source_db"
+TARGET_DB="target_db"
+DUMP_DIR="./mongo_dump"
+REPORT_FILE="./migration_report.html"
+
+COCKROACH_IMAGE="cockroachdb/cockroach:v23.1.11"
+FERRET_IMAGE="ghcr.io/ferretdb/ferretdb:latest"
+CRDB_PORT=26257
+FERRET_PORT=27017
+CRDB_USER="root"
+
 echo ">>> Проверяем наличие необходимых утилит..."
 
 install_if_missing() {
@@ -48,19 +61,6 @@ install_mongo_tools() {
   fi
 }
 install_mongo_tools
-
-# === Конфигурация ===
-MONGO_SOURCE_URI="mongodb://user:pass@mongo-source:27017/source_db"
-SOURCE_DB="source_db"
-TARGET_DB="target_db"
-DUMP_DIR="./mongo_dump"
-REPORT_FILE="./migration_report.html"
-
-COCKROACH_IMAGE="cockroachdb/cockroach:v23.1.11"
-FERRET_IMAGE="ghcr.io/ferretdb/ferretdb:latest"
-CRDB_PORT=26257
-FERRET_PORT=27017
-CRDB_USER="root"
 
 # === 1. Запуск контейнеров CockroachDB и FerretDB ===
 cat > docker-compose.yml <<EOF
