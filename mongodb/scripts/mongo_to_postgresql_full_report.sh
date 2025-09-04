@@ -31,13 +31,24 @@ if ! command -v docker-compose &> /dev/null; then
   sudo apt-get install -y docker-compose-plugin
 fi
 
-# MongoDB tools
-install_if_missing mongo "mongodb-clients"
-install_if_missing mongodump "mongodb-database-tools"
-install_if_missing mongorestore "mongodb-database-tools"
-
 # PostgreSQL client
 install_if_missing psql "postgresql-client"
+
+# MongoDB tools (mongodump, mongorestore, mongo)
+install_mongo_tools() {
+  if ! command -v mongodump &> /dev/null; then
+    echo ">>> Подключаем репозиторий MongoDB..."
+    wget -qO - https://www.mongodb.org/static/pgp/server-6.0.asc | sudo gpg --dearmor -o /usr/share/keyrings/mongodb.gpg
+    echo "deb [ signed-by=/usr/share/keyrings/mongodb.gpg ] https://repo.mongodb.org/apt/ubuntu $(lsb_release -cs)/mongodb-org/6.0 multiverse" \
+      | sudo tee /etc/apt/sources.list.d/mongodb-org-6.0.list
+    sudo apt-get update -y
+    echo ">>> Устанавливаем MongoDB Database Tools..."
+    sudo apt-get install -y mongodb-org-tools
+  else
+    echo ">>> MongoDB Tools уже установлены"
+  fi
+}
+install_mongo_tools
 
 # === Конфигурация ===
 MONGO_SOURCE_URI="mongodb://user:pass@mongo-source:27017/source_db"
@@ -151,4 +162,3 @@ $TABLE_ROWS
 EOF
 
 echo ">>> Отчёт создан: $REPORT_FILE"
-echo "Откройте его в браузере для просмотра результатов."
