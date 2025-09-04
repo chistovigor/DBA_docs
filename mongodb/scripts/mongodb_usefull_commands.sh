@@ -6,6 +6,15 @@ source ~/.bashrc
 
 mongosh --username root --password $mg_pass --authenticationDatabase admin
 
+# docker userful commands
+
+#stop and delete all
+docker compose down -v
+docker image prune -a
+
+#run with docker-compose.yml config
+docker compose up -d
+
 # run ansible playbooks
 
 # Dry run для отслеживания фактических целей внесения изменений

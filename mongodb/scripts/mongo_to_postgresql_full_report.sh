@@ -1,55 +1,69 @@
 #!/bin/bash
-set -e
+set -euo pipefail
 
-# === Загружаем конфиг ===
-if [ ! -f environment ]; then
-  echo "Ошибка: файл environment не найден!"
-  exit 1
-fi
-source environment
+### === Конфигурация ===
+ENV_FILE="./environment"
 
-if [ -z "$MONGO_SOURCE_URI" ] || [ -z "$SOURCE_DB" ] || [ -z "$TARGET_DB" ]; then
-  echo "Ошибка: в environment должны быть заданы MONGO_SOURCE_URI, SOURCE_DB и TARGET_DB"
+if [[ ! -f "$ENV_FILE" ]]; then
+  echo ">>> Файл $ENV_FILE не найден!"
   exit 1
 fi
 
-# === Проверка и установка зависимостей ===
+# Загружаем переменные
+set -a
+source "$ENV_FILE"
+set +a
+
+if [[ -z "${MONGO_SOURCE_URI:-}" || -z "${SOURCE_DB:-}" || -z "${TARGET_DB:-}" ]]; then
+  echo ">>> Не заданы MONGO_SOURCE_URI, SOURCE_DB, TARGET_DB в файле $ENV_FILE"
+  exit 1
+fi
+
+REPORT_FILE="migration_report_postgresql.html"
+
+### === Установка зависимостей ===
 echo ">>> Проверяем наличие необходимых утилит..."
 
 install_if_missing() {
-  CMD=$1
-  PKG=$2
-  if ! command -v $CMD &> /dev/null; then
-    echo ">>> Устанавливаем $PKG..."
+  local cmd=$1
+  local pkg=$2
+  if ! command -v "$cmd" &> /dev/null; then
+    echo ">>> Устанавливаем $pkg..."
     sudo apt-get update -y
-    sudo apt-get install -y $PKG
+    sudo apt-get install -y "$pkg"
   else
-    echo ">>> $CMD уже установлен"
+    echo ">>> $pkg уже установлен"
   fi
 }
+
+# Базовые утилиты
+install_if_missing git git
+install_if_missing curl curl
+install_if_missing jq jq
 
 # Docker
 if ! command -v docker &> /dev/null; then
   echo ">>> Устанавливаем Docker..."
   curl -fsSL https://get.docker.com | sh
-  sudo usermod -aG docker $USER
+  sudo usermod -aG docker "$USER"
 fi
 
-# Docker Compose
-if ! command -v docker-compose &> /dev/null; then
-  echo ">>> Устанавливаем docker-compose..."
+# Docker Compose (v1/v2)
+if docker compose version &> /dev/null; then
+  DOCKER_COMPOSE="docker compose"
+elif command -v docker-compose &> /dev/null; then
+  DOCKER_COMPOSE="docker-compose"
+else
+  echo ">>> Устанавливаем docker-compose-plugin..."
   sudo apt-get update -y
   sudo apt-get install -y docker-compose-plugin
+  DOCKER_COMPOSE="docker compose"
 fi
-
-# PostgreSQL client
-install_if_missing psql "postgresql-client"
 
 # MongoDB tools
 install_mongo_tools() {
   if ! command -v mongodump &> /dev/null; then
-    echo ">>> Подключаем репозиторий MongoDB (jammy, подходит для noble)..."
-    sudo rm -f /etc/apt/sources.list.d/mongodb-org-6.0.list
+    echo ">>> Подключаем репозиторий MongoDB (jammy для noble)..."
     wget -qO - https://www.mongodb.org/static/pgp/server-6.0.asc | sudo gpg --dearmor -o /usr/share/keyrings/mongodb.gpg
     echo "deb [ signed-by=/usr/share/keyrings/mongodb.gpg ] https://repo.mongodb.org/apt/ubuntu jammy/mongodb-org/6.0 multiverse" \
       | sudo tee /etc/apt/sources.list.d/mongodb-org-6.0.list
@@ -62,111 +76,69 @@ install_mongo_tools() {
 }
 install_mongo_tools
 
-# === Конфигурация ===
-DUMP_DIR="./mongo_dump"
-REPORT_FILE="./migration_report.html"
-
-POSTGRES_IMAGE="postgres:15"
-FERRET_IMAGE="ghcr.io/ferretdb/ferretdb:latest"
-POSTGRES_PORT=5432
-FERRET_PORT=27017
-POSTGRES_USER="postgres"
-POSTGRES_PASSWORD="postgres"
-
-# === 1. Запуск контейнеров PostgreSQL и FerretDB ===
+### === Docker Compose файл ===
 cat > docker-compose.yml <<EOF
-version: '3.8'
-
 services:
   postgres:
-    image: $POSTGRES_IMAGE
+    image: ghcr.io/ferretdb/postgres-documentdb:17-0.106.0-ferretdb-2.5.0
+    restart: on-failure
     environment:
-      POSTGRES_USER: $POSTGRES_USER
-      POSTGRES_PASSWORD: $POSTGRES_PASSWORD
-      POSTGRES_DB: $TARGET_DB
-    ports:
-      - "$POSTGRES_PORT:5432"
+      - POSTGRES_USER=username
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=${TARGET_DB}
+    volumes:
+      - ./data:/var/lib/postgresql/data
 
   ferretdb:
-    image: $FERRET_IMAGE
-    environment:
-      FERRETDB_POSTGRESQL_URL: postgres://$POSTGRES_USER:$POSTGRES_PASSWORD@postgres:$POSTGRES_PORT/$TARGET_DB?sslmode=disable
+    image: ghcr.io/ferretdb/ferretdb:2.5.0
+    restart: on-failure
     ports:
-      - "$FERRET_PORT:27017"
-    depends_on:
-      - postgres
+      - 27017:27017
+    environment:
+      - FERRETDB_POSTGRESQL_URL=postgres://username:password@postgres:5432/${TARGET_DB}
+
+networks:
+  default:
+    name: ferretdb
 EOF
 
+### === Запуск контейнеров ===
 echo ">>> Запускаем PostgreSQL и FerretDB..."
-docker-compose up -d
+$DOCKER_COMPOSE up -d
 sleep 15
 
-# === 2. Экспорт данных из MongoDB ===
-echo ">>> Экспортируем данные из исходной MongoDB..."
-rm -rf "$DUMP_DIR"
-mongodump --uri="$MONGO_SOURCE_URI" --out="$DUMP_DIR"
+### === Миграция данных ===
+echo ">>> Делаем dump из MongoDB..."
+rm -rf dump
+# убираем имя БД из URI (например /admin), чтобы не конфликтовало с --db
+MONGO_URI_BASE="${MONGO_SOURCE_URI%/*}"
+mongodump --uri="$MONGO_URI_BASE" --db="$SOURCE_DB" --authenticationDatabase=admin --out=dump
 
-# === 3. Импорт данных в FerretDB ===
-echo ">>> Импортируем данные в FerretDB..."
-mongorestore --uri="mongodb://localhost:$FERRET_PORT/$TARGET_DB" "$DUMP_DIR/$SOURCE_DB"
+echo ">>> Восстанавливаем dump в FerretDB..."
+mongorestore --uri="mongodb://localhost:27017" --nsInclude="${SOURCE_DB}.*" dump/"$SOURCE_DB" --drop
 
-# === 4. Сравнение и отчёт ===
-echo ">>> Считаем документы в коллекциях..."
+### === Сравнение данных ===
+echo ">>> Сравниваем количество документов..."
+SRC_COUNTS=$(mongo "$MONGO_SOURCE_URI/$SOURCE_DB" --quiet --eval 'db.getCollectionNames().map(c => ({c:c, count:db[c].countDocuments()}))' | jq -r '.[] | "\(.c),\(.count)"')
+DST_COUNTS=$(mongo "mongodb://localhost:27017/$SOURCE_DB" --quiet --eval 'db.getCollectionNames().map(c => ({c:c, count:db[c].countDocuments()}))' | jq -r '.[] | "\(.c),\(.count)"')
 
-COLLECTIONS=$(mongo "$MONGO_SOURCE_URI" --quiet --eval "db.getSiblingDB('$SOURCE_DB').getCollectionNames()" | tr -d '[]" ,' | tr '\n' ' ')
+### === Генерация HTML отчёта ===
+echo ">>> Генерируем HTML отчёт..."
+{
+  echo "<html><head><meta charset='UTF-8'><title>Отчёт миграции MongoDB → PostgreSQL</title></head><body>"
+  echo "<h1>Сравнение количества документов</h1>"
+  echo "<table border=1><tr><th>Коллекция</th><th>Источник (MongoDB)</th><th>Приёмник (PostgreSQL/FerretDB)</th></tr>"
 
-SRC_TOTAL=0
-DST_TOTAL=0
-TABLE_ROWS=""
+  while IFS=, read -r col cnt; do
+    src_cnt=$cnt
+    dst_cnt=$(echo "$DST_COUNTS" | grep "^$col," | cut -d',' -f2)
+    [[ -z "$dst_cnt" ]] && dst_cnt=0
+    color="green"
+    [[ "$src_cnt" != "$dst_cnt" ]] && color="red"
+    echo "<tr><td>$col</td><td>$src_cnt</td><td><font color='$color'>$dst_cnt</font></td></tr>"
+  done <<< "$SRC_COUNTS"
 
-for COL in $COLLECTIONS; do
-  SRC_COUNT=$(mongo "$MONGO_SOURCE_URI" --quiet --eval "db.getSiblingDB('$SOURCE_DB').$COL.countDocuments()")
-  DST_COUNT=$(mongo --quiet --host localhost --port $FERRET_PORT --eval "db.getSiblingDB('$TARGET_DB').$COL.countDocuments()")
-  
-  SRC_TOTAL=$((SRC_TOTAL + SRC_COUNT))
-  DST_TOTAL=$((DST_TOTAL + DST_COUNT))
-  
-  if [ "$SRC_COUNT" -eq "$DST_COUNT" ]; then
-    STATUS="Совпадает"
-    CLASS="ok"
-  else
-    STATUS="Различие"
-    CLASS="fail"
-  fi
-  
-  TABLE_ROWS+="<tr><td>$COL</td><td>$SRC_COUNT</td><td>$DST_COUNT</td><td class=\"$CLASS\">$STATUS</td></tr>"
-done
+  echo "</table></body></html>"
+} > "$REPORT_FILE"
 
-cat > $REPORT_FILE <<EOF
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-<meta charset="UTF-8">
-<title>Отчёт о миграции MongoDB → PostgreSQL через FerretDB</title>
-<style>
-  body { font-family: Arial, sans-serif; margin: 20px; }
-  h1 { color: #333; }
-  table { border-collapse: collapse; width: 80%; margin-bottom: 20px; }
-  th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
-  th { background-color: #f2f2f2; }
-  .ok { background-color: #c8e6c9; }
-  .fail { background-color: #ffcdd2; }
-</style>
-</head>
-<body>
-<h1>Отчёт о миграции данных (MongoDB → PostgreSQL через FerretDB)</h1>
-<p><b>Исходная база:</b> $SOURCE_DB</p>
-<p><b>Целевая база:</b> $TARGET_DB</p>
-<p><b>Всего документов:</b> Источник = $SRC_TOTAL, Приёмник = $DST_TOTAL</p>
-
-<h2>Сравнение по коллекциям</h2>
-<table>
-<tr><th>Коллекция</th><th>Документов в источнике</th><th>Документов в приёмнике</th><th>Статус</th></tr>
-$TABLE_ROWS
-</table>
-
-</body>
-</html>
-EOF
-
-echo ">>> Отчёт создан: $REPORT_FILE"
+echo ">>> Готово! Отчёт сохранён в $REPORT_FILE"
