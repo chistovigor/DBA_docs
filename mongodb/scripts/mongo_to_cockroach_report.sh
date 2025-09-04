@@ -1,6 +1,41 @@
 #!/bin/bash
 set -e
 
+# === Проверка и установка зависимостей ===
+echo ">>> Проверяем наличие необходимых утилит..."
+
+install_if_missing() {
+  CMD=$1
+  PKG=$2
+  if ! command -v $CMD &> /dev/null; then
+    echo ">>> Устанавливаем $PKG..."
+    sudo apt-get update -y
+    sudo apt-get install -y $PKG
+  else
+    echo ">>> $CMD уже установлен"
+  fi
+}
+
+# Docker
+if ! command -v docker &> /dev/null; then
+  echo ">>> Устанавливаем Docker..."
+  curl -fsSL https://get.docker.com | sh
+  sudo usermod -aG docker $USER
+  echo ">>> Выйдите и зайдите заново в систему, чтобы docker заработал без sudo!"
+fi
+
+# Docker Compose (v1/v2)
+if ! command -v docker-compose &> /dev/null; then
+  echo ">>> Устанавливаем docker-compose..."
+  sudo apt-get update -y
+  sudo apt-get install -y docker-compose-plugin
+fi
+
+# MongoDB tools (mongodump, mongorestore, mongo)
+install_if_missing mongo "mongodb-clients"
+install_if_missing mongodump "mongodb-database-tools"
+install_if_missing mongorestore "mongodb-database-tools"
+
 # === Конфигурация ===
 MONGO_SOURCE_URI="mongodb://user:pass@mongo-source:27017/source_db"
 SOURCE_DB="source_db"
@@ -53,11 +88,8 @@ echo ">>> Считаем документы в коллекциях..."
 
 COLLECTIONS=$(mongo "$MONGO_SOURCE_URI" --quiet --eval "db.getSiblingDB('$SOURCE_DB').getCollectionNames()" | tr -d '[]" ,' | tr '\n' ' ')
 
-# Счётчики
 SRC_TOTAL=0
 DST_TOTAL=0
-
-# Таблица для отчёта
 TABLE_ROWS=""
 
 for COL in $COLLECTIONS; do

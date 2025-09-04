@@ -1,0 +1,9 @@
+SRC_HOST=mongo-1.dev.xxx.lan,mongo-2.dev.xxx.lan,mongo-3.dev.xxx.lan:27017
+DST_HOST=mongo_new_1.xxx.lan,mongo_new_2.xxx.lan:27017
+
+MONGO_USER=admin
+MONGO_PASS=admin
+AUTH_DB=admin
+DB=some_db
+DUMP_DIR=./mongo_dumps
+THREADS=8
