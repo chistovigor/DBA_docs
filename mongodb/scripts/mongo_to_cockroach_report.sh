@@ -49,6 +49,7 @@ install_if_missing psql "postgresql-client"
 install_mongo_tools() {
   if ! command -v mongodump &> /dev/null; then
     echo ">>> Подключаем репозиторий MongoDB (jammy, подходит для noble)..."
+    sudo rm -f /etc/apt/sources.list.d/mongodb-org-6.0.list
     wget -qO - https://www.mongodb.org/static/pgp/server-6.0.asc | sudo gpg --dearmor -o /usr/share/keyrings/mongodb.gpg
     echo "deb [ signed-by=/usr/share/keyrings/mongodb.gpg ] https://repo.mongodb.org/apt/ubuntu jammy/mongodb-org/6.0 multiverse" \
       | sudo tee /etc/apt/sources.list.d/mongodb-org-6.0.list
