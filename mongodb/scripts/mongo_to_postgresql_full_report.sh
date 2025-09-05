@@ -1,14 +1,12 @@
 #!/bin/bash
 set -euo pipefail
 
-### === Конфигурация ===
 ENV_FILE="./environment"
-DEFAULT_CHECK_LIMIT=100000
 DEBUG_INDEX_DIR="./debug_indexes"
-DEBUG_CHECKSUM_DIR="./debug_scripts"
 REPORT_FILE_HTML="migration_report_postgresql.html"
 REPORT_FILE_TXT="migration_report_postgresql.txt"
 
+# Проверяем файл окружения
 if [[ ! -f "$ENV_FILE" ]]; then
   echo ">>> Файл $ENV_FILE не найден!"
   exit 1
@@ -19,66 +17,47 @@ set -a
 source "$ENV_FILE"
 set +a
 
+# Установка переменной LIMIT по умолчанию
+: "${CHECK_LIMIT:=100000}"
+
 # Проверка ключевых переменных
 : "${MONGO_SOURCE_URI:?Не задано MONGO_SOURCE_URI в $ENV_FILE}"
 : "${SOURCE_DB:?Не задано SOURCE_DB в $ENV_FILE}"
 : "${TARGET_URI:?Не задано TARGET_URI в $ENV_FILE}"
 : "${TARGET_DB:?Не задано TARGET_DB в $ENV_FILE}"
 
-CHECK_LIMIT=${CHECK_LIMIT:-$DEFAULT_CHECK_LIMIT}
+MODE="${1:-main}"
 
-# Определяем режим работы
-MODE="${1:-full}"
+case "$MODE" in
+  help)
+    echo "Использование: $0 [mode]"
+    echo "Режимы работы:"
+    echo "  (пусто)      : Полная миграция данных с созданием индексов и проверкой."
+    echo "  create_index  : Только создание индексов (кроме _id) в БД-приемнике."
+    echo "  check_checksum: Только проверка целостности данных и генерация отчетов."
+    echo "  help          : Вывод этой помощи."
+    echo ""
+    echo "Пример файла environment:"
+    cat <<EOL
+MONGO_SOURCE_URI="mongodb://root:some_pass1@some_server1:27017/admin"
+SOURCE_DB="test2"
+TARGET_URI="mongodb://username:some_pass2@localhost:27017/postgres?authSource=admin"
+TARGET_DB="postgres"
+TARGET_USERNAME="username"
+TARGET_PASSWORD="password"
+CHECK_LIMIT=100000
+EOL
+    exit 0
+    ;;
+esac
 
-if [[ "$MODE" == "help" ]]; then
-  echo "Использование:"
-  echo "  ./mongo_to_postgresql_full_report.sh            # полный режим миграции"
-  echo "  ./mongo_to_postgresql_full_report.sh create_index  # только создание индексов"
-  echo "  ./mongo_to_postgresql_full_report.sh check_checksum # только проверка целостности данных"
-  echo "  ./mongo_to_postgresql_full_report.sh help       # показать эту справку"
-  echo ""
-  echo "Пример файла environment (замещённые чувствительные данные):"
-  echo "  MONGO_SOURCE_URI=\"mongodb://root:some_password1@some_server1:27017/admin\""
-  echo "  SOURCE_DB=\"test2\""
-  echo "  TARGET_USERNAME=\"username\""
-  echo "  TARGET_PASSWORD=\"some_password2\""
-  echo "  TARGET_URI=\"mongodb://username:some_password2@localhost:27017/postgres?authSource=admin\""
-  echo "  TARGET_DB=\"postgres\""
-  echo "  CHECK_LIMIT=100000       # необязательная, по умолчанию 100000"
-  exit 0
-fi
+start_time_total=$(date +%s)
 
-mkdir -p "$DEBUG_INDEX_DIR" "$DEBUG_CHECKSUM_DIR"
-
-### === Установка зависимостей ===
-install_if_missing() {
-  local cmd=$1
-  local pkg=$2
-  if ! command -v "$cmd" &> /dev/null; then
-    echo ">>> Устанавливаем $pkg..."
-    sudo apt-get update -y
-    sudo apt-get install -y "$pkg"
-  fi
-}
-install_if_missing git git
-install_if_missing curl curl
-install_if_missing jq jq
-
-install_mongo_tools() {
-  if ! command -v mongodump &> /dev/null; then
-    wget -qO - https://www.mongodb.org/static/pgp/server-6.0.asc | sudo gpg --dearmor -o /usr/share/keyrings/mongodb.gpg
-    echo "deb [ signed-by=/usr/share/keyrings/mongodb.gpg ] https://repo.mongodb.org/apt/ubuntu jammy/mongodb-org/6.0 multiverse" \
-      | sudo tee /etc/apt/sources.list.d/mongodb-org-6.0.list
-    sudo apt-get update -y
-    sudo apt-get install -y mongodb-org-tools
-  fi
-}
-install_mongo_tools
-
-### === Функции для создания индексов ===
+# --- Функция создания индексов ---
 create_indexes() {
   echo ">>> Создание индексов для каждой коллекции (кроме _id)..."
-  local collections
+  mkdir -p "$DEBUG_INDEX_DIR"
+
   collections=$(mongosh --quiet "${MONGO_SOURCE_URI%/*}/$SOURCE_DB" --authenticationDatabase="admin" \
     --eval "db.getCollectionNames().join(' ')" | tr -d '[],\"')
 
@@ -95,115 +74,128 @@ create_indexes() {
             const opts = {...idx};
             delete opts.key;
             delete opts.ns;
-            print('db.getSiblingDB(\"$TARGET_DB\").'$coll'.createIndex(' + keyJson + ',' + JSON.stringify(opts) + ');');
+            print(\`db.getSiblingDB('${TARGET_DB}').${coll}.createIndex(\${keyJson},\${JSON.stringify(opts)});\`);
           }
         });
       " > "$INDEX_SCRIPT"
 
+    echo ">>> Скрипт индексов для $coll сохранён в $INDEX_SCRIPT"
+
     mongosh "$TARGET_URI" --file "$INDEX_SCRIPT"
     echo ">>> Индексы для $coll созданы в БД-приемнике"
   done
+  echo ">>> Синхронизация индексов завершена."
 }
 
-### === Функции для проверки целостности данных ===
+# --- Функция проверки целостности данных ---
 check_checksum() {
   echo ">>> Проверка целостности данных (лимит: $CHECK_LIMIT)..."
+  START_CHECK=$(date +%s)
 
   collections=$(mongosh --quiet "${MONGO_SOURCE_URI%/*}/$SOURCE_DB" --authenticationDatabase="admin" \
     --eval "db.getCollectionNames().join(' ')" | tr -d '[],\"')
 
-  echo "" > "$REPORT_FILE_TXT"
-  echo "<html><head><meta charset='UTF-8'><title>Отчет проверки данных</title></head><body>" > "$REPORT_FILE_HTML"
-  echo "<h1>Проверка целостности данных</h1><table border=1><tr><th>Коллекция</th><th>Источник</th><th>Приёмник</th><th>MD5 Source</th><th>MD5 Target</th><th>Время Source</th><th>Время Target</th></tr>" >> "$REPORT_FILE_HTML"
+  TXT_REPORT=""
+  HTML_REPORT="<html><head><meta charset='UTF-8'><title>Отчёт миграции MongoDB → PostgreSQL</title></head><body>"
+  HTML_REPORT+="<h1>Сравнение целостности коллекций</h1>"
+  HTML_REPORT+="<table border=1><tr><th>Коллекция</th><th>Источник</th><th>Хеш (MD5)</th><th>Приёмник</th><th>Хеш (MD5)</th><th>Статус</th><th>Время</th></tr>"
 
   for coll in $collections; do
-    SRC_START=$(date +%s)
-    SRC_HASH_CNT=$(mongosh "${MONGO_SOURCE_URI%/*}/$SOURCE_DB" --authenticationDatabase="admin" --quiet --eval "
-      const crypto = require('crypto');
-      const dbname = '$SOURCE_DB';
-      const collname = '$coll';
-      const limit = $CHECK_LIMIT;
-      let count = 0;
-      const hash = crypto.createHash('md5');
-      const cursor = db.getSiblingDB(dbname)[collname].find().sort({_id:1}).limit(limit);
-      while(cursor.hasNext()){ const doc = cursor.next(); count++; hash.update(JSON.stringify(doc)); }
-      print(hash.digest('hex') + ',' + count);
-    ")
-    SRC_END=$(date +%s)
-    SRC_HASH=$(echo "$SRC_HASH_CNT" | cut -d',' -f1)
-    SRC_COUNT=$(echo "$SRC_HASH_CNT" | cut -d',' -f2)
-    SRC_TIME=$((SRC_END-SRC_START))
+    echo ">>> Проверяем коллекцию: $coll"
+    START_COLL=$(date +%s)
 
-    DST_START=$(date +%s)
-    DST_HASH_CNT=$(mongosh "$TARGET_URI" --quiet --eval "
+    # Источник
+    SRC_HASH_COUNT=$(mongosh --quiet "${MONGO_SOURCE_URI%/*}/$SOURCE_DB" --authenticationDatabase="admin" --eval "
       const crypto = require('crypto');
-      const dbname = '$TARGET_DB';
-      const collname = '$coll';
+      db = db.getSiblingDB('$SOURCE_DB');
+      const collection = '$coll';
       const limit = $CHECK_LIMIT;
       let count = 0;
       const hash = crypto.createHash('md5');
-      const cursor = db.getSiblingDB(dbname)[collname].find().sort({_id:1}).limit(limit);
-      while(cursor.hasNext()){ const doc = cursor.next(); count++; hash.update(JSON.stringify(doc)); }
+      const cursor = db[collection].find().sort({_id:1}).limit(limit);
+      while(cursor.hasNext()) { const doc = cursor.next(); count++; hash.update(JSON.stringify(doc)); }
       print(hash.digest('hex') + ',' + count);
     ")
-    DST_END=$(date +%s)
-    DST_HASH=$(echo "$DST_HASH_CNT" | cut -d',' -f1)
-    DST_COUNT=$(echo "$DST_HASH_CNT" | cut -d',' -f2)
-    DST_TIME=$((DST_END-DST_START))
+    SRC_HASH=$(echo "$SRC_HASH_COUNT" | cut -d',' -f1)
+    SRC_COUNT=$(echo "$SRC_HASH_COUNT" | cut -d',' -f2)
+
+    # Приёмник
+    DST_HASH_COUNT=$(mongosh --quiet "$TARGET_URI" --eval "
+      const crypto = require('crypto');
+      db = db.getSiblingDB('$TARGET_DB');
+      const collection = '$coll';
+      const limit = $CHECK_LIMIT;
+      let count = 0;
+      const hash = crypto.createHash('md5');
+      const cursor = db[collection].find().sort({_id:1}).limit(limit);
+      while(cursor.hasNext()) { const doc = cursor.next(); count++; hash.update(JSON.stringify(doc)); }
+      print(hash.digest('hex') + ',' + count);
+    ")
+    DST_HASH=$(echo "$DST_HASH_COUNT" | cut -d',' -f1)
+    DST_COUNT=$(echo "$DST_HASH_COUNT" | cut -d',' -f2)
 
     STATUS="OK"
     [[ "$SRC_HASH" != "$DST_HASH" ]] && STATUS="НЕСООТВЕТСТВИЕ"
 
-    echo "$coll | $SRC_COUNT | $DST_COUNT | $SRC_HASH | $DST_HASH | $SRC_TIME s | $DST_TIME s | $STATUS" >> "$REPORT_FILE_TXT"
-    echo "<tr><td>$coll</td><td>$SRC_COUNT</td><td>$DST_COUNT</td><td>$SRC_HASH</td><td>$DST_HASH</td><td>${SRC_TIME}s</td><td>${DST_TIME}s</td></tr>" >> "$REPORT_FILE_HTML"
+    END_COLL=$(date +%s)
+    DURATION=$((END_COLL-START_COLL))
+
+    TXT_REPORT+="Коллекция: $coll | Источник: $SRC_COUNT ($SRC_HASH) | Приёмник: $DST_COUNT ($DST_HASH) | Статус: $STATUS | Время: ${DURATION}s\n"
+    HTML_REPORT+="<tr><td>$coll</td><td>$SRC_COUNT</td><td>$SRC_HASH</td><td>$DST_COUNT</td><td>$DST_HASH</td><td>$STATUS</td><td>${DURATION}s</td></tr>"
   done
 
-  echo "</table></body></html>" >> "$REPORT_FILE_HTML"
-  echo ">>> Генерация текстового и HTML отчета завершена"
-  echo ">>> Отчет сохранён в $REPORT_FILE_HTML и $REPORT_FILE_TXT"
+  END_CHECK=$(date +%s)
+  TOTAL_DURATION=$((END_CHECK-START_CHECK))
+
+  HTML_REPORT+="</table>"
+  HTML_REPORT+="<p>Общее время проверки: ${TOTAL_DURATION}s</p></body></html>"
+
+  echo -e "$TXT_REPORT" > "$REPORT_FILE_TXT"
+  echo "$HTML_REPORT" > "$REPORT_FILE_HTML"
+
+  echo ">>> Проверка целостности данных завершена за ${TOTAL_DURATION}s"
+  echo ">>> Отчёт сохранён в $REPORT_FILE_HTML и $REPORT_FILE_TXT"
 }
 
-### === Основной блок ===
-case "$MODE" in
-  full)
-    echo ">>> Полный режим: миграция данных, создание индексов и проверка целостности"
-    
-    ### Запуск контейнеров только в полном режиме
-    echo ">>> Запускаем PostgreSQL и FerretDB..."
-    docker compose up -d
-    sleep 15
+# --- Основной режим ---
+if [[ "$MODE" == "create_index" ]]; then
+  echo ">>> Режим только создание индексов"
+  create_indexes
+  exit 0
+elif [[ "$MODE" == "check_checksum" ]]; then
+  echo ">>> Режим только проверки целостности данных"
+  check_checksum
+  exit 0
+else
+  echo ">>> Полная миграция данных с созданием индексов и проверкой..."
 
-    ### Миграция данных
-    echo ">>> Экспортируем данные из MongoDB..."
-    rm -rf dump && mkdir dump
-    MONGO_URI_BASE="${MONGO_SOURCE_URI%/*}"
-    collections=$(mongosh --quiet "$MONGO_URI_BASE/$SOURCE_DB" --authenticationDatabase="admin" \
-      --eval "db.getCollectionNames().join(' ')" | tr -d '[],\"')
-    for coll in $collections; do
-      echo "  -> Экспорт коллекции $coll"
-      mongoexport --uri="$MONGO_URI_BASE/$SOURCE_DB" --collection="$coll" --out="dump/${coll}.json" --authenticationDatabase="admin"
-    done
+  # --- Миграция данных ---
+  echo ">>> Делаем export из MongoDB в JSON..."
+  rm -rf dump && mkdir dump
 
-    echo ">>> Импортируем данные в FerretDB..."
-    for coll_file in dump/*.json; do
-      coll=$(basename "$coll_file" .json)
-      echo "  -> Импорт коллекции $coll"
-      mongoimport --uri="$TARGET_URI" --collection="$coll" --drop --file="$coll_file"
-    done
+  MONGO_URI_BASE=$(echo "$MONGO_SOURCE_URI" | sed -E 's|/[^/]+$||')
+  collections=$(mongosh --quiet "$MONGO_URI_BASE/$SOURCE_DB" --authenticationDatabase="admin" \
+    --eval "db.getCollectionNames().join(' ')" | tr -d '[],\"')
 
-    create_indexes
-    check_checksum
-    ;;
-  create_index)
-    echo ">>> Режим только создание индексов"
-    create_indexes
-    ;;
-  check_checksum)
-    echo ">>> Режим только проверка целостности данных"
-    check_checksum
-    ;;
-  *)
-    echo ">>> Неизвестный режим: $MODE"
-    exit 1
-    ;;
-esac
+  for coll in $collections; do
+    echo "  -> Экспорт коллекции $coll"
+    mongoexport --uri="$MONGO_URI_BASE/$SOURCE_DB" --collection="$coll" --out="dump/${coll}.json" --authenticationDatabase="admin"
+  done
+
+  echo ">>> Восстанавливаем dump в FerretDB..."
+  for coll_file in dump/*.json; do
+    coll=$(basename "$coll_file" .json)
+    echo "  -> Импорт коллекции $coll"
+    mongoimport --uri="$TARGET_URI" --collection="$coll" --drop --file="$coll_file"
+  done
+
+  # --- Создание индексов ---
+  create_indexes
+
+  # --- Проверка целостности ---
+  check_checksum
+
+fi
+
+END_TOTAL=$(date +%s)
+echo ">>> Общее время выполнения скрипта: $((END_TOTAL-start_time_total))s"
