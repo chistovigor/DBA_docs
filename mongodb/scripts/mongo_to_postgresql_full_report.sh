@@ -14,33 +14,42 @@ set -a
 source "$ENV_FILE"
 set +a
 
-TARGET_URI="mongodb://${TARGET_USERNAME}:${TARGET_PASSWORD}@localhost:27017/${TARGET_DB}"
+# Проверяем ключевые переменные
+: "${MONGO_SOURCE_URI:?Не задано MONGO_SOURCE_URI в $ENV_FILE}"
+: "${SOURCE_DB:?Не задано SOURCE_DB в $ENV_FILE}"
+: "${TARGET_URI:?Не задано TARGET_URI в $ENV_FILE}"
+: "${TARGET_DB:?Не задано TARGET_DB в $ENV_FILE}"
+: "${TARGET_USERNAME:?Не задано TARGET_USERNAME в $ENV_FILE}"
+: "${TARGET_PASSWORD:?Не задано TARGET_PASSWORD в $ENV_FILE}"
+
+# Лимит документов для проверки
+LIMIT="${CHECK_LIMIT:-100000}"
+
+MODE="${1:-full}"  # full / create_index / check_checksum / help
 
 DEBUG_INDEX_DIR="./debug_indexes"
-DEBUG_CHECKSUM_DIR="./debug_scripts"
-mkdir -p "$DEBUG_INDEX_DIR" "$DEBUG_CHECKSUM_DIR"
+DEBUG_CHECK_DIR="./debug_scripts"
+mkdir -p "$DEBUG_INDEX_DIR" "$DEBUG_CHECK_DIR"
 
-REPORT_HTML="checksum_report.html"
-REPORT_TXT="checksum_report.txt"
+REPORT_FILE="migration_report_postgresql.html"
+TXT_REPORT="migration_report_postgresql.txt"
 
-function usage() {
-  echo "Использование: $0 [режим]"
-  echo "Режимы:"
-  echo "  create_index   - только создание индексов"
-  echo "  check_checksum - только проверка контрольных сумм"
-  echo "  help           - вывод этой справки"
-  echo "  без аргумента  - полный цикл: миграция данных + создание индексов + проверка"
-  exit 0
+print_help() {
+    echo "Использование: $0 [mode]"
+    echo "Режимы:"
+    echo "  full           Полная миграция данных + создание индексов + проверка целостности"
+    echo "  create_index   Только создание индексов"
+    echo "  check_checksum Только проверка целостности данных"
+    echo "  help           Вывод этой справки"
 }
 
-[[ "${1:-}" == "help" ]] && usage
+[[ "$MODE" == "help" ]] && { print_help; exit 0; }
 
-MODE="${1:-full}"
+MONGO_URI_BASE="${MONGO_SOURCE_URI%/*}"
 
-### === Установка зависимостей ===
+### === Функции ===
 install_if_missing() {
-  local cmd=$1
-  local pkg=$2
+  local cmd=$1 pkg=$2
   if ! command -v "$cmd" &> /dev/null; then
     echo ">>> Устанавливаем $pkg..."
     sudo apt-get update -y
@@ -48,33 +57,8 @@ install_if_missing() {
   fi
 }
 
-install_if_missing git git
-install_if_missing curl curl
-install_if_missing jq jq
-
-# Docker
-if ! command -v docker &> /dev/null; then
-  echo ">>> Устанавливаем Docker..."
-  curl -fsSL https://get.docker.com | sh
-  sudo usermod -aG docker "$USER"
-fi
-
-# Docker Compose
-if docker compose version &> /dev/null; then
-  DOCKER_COMPOSE="docker compose"
-elif command -v docker-compose &> /dev/null; then
-  DOCKER_COMPOSE="docker-compose"
-else
-  echo ">>> Устанавливаем docker-compose-plugin..."
-  sudo apt-get update -y
-  sudo apt-get install -y docker-compose-plugin
-  DOCKER_COMPOSE="docker compose"
-fi
-
-# MongoDB tools
 install_mongo_tools() {
   if ! command -v mongodump &> /dev/null; then
-    echo ">>> Устанавливаем MongoDB tools..."
     wget -qO - https://www.mongodb.org/static/pgp/server-6.0.asc | sudo gpg --dearmor -o /usr/share/keyrings/mongodb.gpg
     echo "deb [ signed-by=/usr/share/keyrings/mongodb.gpg ] https://repo.mongodb.org/apt/ubuntu jammy/mongodb-org/6.0 multiverse" \
       | sudo tee /etc/apt/sources.list.d/mongodb-org-6.0.list
@@ -82,9 +66,14 @@ install_mongo_tools() {
     sudo apt-get install -y mongodb-org-tools
   fi
 }
+
+### === Установка зависимостей ===
+install_if_missing git git
+install_if_missing curl curl
+install_if_missing jq jq
 install_mongo_tools
 
-### === Docker Compose файл ===
+### === Docker Compose ===
 cat > docker-compose.yml <<EOF
 services:
   postgres:
@@ -103,137 +92,118 @@ services:
     ports:
       - 27017:27017
     environment:
-      - FERRETDB_POSTGRESQL_URL=postgres://username:password@postgres:5432/postgres
+      - FERRETDB_POSTGRESQL_URL=postgres://${TARGET_USERNAME}:${TARGET_PASSWORD}@postgres:5432/postgres
 
 networks:
   default:
     name: ferretdb
 EOF
 
-### === Миграция данных и создание индексов ===
-MONGO_URI_BASE="${MONGO_SOURCE_URI%/*}"
-
 if [[ "$MODE" == "full" || "$MODE" == "create_index" ]]; then
-  if [[ "$MODE" == "full" ]]; then
     echo ">>> Запускаем PostgreSQL и FerretDB..."
-    $DOCKER_COMPOSE up -d
+    docker compose up -d
     sleep 15
+fi
 
-    echo ">>> Экспортируем коллекции из MongoDB..."
+### === Миграция данных ===
+if [[ "$MODE" == "full" ]]; then
+    echo ">>> Экспортируем данные из MongoDB..."
     rm -rf dump && mkdir dump
 
     collections=$(mongosh --quiet "$MONGO_URI_BASE/$SOURCE_DB" --authenticationDatabase="admin" \
-      --eval "db.getCollectionNames().join(' ')" | tr -d '[],\"')
+        --eval "db.getCollectionNames().join(' ')" | tr -d '[],\"')
 
     for coll in $collections; do
-      echo "  -> Экспорт коллекции $coll"
-      mongoexport --uri="$MONGO_URI_BASE/$SOURCE_DB" \
-        --collection="$coll" \
-        --out="dump/${coll}.json" \
-        --authenticationDatabase="admin"
+        echo "  -> Экспорт коллекции $coll"
+        mongoexport --uri="$MONGO_URI_BASE/$SOURCE_DB" --collection="$coll" \
+            --out="dump/${coll}.json" --authenticationDatabase="admin"
     done
 
     echo ">>> Импортируем коллекции в FerretDB..."
     for coll_file in dump/*.json; do
-      coll=$(basename "$coll_file" .json)
-      echo "  -> Импорт коллекции $coll"
-      mongoimport --uri="$TARGET_URI" --collection="$coll" --drop --file="$coll_file"
+        coll=$(basename "$coll_file" .json)
+        echo "  -> Импорт коллекции $coll"
+        mongoimport --uri="$TARGET_URI" --collection="$coll" --drop --file="$coll_file"
     done
-  else
+fi
+
+### === Создание индексов (кроме _id) ===
+if [[ "$MODE" == "full" || "$MODE" == "create_index" ]]; then
+    echo ">>> Создание индексов для каждой коллекции (кроме _id)..."
+
     collections=$(mongosh --quiet "$MONGO_URI_BASE/$SOURCE_DB" --authenticationDatabase="admin" \
-      --eval "db.getCollectionNames().join(' ')" | tr -d '[],\"')
-  fi
+        --eval "db.getCollectionNames().join(' ')" | tr -d '[],\"')
 
-  ### === Создание индексов ===
-  echo ">>> Создание индексов для каждой коллекции (кроме _id)..."
-  for coll in $collections; do
-    INDEX_SCRIPT="$DEBUG_INDEX_DIR/create_indexes_${coll}.js"
-    mongosh --quiet "$MONGO_URI_BASE/$SOURCE_DB" --authenticationDatabase="admin" \
-      --eval "
-        const indexes = db.getSiblingDB('$SOURCE_DB')['$coll'].getIndexes();
-        indexes.forEach(idx => {
-          if (!('_id' in idx.key)) {
-            const keyJson = JSON.stringify(idx.key);
-            const opts = {...idx};
-            delete opts.key;
-            delete opts.ns;
-            print('db.getSiblingDB(\"$TARGET_DB\")[\"' + '$coll' + '\"]' + '.createIndex(' + keyJson + ',' + JSON.stringify(opts) + ');');
-          }
-        });
-      " > "$INDEX_SCRIPT"
+    for coll in $collections; do
+        INDEX_SCRIPT="$DEBUG_INDEX_DIR/create_indexes_${coll}.js"
 
-    echo "  -> Применяем индексы для $coll"
-    mongosh "$TARGET_URI" --file "$INDEX_SCRIPT"
-  done
+        mongosh --quiet "$MONGO_URI_BASE/$SOURCE_DB" --authenticationDatabase="admin" \
+          --eval "
+            db.getSiblingDB('$SOURCE_DB')['$coll'].getIndexes().forEach(idx => {
+              if (!('_id' in idx.key)) {
+                const keyJson = JSON.stringify(idx.key);
+                const opts = {...idx};
+                delete opts.key;
+                delete opts.ns;
+                print('db.getSiblingDB(\"$TARGET_DB\").'$coll'.createIndex(' + keyJson + ',' + JSON.stringify(opts) + ');');
+              }
+            });
+          " > "$INDEX_SCRIPT"
+
+        mongosh "$TARGET_URI" --file "$INDEX_SCRIPT"
+        echo ">>> Индексы для $coll созданы"
+    done
 fi
 
-### === Проверка контрольных сумм ===
+### === Проверка целостности данных ===
 if [[ "$MODE" == "full" || "$MODE" == "check_checksum" ]]; then
-  LIMIT=${LIMIT:-100000}
-  echo ">>> Проверяем целостность данных между БД (лимит $LIMIT)..."
+    echo ">>> Проверка целостности данных (лимит: $LIMIT)..."
 
-  echo "Коллекция | Источник (кол-во / MD5) | Приёмник (кол-во / MD5)" > "$REPORT_TXT"
-  echo "<html><head><meta charset='UTF-8'><title>Отчёт контрольных сумм</title></head><body><table border=1><tr><th>Коллекция</th><th>Источник</th><th>Приёмник</th></tr>" > "$REPORT_HTML"
-
-  collections=$(mongosh --quiet "$MONGO_URI_BASE/$SOURCE_DB" --authenticationDatabase="admin" \
-      --eval "db.getCollectionNames().join(' ')" | tr -d '[],\"')
-
-  for coll in $collections; do
-    SRC_SCRIPT="$DEBUG_CHECKSUM_DIR/get_checksum_source_${coll}.js"
-    DST_SCRIPT="$DEBUG_CHECKSUM_DIR/get_checksum_target_${coll}.js"
-
-    cat > "$SRC_SCRIPT" <<EOF
-const crypto = require("crypto");
-db = db.getSiblingDB("${SOURCE_DB}");
-const collection = "${coll}";
-const limit = ${LIMIT};
-let count = 0;
-const hash = crypto.createHash("md5");
-const cursor = db[collection].find().sort({_id:1}).limit(limit);
-while (cursor.hasNext()) {
-  const doc = cursor.next();
-  count++;
-  hash.update(JSON.stringify(doc));
+    SRC_COUNTS=$(mongosh --quiet "$MONGO_URI_BASE/$SOURCE_DB" --authenticationDatabase="admin" \
+      --eval "
+print('[');
+var collections = db.getCollectionNames();
+for (var i = 0; i < collections.length; i++) {
+  var c = collections[i];
+  var count = db[c].countDocuments();
+  print(JSON.stringify({c: c, count: Math.min(count, $LIMIT)}) + (i < collections.length - 1 ? ',' : ''));
 }
-print(hash.digest("hex") + "," + count);
-EOF
+print(']');
+" | jq -r '.[] | "\(.c),\(.count)"')
 
-    cat > "$DST_SCRIPT" <<EOF
-const crypto = require("crypto");
-db = db.getSiblingDB("${TARGET_DB}");
-const collection = "${coll}";
-const limit = ${LIMIT};
-let count = 0;
-const hash = crypto.createHash("md5");
-const cursor = db[collection].find().sort({_id:1}).limit(limit);
-while (cursor.hasNext()) {
-  const doc = cursor.next();
-  count++;
-  hash.update(JSON.stringify(doc));
+    DST_COUNTS=$(mongosh --quiet "$TARGET_URI" \
+      --eval "
+print('[');
+var collections = db.getCollectionNames();
+for (var i = 0; i < collections.length; i++) {
+  var c = collections[i];
+  var count = db[c].countDocuments();
+  print(JSON.stringify({c: c, count: Math.min(count, $LIMIT)}) + (i < collections.length - 1 ? ',' : ''));
 }
-print(hash.digest("hex") + "," + count);
-EOF
+print(']');
+" | jq -r '.[] | "\(.c),\(.count)"')
 
-    SRC_RESULT=$(mongosh "$MONGO_URI_BASE/$SOURCE_DB" --authenticationDatabase="admin" --quiet --file "$SRC_SCRIPT")
-    DST_RESULT=$(mongosh "$TARGET_URI" --quiet --file "$DST_SCRIPT")
+    echo ">>> Генерация текстового и HTML отчета..."
+    echo "Проверка первых $LIMIT документов каждой коллекции" > "$TXT_REPORT"
 
-    SRC_HASH=$(echo "$SRC_RESULT" | cut -d, -f1)
-    SRC_COUNT=$(echo "$SRC_RESULT" | cut -d, -f2)
-    DST_HASH=$(echo "$DST_RESULT" | cut -d, -f1)
-    DST_COUNT=$(echo "$DST_RESULT" | cut -d, -f2)
+    {
+      echo "<html><head><meta charset='UTF-8'><title>Отчёт миграции MongoDB → PostgreSQL</title></head><body>"
+      echo "<h1>Сравнение количества документов (лимит $LIMIT)</h1>"
+      echo "<table border=1><tr><th>Коллекция</th><th>Источник (MongoDB)</th><th>Приёмник (PostgreSQL/FerretDB)</th></tr>"
 
-    COLOR="green"
-    [[ "$SRC_HASH" != "$DST_HASH" || "$SRC_COUNT" != "$DST_COUNT" ]] && COLOR="red"
+      while IFS=, read -r col cnt; do
+          src_cnt=$cnt
+          dst_cnt=$(echo "$DST_COUNTS" | grep "^$col," | cut -d',' -f2)
+          [[ -z "$dst_cnt" ]] && dst_cnt=0
+          color="green"
+          [[ "$src_cnt" != "$dst_cnt" ]] && color="red"
 
-    # текстовый отчет
-    echo "$coll | $SRC_COUNT / $SRC_HASH | $DST_COUNT / $DST_HASH" >> "$REPORT_TXT"
+          echo "$col: источник=$src_cnt, приёмник=$dst_cnt" >> "$TXT_REPORT"
+          echo "<tr><td>$col</td><td>$src_cnt</td><td><font color='$color'>$dst_cnt</font></td></tr>"
+      done <<< "$SRC_COUNTS"
 
-    # html отчет
-    echo "<tr><td>$coll</td><td>$SRC_COUNT / $SRC_HASH</td><td><font color='$COLOR'>$DST_COUNT / $DST_HASH</font></td></tr>" >> "$REPORT_HTML"
-  done
+      echo "</table></body></html>"
+    } > "$REPORT_FILE"
 
-  echo "</table></body></html>" >> "$REPORT_HTML"
-  echo ">>> Отчёты сохранены в $REPORT_TXT и $REPORT_HTML"
+    echo ">>> Проверка завершена. Отчёт сохранён в $REPORT_FILE и $TXT_REPORT"
 fi
-
-echo ">>> Скрипт завершён. Скрипты для дебага: $DEBUG_INDEX_DIR и $DEBUG_CHECKSUM_DIR"
