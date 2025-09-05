@@ -1,6 +1,8 @@
 #!/bin/bash
 set -euo pipefail
 
+START_TOTAL=$(date +%s%3N)
+
 ### === Конфигурация ===
 ENV_FILE="./environment"
 DEBUG_DIR="./debug_scripts"
@@ -53,22 +55,6 @@ if [[ "$MODE" == "help" ]]; then
   show_help
   exit 0
 fi
-
-install_if_missing() {
-  local cmd=$1
-  local pkg=$2
-  if ! command -v "$cmd" &> /dev/null; then
-    echo ">>> Устанавливаем $pkg..."
-    sudo apt-get update -y
-    sudo apt-get install -y "$pkg"
-  fi
-}
-
-### === Установка утилит ===
-install_if_missing jq jq
-install_if_missing mongosh mongodb-org-tools
-install_if_missing docker docker
-install_if_missing docker-compose docker-compose-plugin
 
 MONGO_URI_BASE="${MONGO_SOURCE_URI%/*}"
 
@@ -220,26 +206,24 @@ check_checksum() {
   done
 
   HTML_REPORT+="</table></body></html>"
-
   echo -e "$TXT_REPORT" > "$TXT_REPORT_FILE"
   echo "$HTML_REPORT" > "$REPORT_FILE"
-
   echo ">>> Генерация текстового и HTML отчета завершена"
   echo ">>> Отчет сохранён в $REPORT_FILE и $TXT_REPORT_FILE"
 }
 
-### === Основной блок ===
+### === Основной блок исполнения ===
 case "$MODE" in
   create_index)
     echo ">>> Режим только создание индексов"
     create_indexes
     ;;
   check_checksum)
-    echo ">>> Режим только проверка целостности данных"
+    echo ">>> Режим только проверка целостности"
     check_checksum
     ;;
   "" )
-    echo ">>> Основной режим: миграция данных + создание индексов + проверка"
+    echo ">>> Полная миграция данных"
     start_containers
     migrate_data
     create_indexes
@@ -247,5 +231,10 @@ case "$MODE" in
     ;;
   * )
     show_help
+    exit 0
     ;;
 esac
+
+END_TOTAL=$(date +%s%3N)
+TOTAL_TIME=$((END_TOTAL-START_TOTAL))
+echo ">>> Общее время выполнения скрипта: ${TOTAL_TIME}ms"
