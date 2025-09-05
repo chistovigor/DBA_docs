@@ -36,6 +36,7 @@ show_help() {
   create_index   - только создание индексов
   check_checksum - только проверка целостности (с подсчётом и хешем)
   help           - вывод помощи
+  (по умолчанию) - полная миграция данных + создание индексов + проверка
 
 Файл environment должен содержать:
   MONGO_SOURCE_URI="mongodb://user:pass@some_server:27017/admin"
@@ -63,10 +64,72 @@ install_if_missing() {
   fi
 }
 
+### === Установка утилит ===
 install_if_missing jq jq
 install_if_missing mongosh mongodb-org-tools
+install_if_missing docker docker
+install_if_missing docker-compose docker-compose-plugin
 
 MONGO_URI_BASE="${MONGO_SOURCE_URI%/*}"
+
+### === Функция создания контейнеров и запуска ===
+start_containers() {
+  cat > docker-compose.yml <<EOF
+services:
+  postgres:
+    image: ghcr.io/ferretdb/postgres-documentdb:17-0.106.0-ferretdb-2.5.0
+    restart: on-failure
+    environment:
+      - POSTGRES_USER=${TARGET_USERNAME}
+      - POSTGRES_PASSWORD=${TARGET_PASSWORD}
+      - POSTGRES_DB=postgres
+    volumes:
+      - ./data:/var/lib/postgresql/data
+
+  ferretdb:
+    image: ghcr.io/ferretdb/ferretdb:2.5.0
+    restart: on-failure
+    ports:
+      - 27017:27017
+    environment:
+      - FERRETDB_POSTGRESQL_URL=postgres://${TARGET_USERNAME}:${TARGET_PASSWORD}@postgres:5432/postgres
+
+networks:
+  default:
+    name: ferretdb
+EOF
+
+  echo ">>> Запускаем PostgreSQL и FerretDB..."
+  docker compose up -d
+  sleep 15
+}
+
+### === Функция миграции данных ===
+migrate_data() {
+  echo ">>> Делаем export из MongoDB в JSON..."
+  rm -rf dump && mkdir dump
+
+  collections=$(mongosh --quiet "$MONGO_URI_BASE/$SOURCE_DB" --authenticationDatabase="admin" \
+    --eval "db.getCollectionNames().join(' ')" | tr -d '[],\"')
+
+  for coll in $collections; do
+    echo "  -> Экспорт коллекции $coll"
+    mongoexport --uri="$MONGO_URI_BASE/$SOURCE_DB" \
+      --collection="$coll" \
+      --out="dump/${coll}.json" \
+      --authenticationDatabase="admin"
+  done
+
+  echo ">>> Восстанавливаем dump в FerretDB..."
+  for coll_file in dump/*.json; do
+    coll=$(basename "$coll_file" .json)
+    echo "  -> Импорт коллекции $coll"
+    mongoimport --uri="$TARGET_URI" \
+      --collection="$coll" \
+      --drop \
+      --file="$coll_file"
+  done
+}
 
 ### === Функция создания индексов ===
 create_indexes() {
@@ -87,7 +150,7 @@ create_indexes() {
             const opts = {...idx};
             delete opts.key;
             delete opts.ns;
-            print('db.getSiblingDB(\"$TARGET_DB\").' + '$coll' + '.createIndex(' + keyJson + ',' + JSON.stringify(opts) + ');');
+            print('db.getSiblingDB(\"$TARGET_DB\")[\"$coll\"].createIndex(' + keyJson + ',' + JSON.stringify(opts) + ');');
           }
         });
       " > "$INDEX_SCRIPT"
@@ -177,7 +240,8 @@ case "$MODE" in
     ;;
   "" )
     echo ">>> Основной режим: миграция данных + создание индексов + проверка"
-    # Здесь вставляется код миграции (export/import), затем
+    start_containers
+    migrate_data
     create_indexes
     check_checksum
     ;;
