@@ -12,6 +12,8 @@ mongosh --username root --password $mg_pass --authenticationDatabase admin
 docker compose down -v
 docker image prune -a
 
+docker compose down -v && echo y | docker image prune -a && rm setup_ferretdb_cockroach.sh
+
 #run with docker-compose.yml config
 docker compose up -d
 
