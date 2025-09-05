@@ -156,6 +156,17 @@ function getCacheSizeGB() {
 
 getCacheSizeGB();
 
+# checksum данных коллекций в БД
+
+mongosh --quiet "$MONGO_URI_BASE/$SOURCE_DB" --authenticationDatabase="admin"   --eval '
+var collections = db.getCollectionNames();
+for (var i = 0; i < collections.length; i++) {
+  var c = collections[i];
+  var checksum = db.mycollection.aggregate([с]).next().checksum;
+  print("collection: " + c);
+  print("Checksum: " + checksum));
+}'
+
 
 
 

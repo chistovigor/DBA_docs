@@ -36,7 +36,6 @@ install_if_missing() {
   fi
 }
 
-# Базовые утилиты
 install_if_missing git git
 install_if_missing curl curl
 install_if_missing jq jq
@@ -48,7 +47,7 @@ if ! command -v docker &> /dev/null; then
   sudo usermod -aG docker "$USER"
 fi
 
-# Docker Compose (v1/v2)
+# Docker Compose
 if docker compose version &> /dev/null; then
   DOCKER_COMPOSE="docker compose"
 elif command -v docker-compose &> /dev/null; then
@@ -68,7 +67,6 @@ install_mongo_tools() {
     echo "deb [ signed-by=/usr/share/keyrings/mongodb.gpg ] https://repo.mongodb.org/apt/ubuntu jammy/mongodb-org/6.0 multiverse" \
       | sudo tee /etc/apt/sources.list.d/mongodb-org-6.0.list
     sudo apt-get update -y
-    echo ">>> Устанавливаем MongoDB Database Tools..."
     sudo apt-get install -y mongodb-org-tools
   else
     echo ">>> MongoDB Tools уже установлены"
@@ -83,8 +81,8 @@ services:
     image: ghcr.io/ferretdb/postgres-documentdb:17-0.106.0-ferretdb-2.5.0
     restart: on-failure
     environment:
-      - POSTGRES_USER=username
-      - POSTGRES_PASSWORD=password
+      - POSTGRES_USER=${TARGET_USERNAME}
+      - POSTGRES_PASSWORD=${TARGET_PASSWORD}
       - POSTGRES_DB=${TARGET_DB}
     volumes:
       - ./data:/var/lib/postgresql/data
@@ -108,19 +106,55 @@ $DOCKER_COMPOSE up -d
 sleep 15
 
 ### === Миграция данных ===
-echo ">>> Делаем dump из MongoDB..."
-rm -rf dump
-# убираем имя БД из URI (например /admin), чтобы не конфликтовало с --db
-MONGO_URI_BASE="${MONGO_SOURCE_URI%/*}"
-mongodump --uri="$MONGO_URI_BASE" --db="$SOURCE_DB" --authenticationDatabase=admin --out=dump
+echo ">>> Делаем export из MongoDB в JSON..."
+rm -rf dump && mkdir dump
+
+# убираем имя БД из URI (например /admin), чтобы не конфликтовало
+MONGO_URI_BASE=$(echo "$MONGO_SOURCE_URI" | sed -E 's|/[^/]+$||')
+
+collections=$(mongosh --quiet "$MONGO_URI_BASE/$SOURCE_DB" --authenticationDatabase="admin" \
+  --eval "db.getCollectionNames().join(' ')" | tr -d '[],\"')
+
+for coll in $collections; do
+  echo "  -> Экспорт коллекции $coll"
+  mongoexport --uri="$MONGO_URI_BASE/$SOURCE_DB" \
+    --collection="$coll" \
+    --out="dump/${coll}.json" \
+    --authenticationDatabase="admin"
+done
 
 echo ">>> Восстанавливаем dump в FerretDB..."
-mongorestore --uri="mongodb://localhost:27017" --nsInclude="${SOURCE_DB}.*" dump/"$SOURCE_DB" --drop
+for coll_file in dump/*.json; do
+  coll=$(basename "$coll_file" .json)
+  echo "  -> Импорт коллекции $coll"
+  mongoimport --uri="mongodb://${TARGET_USERNAME}:${TARGET_PASSWORD}@localhost:27017/${TARGET_DB}" \
+    --collection="$coll" \
+    --drop \
+    --file="$coll_file"
+done
 
 ### === Сравнение данных ===
 echo ">>> Сравниваем количество документов..."
-SRC_COUNTS=$(mongo "$MONGO_SOURCE_URI/$SOURCE_DB" --quiet --eval 'db.getCollectionNames().map(c => ({c:c, count:db[c].countDocuments()}))' | jq -r '.[] | "\(.c),\(.count)"')
-DST_COUNTS=$(mongo "mongodb://localhost:27017/$SOURCE_DB" --quiet --eval 'db.getCollectionNames().map(c => ({c:c, count:db[c].countDocuments()}))' | jq -r '.[] | "\(.c),\(.count)"')
+SRC_COUNTS=$(mongosh --quiet "$MONGO_URI_BASE/$SOURCE_DB" --authenticationDatabase="admin" \
+  --eval '
+print("[");
+var collections = db.getCollectionNames();
+for (var i = 0; i < collections.length; i++) {
+  var c = collections[i];
+  var count = db[c].countDocuments();
+  print(JSON.stringify({c: c, count: count}) + (i < collections.length - 1 ? "," : ""));
+}
+print("]");' | jq -r '.[] | "\(.c),\(.count)"')
+
+DST_COUNTS=$(mongosh --quiet "mongodb://${TARGET_USERNAME}:${TARGET_PASSWORD}@localhost:27017/${TARGET_DB}" \
+  --eval 'print("[");
+var collections = db.getCollectionNames();
+for (var i = 0; i < collections.length; i++) {
+  var c = collections[i];
+  var count = db[c].countDocuments();
+  print(JSON.stringify({c: c, count: count}) + (i < collections.length - 1 ? "," : ""));
+}
+print("]");' | jq -r '.[] | "\(.c),\(.count)"')
 
 ### === Генерация HTML отчёта ===
 echo ">>> Генерируем HTML отчёт..."
@@ -140,5 +174,3 @@ echo ">>> Генерируем HTML отчёт..."
 
   echo "</table></body></html>"
 } > "$REPORT_FILE"
-
-echo ">>> Готово! Отчёт сохранён в $REPORT_FILE"

@@ -1,0 +1,8 @@
+MONGO_SOURCE_URI="mongodb://root:dBKcxsiyuDGYOGhGRvb83kau@sc-lux99-x-test-chistov-mongo-1.xbet.lan:27017/admin"
+SOURCE_DB="test2"
+MONGO_URI_BASE="${MONGO_SOURCE_URI%/*}"
+TARGET_DB="ferret_test2"
+TARGET_USERNAME="username"
+TARGET_PASSWORD="password"
+TARGET_URI="mongodb://${TARGET_USERNAME}:${TARGET_PASSWORD}@localhost:27017/${TARGET_DB}?authSource=admin"
+#CHECK_LIMIT=500000
