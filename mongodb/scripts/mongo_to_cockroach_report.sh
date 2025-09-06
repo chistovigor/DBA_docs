@@ -21,8 +21,8 @@ if [[ "${1:-}" == "help" ]]; then
 MONGO_SOURCE_URI="mongodb://root:some_password1@some_server1:27017/admin"
 SOURCE_DB="test2"
 
-TARGET_USER="username"
-TARGET_PASS="some_password2"
+TARGET_USERNAME="username"
+TARGET_PASSWORD="some_password2"
 TARGET_DB="ferret_test2"
 
 CHECK_LIMIT=500000
@@ -46,11 +46,11 @@ CHECK_LIMIT="${CHECK_LIMIT:-100000}"
 # Проверяем ключевые переменные
 : "${MONGO_SOURCE_URI:?Не задано MONGO_SOURCE_URI в $ENV_FILE}"
 : "${SOURCE_DB:?Не задан SOURCE_DB в $ENV_FILE}"
-: "${TARGET_USER:?Не задан TARGET_USER в $ENV_FILE}"
-: "${TARGET_PASS:?Не задан TARGET_PASS в $ENV_FILE}"
+: "${TARGET_USERNAME:?Не задан TARGET_USERNAME в $ENV_FILE}"
+: "${TARGET_PASSWORD:?Не задан TARGET_PASSWORD в $ENV_FILE}"
 : "${TARGET_DB:?Не задан TARGET_DB в $ENV_FILE}"
 
-TARGET_URI="mongodb://${TARGET_USER}:${TARGET_PASS}@localhost:27017/${TARGET_DB}?authSource=admin"
+TARGET_URI="mongodb://${TARGET_USERNAME}:${TARGET_PASSWORD}@localhost:27017/${TARGET_DB}?authSource=admin"
 
 REPORT_HTML="migration_report_postgresql.html"
 REPORT_TXT="migration_report_postgresql.txt"
