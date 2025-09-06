@@ -46,10 +46,21 @@ fi
 if ! command -v mongosh &> /dev/null; then
     echo ">>> mongosh не найден, устанавливаем..."
     # добавляем официальный репозиторий MongoDB
-    wget -qO - https://www.mongodb.org/static/pgp/server-7.0.asc | sudo gpg --dearmor -o /usr/share/keyrings/mongodb.gpg
-    echo "deb [ arch=amd64 signed-by=/usr/share/keyrings/mongodb.gpg ] https://repo.mongodb.org/apt/ubuntu noble/mongodb-org/7.0 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-7.0.list
-    apt-get update -y
-    apt-get install -y mongosh mongodb-org-tools
+    echo ">>> Устанавливаем MongoDB CLI (mongosh, mongoimport, mongoexport) на Ubuntu 24.04"
+
+    # Добавляем ключ репозитория
+    sudo rm -f /etc/apt/sources.list.d/mongodb-org-7.0.list
+    wget -qO - https://www.mongodb.org/static/pgp/server-6.0.asc | sudo gpg --dearmor -o /usr/share/keyrings/mongodb.gpg
+
+    # Добавляем репозиторий jammy (22.04), совместимый с Ubuntu 24.04
+    echo "deb [ arch=amd64 signed-by=/usr/share/keyrings/mongodb.gpg ] https://repo.mongodb.org/apt/ubuntu jammy/mongodb-org/6.0 multiverse" \
+    | sudo tee /etc/apt/sources.list.d/mongodb-org-6.0.list
+
+    # Обновляем индексы пакетов
+    sudo apt-get update -y
+
+    # Устанавливаем MongoDB Tools и mongosh
+    sudo apt-get install -y mongodb-org
 else
     echo ">>> mongosh уже установлен"
 fi
