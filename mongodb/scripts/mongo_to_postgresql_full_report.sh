@@ -30,6 +30,30 @@ TXT_REPORT_FILE="migration_report_postgresql.txt"
 
 MODE="${1:-}"
 
+# ==== Установка Docker и Docker Compose (если не установлены) ====
+if ! command -v docker &> /dev/null; then
+    echo ">>> Docker не найден, устанавливаем..."
+    curl -fsSL https://get.docker.com -o get-docker.sh
+    sh get-docker.sh
+    docker --version
+    docker compose version
+    systemctl enable --now docker
+else
+    echo ">>> Docker уже установлен"
+fi
+
+# ==== Установка MongoDB CLI (mongosh, mongoimport, mongoexport) ====
+if ! command -v mongosh &> /dev/null; then
+    echo ">>> mongosh не найден, устанавливаем..."
+    # добавляем официальный репозиторий MongoDB
+    wget -qO - https://www.mongodb.org/static/pgp/server-7.0.asc | sudo gpg --dearmor -o /usr/share/keyrings/mongodb.gpg
+    echo "deb [ arch=amd64 signed-by=/usr/share/keyrings/mongodb.gpg ] https://repo.mongodb.org/apt/ubuntu noble/mongodb-org/7.0 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-7.0.list
+    apt-get update -y
+    apt-get install -y mongosh mongodb-org-tools
+else
+    echo ">>> mongosh уже установлен"
+fi
+
 show_help() {
   cat <<EOF
 Использование: $0 [режим]
