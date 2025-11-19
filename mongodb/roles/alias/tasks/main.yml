@@ -1,0 +1,24 @@
+---
+- name:  list users with bashl
+  shell: "getent passwd | awk -F: '/\\/bash$/ {print $1}'"
+  register: users_with_bash
+  ignore_errors: yes
+
+- name: mongosh alias for all users
+  lineinfile:
+    path: "/home/{{ item }}/.bashrc"
+    state: present
+    regexp: '^alias mongo='
+    line: 'alias mongo=mongosh'
+    create: yes
+  loop: "{{ users_with_bash.stdout_lines }}"
+  when: item != 'root'
+  ignore_errors: yes    
+
+- name: mongosh alias for root user
+  lineinfile:
+    path: /root/.bashrc
+    state: present
+    regexp: '^alias mongo='
+    line: 'alias mongo=mongosh'
+    create: yes    

@@ -1,0 +1,7 @@
+[elastic-6.x]
+baseurl = https://artifacts.elastic.co/packages/6.x/yum
+gpgcheck = 0
+name = Elastic 6.x YUM repo
+proxy = http://5.101.96.229:3128
+proxy_password = VtWRuk1Aq9hA
+proxy_username = elastic_repo_user

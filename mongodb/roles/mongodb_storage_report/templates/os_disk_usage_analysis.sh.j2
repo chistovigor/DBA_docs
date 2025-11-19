@@ -1,0 +1,263 @@
+#!/usr/bin/env bash
+# OS disk usage analysis (templated)
+# TOP_N and TARGET_DIR are rendered by Jinja, rest of the script is raw to avoid template parsing issues.
+
+TOP_N={{ TOP_N | default(20) }}
+TARGET_DIR="{{ os_target_dir | default('/') }}"
+
+{% raw %}
+set -uo pipefail  # Removed -e to prevent early exit on errors
+IFS=$'\n\t'
+
+# Enable debug mode if DEBUG env var is set
+if [ "${DEBUG:-}" = "1" ]; then
+  set -x
+fi
+
+VERSION="2025-10-14"
+OUT_FILE=""
+declare -a TARGET_DIRS=()
+QUIET=false
+
+print_help() {
+  cat <<EOF
+Usage: $(basename "$0") [options] [paths...]
+Options:
+  -n, --top N         Number of top entries to show (default: ${TOP_N})
+  -d, --dir PATH      Add PATH to analysis (can be used multiple times). If none, defaults to / and common mongo dirs.
+  -o, --output FILE   Also write full report to FILE (append).
+  -q, --quiet         Suppress progress/info messages (still prints report).
+  -h, --help          Show this help and exit.
+EOF
+}
+
+log() {
+  if [ "${QUIET}" = false ]; then
+    printf "%s\n" "$*" >&2
+  fi
+}
+
+err() {
+  printf "ERROR: %s\n" "$*" >&2
+}
+
+require_cmds() {
+  local miss=0
+  for cmd in "$@"; do
+    if ! command -v "$cmd" >/dev/null 2>&1; then
+      printf "  - %s (missing)\n" "$cmd" >&2
+      miss=1
+    fi
+  done
+  if [ "$miss" -ne 0 ]; then
+    err "Install missing utilities and rerun."
+    exit 2
+  fi
+}
+
+human_size() {
+  if command -v numfmt >/dev/null 2>&1; then
+    numfmt --to=iec-i --suffix=B "$1" 2>/dev/null || printf "%s" "$1"
+  else
+    printf "%s" "$1"
+  fi
+}
+
+cleanup() {
+  [ -n "${TMPFILE:-}" ] && [ -f "$TMPFILE" ] && rm -f "$TMPFILE"
+}
+trap cleanup EXIT
+
+# --- parse args ---
+while [ $# -gt 0 ]; do
+  case "$1" in
+    -n|--top)
+      TOP_N="$2"; shift 2 ;;
+    -d|--dir)
+      TARGET_DIRS+=("$2"); shift 2 ;;
+    -o|--output)
+      OUT_FILE="$2"; shift 2 ;;
+    -q|--quiet)
+      QUIET=true; shift ;;
+    -h|--help)
+      print_help; exit 0 ;;
+    --) shift; break ;;
+    -*)
+      err "Unknown option: $1"; print_help; exit 2 ;;
+    *)
+      TARGET_DIRS+=("$1"); shift ;;
+  esac
+done
+
+if [ "${#TARGET_DIRS[@]}" -eq 0 ]; then
+  TARGET_DIRS=( "${TARGET_DIR}" )
+  [ -d /var/lib/mongodb ] && TARGET_DIRS+=( "/var/lib/mongodb" )
+  [ -d /var/log/mongodb ] && TARGET_DIRS+=( "/var/log/mongodb" )
+  [ -d /var/log ] && TARGET_DIRS+=( "/var/log" )
+  [ -d /tmp ] && TARGET_DIRS+=( "/tmp" )
+fi
+
+declare -A _seen
+declare -a DIRS_CLEAN=()
+for d in "${TARGET_DIRS[@]}"; do
+  if [ -e "$d" ]; then
+    reald=$(readlink -f -- "$d" 2>/dev/null || printf "%s" "$d")
+    if [ -z "${_seen[$reald]:-}" ]; then
+      DIRS_CLEAN+=( "$reald" )
+      _seen[$reald]=1
+    fi
+  else
+    log "Warning: path does not exist and will be skipped: $d"
+  fi
+done
+TARGET_DIRS=( "${DIRS_CLEAN[@]}" )
+
+if [ "${#TARGET_DIRS[@]}" -eq 0 ]; then
+  err "No available directories to analyze."
+  exit 0   # Exit with code 0 so Ansible doesn't complain
+fi
+
+require_cmds df du find sort head awk
+
+HAS_NUMFMT=0; command -v numfmt >/dev/null 2>&1 && HAS_NUMFMT=1
+HAS_LSOF=0; command -v lsof >/dev/null 2>&1 && HAS_LSOF=1
+
+TMPFILE="$(mktemp -t os-disk-analysis.XXXXXX)"
+HOSTNAME="$(hostname -f 2>/dev/null || hostname)"
+NOW="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+REPORT_HEADER="OS disk usage analysis report
+Generated: ${NOW}
+Host: ${HOSTNAME}
+Script version: ${VERSION}
+Target dirs: ${TARGET_DIRS[*]}
+Top N: ${TOP_N}
+"
+
+if [ -n "$OUT_FILE" ]; then
+  printf "%s\n\n" "$REPORT_HEADER" >>"$OUT_FILE"
+fi
+
+# Wrap entire analysis in a subshell with error handling
+{
+  set +e  # Disable exit-on-error within this block
+  printf "%s\n" "================================================================"
+  printf "%s\n" "$REPORT_HEADER"
+  printf "%s\n" "Filesystem summary (df -h -P):"
+  df -h -P || true
+  printf "\n"
+
+  printf "%s\n" "Inode usage (df -i -P):"
+  df -i -P || true
+  printf "\n"
+
+  printf "%s\n" "Filesystems >= 80% used:"
+  df -P | awk 'NR>1 && $5+0 >= 80 {print $0}' || true
+  printf "\n"
+
+  for path in "${TARGET_DIRS[@]}"; do
+    printf "%s\n" "----------------------------------------------------------------"
+    printf "Analyzing path: %s\n\n" "$path"
+
+    mp="$(df -P "$path" 2>/dev/null | tail -1 | awk '{print $6}')"
+    printf "Mountpoint: %s\n\n" "$mp"
+
+    printf "%s\n" "1) Top ${TOP_N} directories by size (depth=2):"
+    if command -v du >/dev/null 2>&1; then
+      # Test if GNU du options are supported
+      if du -x -B1M --max-depth=2 "$path" >/dev/null 2>&1; then
+        # GNU du is supported
+        du -x -B1M --max-depth=2 "$path" 2>/dev/null | sort -rn -k1 | head -n "$TOP_N" | awk '{ printf("%6s MiB  %s\n",$1,$2) }'
+      else
+        # Fall back to POSIX du (output in KB, convert to MB)
+        du -k "$path" 2>/dev/null | awk -v maxdepth=2 'BEGIN{FS="/"} {depth=NF-1; if(depth<=maxdepth) print}' | sort -rn -k1 | head -n "$TOP_N" | awk '{ printf("%6.0f MiB  %s\n",$1/1024,$2) }'
+      fi
+    else
+      printf "  du command not found\n"
+    fi
+    printf "\n"
+
+    # ULTRA-LIGHTWEIGHT: No file scanning - only directory summaries
+    log "Starting minimal disk analysis for $path (performance optimized)"
+    
+    printf "%s\n" "2) Largest directories (using du - no file scanning):"
+    if [ "$path" = "/" ]; then
+      # For root filesystem, check only key directories
+      printf "  (Checking key directories: /var, /opt, /usr, /home)\n"
+      for keydir in /var /opt /usr /home; do
+        if [ -d "$keydir" ]; then
+          size_output=$(timeout 3 du -sh "$keydir" 2>/dev/null)
+          if [ -n "$size_output" ]; then
+            size=$(echo "$size_output" | awk '{print $1}')
+            printf "  %s  %s\n" "$size" "$keydir"
+          else
+            printf "  [N/A]  %s (size unavailable)\n" "$keydir"
+          fi
+        fi
+      done
+      
+      # Quick check for MongoDB specific directories
+      for mongodir in /var/lib/mongodb /var/log/mongodb /opt/mongodb; do
+        if [ -d "$mongodir" ]; then
+          size_output=$(timeout 2 du -sh "$mongodir" 2>/dev/null)
+          if [ -n "$size_output" ]; then
+            size=$(echo "$size_output" | awk '{print $1}')
+            printf "  %s  %s (MongoDB)\n" "$size" "$mongodir"
+          else
+            printf "  [N/A]  %s (MongoDB - size unavailable)\n" "$mongodir"
+          fi
+        fi
+      done
+    else
+      # For specific paths, show subdirectories only
+      timeout 5 du -sh "$path"/* 2>/dev/null | sort -rh | head -n "$TOP_N" || printf "  No subdirectories or access denied\n"
+    fi
+    printf "\n"
+
+    printf "%s\n" "3) File count estimation (ls-based):"
+    if [ "$path" = "/" ]; then
+      printf "  Root filesystem - showing key directory file counts:\n"
+      for countdir in /var/log /opt/mongodb /var/lib/mongodb; do
+        if [ -d "$countdir" ]; then
+          count=$(timeout 2 ls -1 "$countdir" 2>/dev/null | wc -l || echo "0")
+          printf "  %6s files in %s\n" "$count" "$countdir"
+        fi
+      done
+    else
+      count=$(timeout 3 ls -1 "$path" 2>/dev/null | wc -l || echo "0")
+      printf "  %s files in %s\n" "$count" "$path"
+    fi
+    printf "\n"
+
+    printf "%s\n" "4) Deleted-but-open files (quick check):"
+    printf "  (Skipped for performance - use 'lsof +L1' manually if needed)\n"
+    printf "\n"
+
+    printf "%s\n" "5) Storage recommendations:"
+    if [ "$path" = "/" ]; then
+      printf "  - Check /var/log for log rotation\n"
+      printf "  - Monitor MongoDB data directories growth\n"
+      printf "  - Consider cleanup of /tmp and /var/cache if large\n"
+    else
+      printf "  - Monitor growth of largest subdirectories\n"
+      printf "  - Consider file cleanup if directory is growing rapidly\n"
+    fi
+    printf "\n"
+
+    printf "%s\n" "6) Quick space summary:"
+    printf "  Available space on %s:\n" "$path"
+    df -h "$path" 2>/dev/null | tail -1 | awk '{printf("  Used: %s/%s (%s full)\n", $3, $2, $5)}' || printf "  Space info unavailable\n"
+    printf "\n"
+    
+    log "Completed minimal disk analysis"
+  done
+
+  printf "%s\n" "================================================================"
+  printf "%s\n" "Notes / next steps (automatable):"
+  printf " - If large log files are found: check logrotate and retention.\n"
+  printf " - Deleted-but-open files: restart corresponding process or close fd by PID.\n"
+
+} | { if [ -n "$OUT_FILE" ]; then tee -a "$OUT_FILE"; else cat; fi } || true
+
+# Force successful exit regardless of any command failures
+exit 0
+{% endraw %}

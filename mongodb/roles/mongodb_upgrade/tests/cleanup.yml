@@ -1,0 +1,36 @@
+---
+- name: Cleanup MongoDB test VMs
+  hosts: all
+  become: yes
+  gather_facts: yes
+
+  tasks:
+
+    - name: Gather all service facts
+      ansible.builtin.service_facts:
+
+    - name: Stop MongoDB service if it exists
+      ansible.builtin.systemd:
+        name: mongod
+        state: stopped
+      when: "'mongod.service' in ansible_facts.services"
+      ignore_errors: yes
+
+    - name: Disable MongoDB service if it exists
+      ansible.builtin.systemd:
+        name: mongod
+        enabled: no
+      when: "'mongod.service' in ansible_facts.services"
+      ignore_errors: yes
+
+    - name: Remove MongoDB data directory if it exists
+      ansible.builtin.file:
+        path: /var/lib/mongo
+        state: absent
+      ignore_errors: yes
+
+    - name: Remove MongoDB log directory if it exists
+      ansible.builtin.file:
+        path: /var/log/mongodb
+        state: absent
+      ignore_errors: yes

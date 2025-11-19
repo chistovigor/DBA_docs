@@ -1,0 +1,22 @@
+---
+- name: copying the certificate file to the server 
+  hosts: all
+  become: true
+
+
+  tasks:
+    - name: creating  directory /etc/ssl/mongodb
+      file:
+        path: /etc/ssl/mongodb
+        state: directory
+        mode: '2770'
+        owner: 'root'
+        group: 'mongodb'
+
+    - name: copying file to the serve
+      copy:
+        src: "{{ playbook_dir }}/files/mongodb.pem"
+        dest: /etc/ssl/mongodb/mongodb.pem
+        mode: '0700'
+        owner: 'mongodb'
+        group: 'root'          

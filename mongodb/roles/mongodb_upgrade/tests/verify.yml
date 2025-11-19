@@ -1,0 +1,32 @@
+---
+- name: Verify MongoDB service and replica set
+  hosts: all
+  gather_facts: no
+  become: yes
+
+  tasks:
+
+    - name: Check if MongoDB service is running
+      ansible.builtin.command: systemctl is-active mongod
+      register: mongodb_service_status
+      ignore_errors: yes
+
+    - name: Assert MongoDB service is active
+      ansible.builtin.assert:
+        that:
+          - mongodb_service_status is defined
+          - mongodb_service_status.rc == 0
+        fail_msg: "MongoDB service is not active on {{ inventory_hostname }}"
+
+    - name: Check replica set status
+      ansible.builtin.shell: |
+        mongo --quiet --eval "rs.status().ok"
+      register: rs_status
+      ignore_errors: yes
+
+    - name: Assert replica set is healthy
+      ansible.builtin.assert:
+        that:
+          - rs_status.rc == 0
+          - rs_status.stdout | int == 1
+        fail_msg: "Replica set is not healthy on {{ inventory_hostname }}"

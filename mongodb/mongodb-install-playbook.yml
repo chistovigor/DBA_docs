@@ -1,0 +1,50 @@
+- name: Playbook to install and configure MongoDB
+  hosts: all
+  become: true
+  roles:
+    - install-mongodb-role
+    - logrotate-mongodb
+    - sysctl-config
+    - nftables-config
+    - alias
+    - install-mongodb-plugin
+    - mongodb_systemd_override
+#    - mongodb-conf-fetch
+  vars:
+    mongodb_version: "7.0"
+    distribution_release: "jammy" # ubuntu version focal or jammy WARNING * 22.04 LTS ("Jammy") (Starting in MongoDB 6.0.4)
+    mongod_conf_template: "mongod.conf.j2" # configuration file mongodb  "/templates/mongod.conf.j2"
+    mongodb_data_dest: "/opt/mongodb"
+    mongod_conf_dest: "/etc/mongod.conf"
+    mongod_key_path: "/etc/mongod.key"
+
+    # vars mongod.conf file
+    ip: "{{ hostvars[inventory_hostname].ansible_host }}"  #bindIp network interfaces assigned automatically from inventory
+    rsname: >
+          {% set specific_group = (group_names | difference([
+            'infra',
+            'xbet_lan',
+            'btmk_lan',
+            'ams2',
+            'obelis_lan',
+            'lux1',
+            'lux99',
+            'ams99',
+            'ams1',
+            'consultant',
+            'ams2_mongo',
+            'lux1_mongo',
+            'lux99_mongo',
+            'ams99_mongo',
+            'ams1_mongo',
+            'obe_stage_mongo',
+            'obe_test_mongo',
+            'obe_prod_mongo',
+            'slots_dev_mongo',
+            'slots_prod_mongo',
+            'slots_prod_three',
+            'slots_prod_two',
+            'slots_mongo'
+          ]))[0] %}
+          {{ specific_group | replace('_', '-') }}
+    oplog: 4096 #oplogSizeMB

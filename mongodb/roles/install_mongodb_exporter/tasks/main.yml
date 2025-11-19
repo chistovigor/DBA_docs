@@ -8,6 +8,47 @@
     - /usr/local/bin
 
 #####################
+# MongoDB user/role for exporter
+#####################
+
+- name: Upload create_exporter_role.js
+  template:
+    src: create_exporter_role.js
+    dest: /tmp/create_exporter_role.js
+    mode: '0600'
+
+- name: Create role and assign to grafana via mongosh
+  command:
+    argv:
+      - mongosh
+      - --username
+      - "root"
+      - --password
+      - "{{ mongo_password }}"
+      - --authenticationDatabase
+      - admin
+      - /tmp/create_exporter_role.js
+  register: create_role_result
+  changed_when: >
+    ('Role created' in create_role_result.stdout) or
+    ('User created and role granted' in create_role_result.stdout) or
+    ('Role granted to existing user' in create_role_result.stdout)
+  failed_when: >
+    (create_role_result.rc != 0) and
+    not (('Role exists' in create_role_result.stdout) and
+         ('User exists and already has role' in create_role_result.stdout))
+  ignore_errors: true
+
+- name: Show mongosh output
+  debug:
+    var: create_role_result.stdout_lines
+
+- name: Remove create_exporter_role.js
+  file:
+    path: /tmp/create_exporter_role.js
+    state: absent
+
+#####################
 # MongoDB Exporter
 #####################
 
@@ -50,9 +91,15 @@
     owner: root
     group: root
     mode: '0644'
-  notify:
-    - reload systemd
-    - restart mongodb_exporter
+
+- name: Reload systemd
+  ansible.builtin.systemd:
+    daemon_reload: yes
+
+- name: Restart mongodb_exporter
+  ansible.builtin.service:
+    name: mongodb_exporter
+    state: restarted
 
 #####################
 # Node Exporter
@@ -97,54 +144,68 @@
     owner: root
     group: root
     mode: '0644'
-  notify:
-    - reload systemd
-    - restart node_exporter
+
+- name: Reload systemd
+  ansible.builtin.systemd:
+    daemon_reload: yes
+
+- name: Restart mongodb_exporter
+  ansible.builtin.service:
+    name: node_exporter
+    state: restarted
+
+
+#####################
+# Firewall rules (nftables / ufw)
+#####################
 
 - name: Check if nftables config directory exists
   stat:
     path: /etc/nftables
   register: nftables_dir
 
-- name: Add MongoDB Exporter port to nftables configuration
-  block:
-    - name: Find the config file
-      find:
-        paths: /etc/nftables
-        patterns: "*-filter.nft"
-      register: nftables_config_files
+- name: Find nftables config file
+  find:
+    paths: /etc/nftables
+    patterns: "*-filter.nft"
+  register: nftables_config_files
+  when: nftables_dir.stat.exists
 
 - name: Set config file path
   set_fact:
     nftables_config: "{{ (nftables_config_files.files | first).path | default('/etc/nftables/ipv4-filter.nft') }}"
 
-# Проверяем и добавляем порт MongoDB Exporter
-- name: Check if port already exists in config
+- name: Check if MongoDB Exporter port already exists
   command: grep -q "elements = {.*{{ mongodb_exporter_port }}.*}" "{{ nftables_config }}"
   register: port_exists
   failed_when: false
   changed_when: false
+  when: nftables_dir.stat.exists
 
-- name: Ensure MongoDB Exporter port is present ONLY in firewall_open_tcp_ports
+- name: Ensure MongoDB Exporter port is present
   replace:
     path: "{{ nftables_config }}"
     regexp: '(^\s*set firewall_open_tcp_ports\s*\{[^}]*elements\s*=\s*\{)([^}]*)\}'
     replace: '\1\2, {{ mongodb_exporter_port }}}'
-  when: port_exists.rc != 0
+  when:
+    - nftables_dir.stat.exists
+    - port_exists.rc != 0
 
-# Проверяем и добавляем порт Node Exporter
 - name: Check if Node Exporter port already exists
   command: grep -q "elements = {.*{{ node_exporter_port }}.*}" "{{ nftables_config }}"
   register: node_exporter_port_exists
   failed_when: false
   changed_when: false
+  when: nftables_dir.stat.exists
 
-- name: Ensure Node Exporter port is present ONLY in firewall_open_tcp_ports
+- name: Ensure Node Exporter port is present
   replace:
     path: "{{ nftables_config }}"
     regexp: '(^\s*set firewall_open_tcp_ports\s*\{[^}]*elements\s*=\s*\{)([^}]*)\}'
     replace: '\1\2, {{ node_exporter_port }}}'
-  when: node_exporter_port_exists.rc != 0
+  when:
+    - nftables_dir.stat.exists
+    - node_exporter_port_exists.rc != 0
 
 - name: Restart nftables to apply changes
   systemd:
@@ -152,7 +213,6 @@
     state: restarted
   when:
     - nftables_dir.stat.exists
-    - port_exists.rc != 0
 
 - name: Enable and start MongoDB Exporter service
   systemd:
@@ -161,18 +221,12 @@
     state: started
     daemon_reload: true
 
-- name: Check if UFW is active
-  stat:
-    path: /etc/ufw/ufw.conf
-  register: ufw_config
-
-# Проверяем наличие UFW
+# UFW config
 - name: Check if UFW is installed
   stat:
     path: /etc/ufw/ufw.conf
   register: ufw_config
 
-# Получаем статус UFW (не падаем, если UFW выключен)
 - name: Get UFW status
   command: ufw status
   register: ufw_status
@@ -180,7 +234,6 @@
   failed_when: false
   when: ufw_config.stat.exists
 
-# Настраиваем правило только если UFW реально активен
 - name: Configure UFW for MongoDB Exporter
   ufw:
     rule: allow
@@ -191,6 +244,10 @@
     - ufw_config.stat.exists
     - "'Status: active' in ufw_status.stdout"
 
+#####################
+# Cleanup temp archives
+#####################
+
 - name: Clean up temporary files
   file:
     path: "{{ item }}"
@@ -198,6 +255,12 @@
   loop:
     - /tmp/mongodb_exporter.tar.gz
     - "/tmp/mongodb_exporter-{{ mongodb_exporter_version }}.linux-amd64"
+    - /tmp/node_exporter.tar.gz
+    - "/tmp/node_exporter-{{ node_exporter_version }}.linux-amd64"
+
+#####################
+# Verify listening & firewall rules
+#####################
 
 - name: Verify IPv4 listening
   shell: |
@@ -220,7 +283,7 @@
     msg: "Exporter on port {{ item.item }} is listening on IPv4: {{ item.stdout }}"
   loop: "{{ ipv4_check.results }}"
 
-- name: Verify ports in nftables rules
+- name: Verify nftables port rules
   shell: nft list ruleset | grep -q "{{ item }}"
   register: nftables_port_check
   changed_when: false
@@ -234,18 +297,18 @@
     msg: "Port {{ item.item }} found in nftables: {{ 'yes' if item.rc == 0 else 'no' }}"
   loop: "{{ nftables_port_check.results }}"
 
-- name: Check external connectivity
+- name: Check external connectivity (IPv4 only)
   wait_for:
     host: "{{ ansible_default_ipv4.address }}"
     port: "{{ item }}"
-    timeout: 30
-    delay: 5
+    timeout: 10
+    connect_timeout: 3
   delegate_to: localhost
-  become: no
+  become: false
   register: port_check
   until: port_check is success
   retries: 3
-  delay: 10
+  delay: 5
   ignore_errors: yes
   loop:
     - "{{ mongodb_exporter_port }}"
@@ -254,10 +317,89 @@
 - name: Display port check results
   debug:
     msg: >-
-      Port {{ item.item }} is {{
+      Port {{ item.item }} (IPv4 {{ ansible_default_ipv4.address }}) is {{
         'accessible externally' if item is success
-        else 'NOT accessible externally. Check cloud provider firewall.'
+        else 'NOT accessible externally. Check security groups / firewall.'
       }}
   loop: "{{ port_check.results }}"
 
+- name: Check if MongoDB user 'grafana' exists
+  ansible.builtin.command: >
+    mongosh --host 127.0.0.1:27017
+    --username root
+    --password "{{ mongo_password }}"
+    --quiet
+    --eval 'db.getSiblingDB("admin").getUser("grafana")'
+  register: grafana_user_info
+  changed_when: false
 
+- name: Create grafana user
+  ansible.builtin.command: >
+    mongosh --host 127.0.0.1:27017
+    --username root
+    --password "{{ mongo_password }}"
+    --eval 'db.getSiblingDB("admin").createUser({user: "{{ mongodb_exporter_user }}", pwd: "{{ mongodb_exporter_password }}", roles: [{role: "clusterMonitor", db: "admin"}]})'
+  when: grafana_user_info.stdout.strip() == "null"
+  register: grafana_create_result
+  ignore_errors: yes
+
+- name: MongoDB user {{ mongodb_exporter_user }} already exists
+  ansible.builtin.debug:
+    msg: "MongoDB user {{ mongodb_exporter_user }} already exists, skipping creation."
+  when: grafana_user_info.stdout.strip() != "null"
+
+
+#####################
+# MongoDB fix zabbix_user
+#####################
+
+- name: Upload fix_zabbix_user.js
+  template:
+    src: fix_zabbix_user.js
+    dest: /tmp/fix_zabbix_user.js
+    mode: '0600'
+
+- name: Create role and assign to grafana via mongosh
+  command:
+    argv:
+      - mongosh
+      - --username
+      - "root"
+      - --password
+      - "{{ mongo_password }}"
+      - --authenticationDatabase
+      - admin
+      - /tmp/fix_zabbix_user.js
+  ignore_errors: yes
+
+- name: Remove fix_zabbix_user.js
+  file:
+    path: /tmp/fix_zabbix_user.js
+    state: absent
+
+#####################
+# Validation
+#####################
+
+- name: Upload validation script for exporter user
+  template:
+    src: check_grafana_role.js
+    dest: /tmp/check_grafana_role.js
+    mode: '0600'
+
+- name: Run validation as exporter user
+  command: >
+    mongosh --username {{ mongodb_exporter_user }}
+    --password '{{ mongodb_exporter_password }}'
+    --authenticationDatabase admin /tmp/check_grafana_role.js
+  register: check_output
+  failed_when: check_output.rc != 0
+
+- name: Show validation result
+  debug:
+    var: check_output.stdout_lines
+
+- name: Remove validation script
+  file:
+    path: /tmp/check_grafana_role.js
+    state: absent

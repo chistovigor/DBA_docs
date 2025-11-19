@@ -1,0 +1,82 @@
+---
+# ================================
+# Главный tasks/main.yml для роли mongodb_upgrade
+# ================================
+
+# 1. Проверяем совместимость ОС
+- name: Проверяем совместимость Ubuntu
+  import_tasks: check_os_compatibility.yml
+
+# 2. Добавление репозитория MongoDB и определение целевой версии
+- name: Добавляем репозиторий MongoDB {{ mongodb_version }}
+  import_tasks: add_repo.yml
+
+# 3. Проверяем статус Replica Set и версии MongoDB
+- name: Проверяем статус Replica Set и версии MongoDB
+  import_tasks: check_replicaset_status.yml
+
+# 4. Валидируем версии MongoDB для обновления
+- name: Валидируем версии MongoDB для обновления
+  import_tasks: validate_versions.yml
+
+# 4.1. Проверяем featureCompatibilityVersion до обновления
+- name: Проверяем featureCompatibilityVersion до обновления
+  import_tasks: check_fcv.yml
+
+# 5. Выводим план последовательного обновления
+- name: Выводим план последовательного обновления
+  debug:
+    msg: "Планируется обновить {{ hosts_to_update | default([]) | length }} хостов{% if hosts_to_update | default([]) | length > 0 %}:{% for host in hosts_to_update | default([]) %} {{ host }}{% if not loop.last %},{% endif %}{% endfor %}{% endif %} PRIMARY узел: {{ primary_host | default('не найден') }}"
+  run_once: true
+
+# 6. Определяем порядок обновления
+- name: Определяем порядок обновления
+  set_fact:
+    secondary_hosts: "{{ hosts_to_update | default([]) | difference([primary_host | default('не найден')]) }}"
+    primary_to_update: "{{ primary_host if (primary_host is defined and primary_host in hosts_to_update | default([])) else None }}"
+  run_once: true
+
+# 7. Выводим порядок обновления
+- name: Выводим порядок обновления
+  ansible.builtin.debug:
+    msg: >-
+      {% if hosts_to_update | default([]) | length > 0 %}
+      Secondary хосты для обновления: {{ secondary_hosts | default([]) }}
+      Primary хост для обновления: {{ primary_to_update | default('отсутствует') }}
+      {% else %}
+      ✓ Обновление не требуется - все хосты уже имеют целевую версию {{ mongodb_full_version | default(mongodb_version) }}
+      ✓ Secondary хосты для обновления: нет
+      ✓ Primary хост для обновления: нет
+      {% endif %}
+  run_once: true
+
+# 8. Выполняем последовательное обновление replica set
+- name: Выполняем последовательное обновление replica set
+  import_tasks: sequential_replicaset_update.yml
+  when: hosts_to_update | length > 0
+  run_once: true
+
+# 9. Выводим сообщение о том, какие сервера были обновлены
+- name: Выводим сервера, которые были обновлены
+  ansible.builtin.debug:
+    msg: >-
+      {% if hosts_to_update | default([]) | length > 0 %}
+      Последовательное обновление выполнено на серверах: {{ hosts_to_update | default([]) }}
+      {% else %}
+      ✓ Обновление не выполнялось - все сервера уже имеют актуальную версию MongoDB
+      ✓ Последовательное обновление выполнено на серверах: нет
+      {% endif %}
+  run_once: true
+
+# 10. Выводим команду для обновления featureCompatibilityVersion после успешного обновления
+- name: Команда для обновления featureCompatibilityVersion
+  ansible.builtin.debug:
+    msg: >-
+      {% if hosts_to_update | default([]) | length > 0 %}
+      ✓ Обновление MongoDB завершено успешно!
+      Для завершения процесса обновления выполните следующую команду на PRIMARY сервере {{ primary_host }}:
+      mongosh --host {{ primary_host }} --eval 'db.adminCommand({ setFeatureCompatibilityVersion: "{{ mongodb_version }}" })'
+      {% else %}
+      ✓ Обновление featureCompatibilityVersion не требуется - все сервера уже имеют актуальную версию
+      {% endif %}
+  run_once: true

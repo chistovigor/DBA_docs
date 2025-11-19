@@ -1,0 +1,178 @@
+# tasks/update_single_node.yml
+# Обновление одного узла replica set
+
+# -----------------------------------------------------------
+# Выводим информацию об обновляемом узле
+- name: Выводим информацию об обновляемом узле
+  debug:
+    msg: |
+      Начинаем обновление узла: {{ target_host }}
+      Тип узла: {{ node_type }}
+      Версия MongoDB для установки: {{ mongodb_version }}
+
+# -----------------------------------------------------------
+# Если это primary - принудительно переключаем его на secondary
+- name: Переводим primary в secondary режим
+  ansible.builtin.shell: |
+    mongosh --quiet --host {{ target_host }} --eval '
+    try {
+      var status = rs.isMaster();
+      if (status.ismaster) {
+        print("Переводим primary в secondary...");
+        rs.stepDown(60);
+        print("PRIMARY успешно переведен в SECONDARY");
+      } else {
+        print("Узел уже является SECONDARY");
+      }
+    } catch(e) {
+      print("Ошибка при переводе в secondary: " + e.message);
+    }'
+  when: node_type == "primary"
+  register: stepdown_result
+  ignore_errors: yes
+
+- name: Выводим результат stepDown
+  debug:
+    msg: "{{ stepdown_result.stdout }}"
+  when: node_type == "primary"
+
+# -----------------------------------------------------------
+# Ждем стабилизации replica set после stepDown
+- name: Ждем стабилизации replica set
+  ansible.builtin.shell: |
+    mongosh --quiet --host {{ primary_host }} --eval '
+    var attempts = 0;
+    var maxAttempts = 30;
+    while (attempts < maxAttempts) {
+      try {
+        var status = rs.status();
+        var healthy = status.members.filter(function(m) { 
+          return m.health == 1 && (m.stateStr == "PRIMARY" || m.stateStr == "SECONDARY") 
+        }).length;
+        if (healthy >= 2) {
+          print("Replica set стабилизирован. Здоровых узлов: " + healthy);
+          break;
+        }
+      } catch(e) {}
+      sleep(2000);
+      attempts++;
+    }
+    if (attempts >= maxAttempts) {
+      print("Не удалось дождаться стабилизации replica set");
+    }'
+  when: node_type == "primary"
+  register: stabilization_result
+  ignore_errors: yes
+
+- name: Выводим результат стабилизации
+  debug:
+    msg: "{{ stabilization_result.stdout }}"
+  when: node_type == "primary"
+
+# -----------------------------------------------------------
+# Останавливаем MongoDB на целевом узле
+- name: Останавливаем MongoDB на узле {{ target_host }}
+  ansible.builtin.systemd:
+    name: mongod
+    state: stopped
+  delegate_to: "{{ target_host }}"
+  become: yes
+
+# -----------------------------------------------------------
+# Добавляем репозиторий MongoDB для целевой версии
+- name: Добавляем репозиторий MongoDB {{ mongodb_version }} на {{ target_host }}
+  include_tasks: add_repo.yml
+  delegate_to: "{{ target_host }}"
+
+# -----------------------------------------------------------
+# Устанавливаем/обновляем MongoDB на целевом узле
+- name: Устанавливаем/обновляем MongoDB на {{ target_host }}
+  include_tasks: install_mongodb.yml
+  delegate_to: "{{ target_host }}"
+
+# -----------------------------------------------------------
+# Запускаем MongoDB на целевом узле
+- name: Запускаем MongoDB на узле {{ target_host }}
+  ansible.builtin.systemd:
+    name: mongod
+    state: started
+    enabled: yes
+  delegate_to: "{{ target_host }}"
+  become: yes
+
+# -----------------------------------------------------------
+# Ждем, пока узел не станет доступным
+- name: Ждем доступности узла {{ target_host }}
+  ansible.builtin.shell: |
+    mongosh --quiet --host {{ target_host }} --eval 'print("connected")'
+  register: connection_check
+  until: connection_check.rc == 0
+  retries: 30
+  delay: 5
+  ignore_errors: yes
+
+# -----------------------------------------------------------
+# Проверяем версию MongoDB на обновленном узле
+- name: Проверяем версию MongoDB на обновленном узле {{ target_host }}
+  ansible.builtin.shell: |
+    mongosh --quiet --host {{ target_host }} --eval 'print(db.version())'
+  register: updated_version
+  ignore_errors: yes
+
+- name: Выводим версию MongoDB после обновления
+  debug:
+    msg: "Версия MongoDB на {{ target_host }}: {{ updated_version.stdout | default('неизвестно') }}"
+
+# -----------------------------------------------------------
+# Проверяем featureCompatibilityVersion после обновления
+- name: Проверяем featureCompatibilityVersion после обновления {{ target_host }}
+  ansible.builtin.shell: |
+    mongosh --quiet --host {{ target_host }} --username "{{ vault_mongo_admin_user }}" --password "{{ vault_mongo_admin_password }}" --authenticationDatabase admin --eval '
+    try {
+      var fcvResult = db.adminCommand({ "getParameter": 1, "featureCompatibilityVersion": 1 });
+      if (fcvResult.ok === 1) {
+        print(JSON.stringify({
+          "fcv": fcvResult.featureCompatibilityVersion,
+          "status": "success"
+        }));
+      } else {
+        print("FCV получить не удалось: " + fcvResult.errmsg);
+      }
+    } catch(e) {
+      print("Ошибка получения FCV: " + e.message);
+    }'
+  register: updated_fcv
+  ignore_errors: yes
+
+- name: Выводим featureCompatibilityVersion после обновления
+  debug:
+    msg: "featureCompatibilityVersion на {{ target_host }}: {{ (updated_fcv.stdout | from_json).fcv | default(updated_fcv.stdout) }}"
+
+# -----------------------------------------------------------
+# Проверяем, что узел вернулся в replica set
+- name: Проверяем статус узла в replica set
+  ansible.builtin.shell: |
+    mongosh --quiet --host {{ target_host }} --eval '
+    try {
+      var status = rs.status();
+      var thisNode = status.members.find(function(m) { 
+        return m.name.includes("{{ target_host }}") 
+      });
+      if (thisNode) {
+        print("Узел в replica set: " + thisNode.stateStr + " (health: " + thisNode.health + ")");
+      } else {
+        print("Узел не найден в replica set");
+      }
+    } catch(e) {
+      print("Ошибка проверки статуса: " + e.message);
+    }'
+  register: node_status_check
+  ignore_errors: yes
+
+- name: Выводим статус узла в replica set
+  debug:
+    msg: "{{ node_status_check.stdout }}"
+
+- name: Завершено обновление узла {{ target_host }}
+  debug:
+    msg: "Узел {{ target_host }} успешно обновлен до версии {{ mongodb_version }}"

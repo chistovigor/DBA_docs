@@ -1,0 +1,9 @@
+---
+# defaults for mongodb_storage_report role
+
+# analysis parameters
+mongo_top_n: 5
+mongo_min_mb: 1
+
+# directory to analyze on OS level (default /)
+mongo_analysis_target_dir: "/"

@@ -1,0 +1,47 @@
+---
+- name: Remove MongoDB from Ubuntu
+  hosts: all
+  become: yes
+
+  vars_prompt:
+    - name: confirm_removal
+      prompt: "ARE YOU SURE YOU WANT TO REMOVE  MongoDB? (yes/no)"
+      private: no
+
+  tasks:
+    - name: Confirm MongoDB removal
+      fail:
+        msg: "Aborted. MongoDB removal was not confirmed."
+      when: confirm_removal != "yes"
+
+    - name: Display warning
+      debug:
+        msg: "WARNING! This playbook will remove MongoDB from the server."
+
+    - name: Stop MongoDB service
+      systemd:
+        name: mongod
+        state: stopped
+      ignore_errors: yes
+
+    - name: Remove MongoDB packages
+      apt:
+        name:
+          - mongodb-org*
+        state: absent
+
+    - name: Remove MongoDB directories
+      file:
+        path: "{{ item }}"
+        state: absent
+      with_items:
+        - /var/log/mongodb
+        - /var/lib/mongodb
+          #        - /etc/mongod.conf
+          #        - /etc/mongod.key
+          #        - /opt/mongodb
+    - name: Clean up MongoDB repository
+      apt_repository:
+        repo: 'ppa:mongodb/mongodb-org'
+        state: absent          
+

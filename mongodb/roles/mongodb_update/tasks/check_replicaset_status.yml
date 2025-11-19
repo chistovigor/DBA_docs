@@ -1,0 +1,123 @@
+# tasks/check_replicaset_status.yml
+
+# -----------------------------------------------------------
+# Определяем список хостов для проверки
+- name: Определяем список хостов для проверки
+  set_fact:
+    replicaset_hosts: "{{ ansible_play_batch | default([inventory_hostname]) }}"
+  tags: debug
+
+- name: Выводим список хостов для проверки
+  debug:
+    msg: "replicaset_hosts = {{ replicaset_hosts }}"
+
+# -----------------------------------------------------------
+# Проверяем статус каждого узла группы (и версию MongoDB)
+- name: Проверяем статус каждого узла группы
+  ansible.builtin.shell: |
+    mongosh --quiet --host {{ node }} --eval '
+    try {
+      var me = rs.isMaster();
+      var ver = db.version();
+      print(JSON.stringify({
+        "me": me.me,
+        "isPrimary": me.ismaster ? "PRIMARY" : "SECONDARY",
+        "primary": me.primary || null,
+        "version": ver
+      }));
+    } catch(e) {
+      print(JSON.stringify({ "error": e.message }));
+    }'
+  loop: "{{ replicaset_hosts }}"
+  loop_control:
+    loop_var: node
+  register: nodes_status
+  ignore_errors: yes
+
+- name: debug nodes_status
+  debug:
+    var: nodes_status
+
+# -----------------------------------------------------------
+# Выводим версии всех узлов
+- name: Выводим версии MongoDB на всех узлах
+  debug:
+    msg: >-
+      {{
+        dict(
+          nodes_status.results
+          | map(attribute='stdout')
+          | select('defined')
+          | map('from_json')
+          | map(attribute='me')
+          | map('split', ':')
+          | map('first')
+          | zip(
+              nodes_status.results
+              | map(attribute='stdout')
+              | select('defined')
+              | map('from_json')
+              | map(attribute='version')
+            )
+        )
+      }}
+
+# -----------------------------------------------------------
+# Находим PRIMARY host
+- name: Находим PRIMARY host
+  set_fact:
+    primary_host: >-
+      {{
+        (
+          nodes_status.results
+          | map(attribute='stdout')
+          | select('defined')
+          | map('from_json')
+          | selectattr('isPrimary', 'equalto', 'PRIMARY')
+          | map(attribute='me')
+          | map('split', ':')
+          | map('first')
+          | list
+          | first
+        ) | default('не найден')
+      }}
+
+- name: Выводим PRIMARY host
+  debug:
+    msg: "PRIMARY = {{ primary_host }}"
+
+# -----------------------------------------------------------
+# Получаем версию MongoDB на PRIMARY
+- name: Получаем версию MongoDB на PRIMARY
+  ansible.builtin.shell: |
+    mongosh --quiet --host {{ primary_host }} --eval '
+    try { print(db.version()) } catch(e) { print("unknown") }'
+  when: primary_host != 'не найден'
+  register: primary_version
+  ignore_errors: yes
+
+- name: Выводим версию MongoDB на PRIMARY
+  debug:
+    msg: "MongoDB version on PRIMARY = {{ primary_version.stdout | default('unknown') }}"
+
+# -----------------------------------------------------------
+# Формируем список хостов для обновления
+- name: Формируем список хостов для обновления
+  set_fact:
+    hosts_to_update: >-
+      {{
+        nodes_status.results
+        | map(attribute='stdout')
+        | select('defined')
+        | map('from_json')
+        | selectattr('error', 'undefined')
+        | selectattr('version', 'match', '^((?!' ~ mongodb_version ~ ').)*$')
+        | map(attribute='me')
+        | map('split', ':')
+        | map('first')
+        | list
+      }}
+
+- name: Выводим список хостов для обновления
+  debug:
+    msg: "{{ hosts_to_update }}"

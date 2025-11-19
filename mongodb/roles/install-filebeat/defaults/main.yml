@@ -1,0 +1,124 @@
+filebeat_config:
+  filebeat: # instance name
+    filebeat: # start filebeat config
+      inputs:
+        - type: log
+          enabled: true
+          paths: "{{ fb_input_paths }}"
+          ignore_older: 5h
+          scan_frequency: 5m
+          clean_removed: false
+          clean_inactive: 48h
+          close_removed: false
+          close_renamed: false
+          close_inactive: 3h
+          encoding: plain
+
+    processors:
+     - drop_fields:
+         fields: [“host”, “beat.name”, “beat.version”, “input.type”, “prospector.type”]
+
+    setup.template.enabled: false
+
+    output.elasticsearch:
+      hosts: "{{ es_cluster_nodes }}"
+      ssl.verification_mode: none
+      compression_level: 3
+      loadbalance: true
+      worker: 2
+      bulk_max_size: 50
+
+    logging:
+      to_files: true
+      selectors: ["*"]
+      level: warning
+
+#filebeat_config_old:
+#  filebeat: # instance name
+#    filebeat: # start filebeat config
+#      inputs:
+#        - type: log
+#          enabled: true
+#          paths: "{{ fb_input_paths }}"
+#          ignore_older: 5h
+#          scan_frequency: 5m
+#          clean_removed: false
+#          clean_inactive: 48h
+#          close_removed: false
+#          close_renamed: false
+#          close_inactive: 3h
+#          encoding: plain
+#
+#    processors:
+#     - drop_fields:
+#         fields: ["@timestamp", "beat.name", "beat.version", "input.type", "prospector.type"]
+#
+#    setup.template.enabled: false
+#
+#    output.elasticsearch:
+#      hosts: "{{ es_cluster_nodes }}"
+#      index: "{{ index_name }}"
+#      pipeline: "{{ ingest_pipeline }}"
+#      compression_level: 3
+#      loadbalance: true
+#      worker: 30
+#      username: "{{ fb_username }}"
+#      password: "{{ fb_password }}"
+#      protocol: "https"
+#      ssl.verification_mode: none
+#
+#    logging:
+#      to_files: true
+#      selectors: ["*"]
+#      level: warning
+#
+#  filebeat1:
+#    filebeat:
+#      inputs:
+#      - clean_inactive: 48h
+#        clean_removed: false
+#        close_inactive: 3h
+#        close_removed: false
+#        close_renamed: false
+#        enabled: true
+#        encoding: plain
+#        ignore_older: 5h
+#        paths:
+#        - /var/log/secure
+#        - /var/log/yum.log
+#        - /var/log/audit/audit.log
+#        scan_frequency: 5m
+#        type: log
+#      logging:
+#        level: warning
+#        selectors:
+#        - '*'
+#        to_files: true
+#      output.elasticsearch:
+#        compression_level: 3
+#        hosts: "{{ es_cluster_nodes }}"
+#        index: "{{ index_name1 }}"
+#        loadbalance: true
+#        password: "{{ fb_password }}"
+#        protocol: https
+#        ssl.verification_mode: none
+#        username: "{{ fb_username }}"
+#        worker: 30
+#      processors:
+#      - drop_fields:
+#          fields:
+#          - '@timestamp'
+#          - beat.name
+#          - beat.version
+#          - input.type
+#          - prospector.type
+#      setup.template.enabled: false
+
+# Example filebeat vars-file in group_vars:
+#
+# fb_input_paths: [ "/var/log/nginx/*.access_log", ]
+# es_cluster_nodes: [ "192.168.50.84:9260", "192.168.50.129:9260", "192.168.50.127:9260",  ]
+# index_name: "nginx-%{+yyyy.MM.dd}"
+# ingest_pipeline: "filebeat-pipe"
+# fb_username: "logstash"
+# fb_password: "KAfi19dkfo1ldQl2kd9kSl109d91kdlL"

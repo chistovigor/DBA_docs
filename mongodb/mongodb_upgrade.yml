@@ -1,0 +1,9 @@
+---
+- hosts: all
+  become: yes
+  vars_files:
+    - roles/mongodb_upgrade/vars/secrets.yml
+  roles:
+    - role: mongodb_upgrade
+      vars:
+        mongodb_version: "8.0"

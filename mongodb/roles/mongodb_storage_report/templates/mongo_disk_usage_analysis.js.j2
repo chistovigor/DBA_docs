@@ -1,0 +1,127 @@
+// ----------------------------
+// MongoDB Disk Usage Analysis
+// ----------------------------
+
+// Параметры (можно передавать через --eval)
+var TOP_N_DB = typeof TOP_N_DB !== 'undefined' ? TOP_N_DB : {{ mongo_top_n_db | default(5) }};
+var TOP_N_COLL = typeof TOP_N_COLL !== 'undefined' ? TOP_N_COLL : {{ mongo_top_n_coll | default(5) }};
+var MIN_MB = typeof MIN_MB !== 'undefined' ? MIN_MB : {{ mongo_min_mb | default(1) }};
+
+// Разрешаем чтение со secondary
+db.getMongo().setReadPref('secondaryPreferred');
+
+// ----------------------------
+// Helper Functions
+// ----------------------------
+function toMB(bytes) {
+    return bytes / 1024 / 1024;
+}
+
+// ----------------------------
+// Вывод директории хранения файлов БД
+// ----------------------------
+try {
+    let dbPath = db.serverCmdLineOpts().parsed.storage.dbPath;
+    print(`[DATA DIR] MongoDB Data Directory: ${dbPath}\n`);
+} catch (e) {
+    print(`[WARNING] Не удалось определить путь к файлам БД: ${e.message}\n`);
+}
+
+print(`[INFO] Running MongoDB disk usage analysis (TOP_N_DB=${TOP_N_DB}, TOP_N_COLL=${TOP_N_COLL}, MIN_MB=${MIN_MB}MB)`);
+print(`[INFO] Collections and indexes smaller than ${MIN_MB} MB will be skipped.\n`);
+
+// ----------------------------
+// Получение статистики по базам
+// ----------------------------
+let dbInfos = [];
+let totalAllDBs = 0;
+
+db.getMongo().getDBNames().forEach(dbName => {
+    try {
+        let database = db.getSiblingDB(dbName);
+        let stats = database.stats(1024*1024);
+        let total = stats.storageSize + stats.indexSize;
+        totalAllDBs += total;
+        dbInfos.push({
+            name: dbName,
+            storage: stats.storageSize,
+            data: stats.dataSize,
+            index: stats.indexSize,
+            total: total
+        });
+    } catch (e) {
+        print(`[WARNING] Skipping ${dbName}: ${e.message}`);
+    }
+});
+
+// Сортировка по размеру баз
+dbInfos.sort((a, b) => b.total - a.total);
+
+// Берём только ТОП N баз
+let topDBs = dbInfos.slice(0, TOP_N_DB);
+
+print("=== [DATABASE] Top Databases by Disk Usage (MB) ===");
+let totalTopN = 0;
+topDBs.forEach((info, i) => {
+    totalTopN += info.total;
+    print(`${i+1}. ${info.name} → total_on_disk=${info.total.toFixed(2)} MB (storage=${info.storage.toFixed(2)} MB, data(logical)=${info.data.toFixed(2)} MB, index=${info.index.toFixed(2)} MB)`);
+});
+
+print(`\n[TOTAL] Total disk usage for all databases: ${totalAllDBs.toFixed(2)} MB`);
+print(`[TOTAL] Total disk usage for top ${TOP_N_DB} databases: ${totalTopN.toFixed(2)} MB\n`);
+
+// ----------------------------
+// Анализ ТОП M коллекций только для ТОП N баз
+// ----------------------------
+topDBs.forEach(dbInfo => {
+    let database = db.getSiblingDB(dbInfo.name);
+    print(`=== [COLLECTIONS] Top ${TOP_N_COLL} Collections for DB: ${dbInfo.name} ===`);
+    try {
+        // Получаем все коллекции, фильтруем по MIN_MB
+        let collections = database.getCollectionNames().map(collName => {
+            try {
+                let stats = database.getCollection(collName).stats(1024*1024);
+                return {
+                    name: collName,
+                    storage: stats.storageSize,
+                    data: stats.size,
+                    index: stats.totalIndexSize,
+                    indexes: stats.indexSizes
+                };
+            } catch (e) {
+                print(`[WARNING] Skipping ${dbInfo.name}.${collName}: ${e.message}`);
+                return null;
+            }
+        }).filter(c => c && (c.storage >= MIN_MB || c.data >= MIN_MB || c.index >= MIN_MB));
+
+        // сортировка по размеру коллекций
+        collections.sort((a, b) => b.storage - a.storage);
+
+        // 🔹 анализ только ТОП M коллекций каждой базы
+        collections.slice(0, TOP_N_COLL).forEach((c, idx) => {
+            print(`${idx+1}. ${c.name} → coll(storage)=${c.storage.toFixed(2)} MB, indexes=${c.index.toFixed(2)} MB, data(logical)=${c.data.toFixed(2)} MB${c.data===0 ? " [WARNING] data(logical)=0 may indicate missing stats on secondary or empty collection." : ""}`);
+            
+            // вывод индексов
+            print("   → Indexes:");
+            for (let [indexName, size] of Object.entries(c.indexes)) {
+                if (size >= MIN_MB) {
+                    print(`      ${indexName}: ${size.toFixed(2)} MB`);
+                }
+            }
+
+            // 🔹 проверка возможности освобождения места
+            let wasted = c.storage - c.data - c.index;
+            if (wasted >= MIN_MB) {
+                print(`   ⚠️ Potential reclaimable space: ${wasted.toFixed(2)} MB`);
+                print(`     Run on DB "${dbInfo.name}": db.getCollection("${c.name}").compact()`);
+            }
+        });
+        print("");
+    } catch (e) {
+        print(`[WARNING] Error processing collections for DB ${dbInfo.name}: ${e.message}`);
+    }
+});
+
+// ----------------------------
+// End of Script
+// ----------------------------

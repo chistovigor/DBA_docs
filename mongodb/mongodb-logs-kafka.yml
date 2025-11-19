@@ -1,0 +1,13 @@
+- hosts: all
+  become: yes
+  vars:
+    fb_input_paths:
+    - "/var/log/syslog"
+    - "/var/log/auth.log"
+    es_cluster_nodes:
+    - "ams-mongologs-kafka.xbet.lan:9092"
+    kafka_config_type: "{{ config_type | default('int') }}" # if you nead ext use --extra-vars "config_type=ext"
+    cluster_name: "x-test-elonmusk"
+    index_name: "x-test-elonmusk"
+  roles:
+  - filebeat

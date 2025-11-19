@@ -1,0 +1,10 @@
+---
+- hosts: all
+  become: yes
+  roles:
+    - role: mongodb_update
+      vars:
+        mongodb_version: "8.0"
+        vault_mongo_admin_user: ""
+        vault_mongo_admin_password: ""
+        mongodb_repo_codename: ""

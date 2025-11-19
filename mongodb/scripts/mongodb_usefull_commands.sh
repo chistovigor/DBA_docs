@@ -6,6 +6,130 @@ source ~/.bashrc
 
 mongosh --username root --password $mg_pass --authenticationDatabase admin
 
+# mount encrypted disk
+
+clevis luks bind -f -y -k /tmp/decrypt_password -d /dev/sdaX tang '{"url": "http://tang_ip"}'
+
+# check passphrase works for the disk without remounting
+
+echo "decrypt_password_value" |  cryptsetup luksOpen /dev/sdb1 test-mapper --test-passphrase
+echo $?
+0 - ok, not 0 - failed
+
+# stop / start DB service
+
+systemctl stop mongod
+systemctl start mongod
+#systemctl restart mongod
+systemctl status mongod
+
+# replication
+
+rs.status()
+rs.isMaster()
+
+# check config / priority for nodes
+
+rs.conf()
+
+cfg = rs.conf()
+# Изменить приоритеты (например, сделать node2[1] PRIMARY)
+cfg.members[0].priority = 1  // Текущий primary
+cfg.members[1].priority = 2  // Новая primary нода
+cfg.members[2].priority = 1  
+rs.reconfig(cfg, {force: true})
+
+# add new RS member
+
+-- on the existing node copy keyfile
+cat /etc/mongod.key
+
+-- on the new node create keyfile with the same content and set permissions
+sudo mkdir -p /etc
+sudo tee /etc/mongod.key <<EOF
+<MONGO_REPL_KEY_123456>
+EOF
+sudo chown mongodb:mongodb /etc/mongod.key
+sudo chmod 400 /etc/mongod.key
+
+-- copy config file from existing node to the new one (adjust bindIp )
+/etc/mongod.conf
+
+bindIp: 127.0.0.1,192.168.*.<NEW_IP>  # заменить на IP нового сервера
+
+-- on the new node start DB:
+sudo systemctl enable mongod
+sudo systemctl start mongod
+sudo systemctl status mongod
+ss -tlnp | grep 27017
+
+-- on the primary node add new member
+mongosh --host <PRIMARY_HOST> -u <ADMIN_USER> -p <PASSWORD> --authenticationDatabase admin
+rs.add("192.168.*.<NEW_IP>:27017")
+or 
+rs.add("<NEW_FQDN>:27017")
+rs.status()
+
+-- if you need to add member which cannot be elected to primary:
+rs.add({
+  host: "192.168.*.<NEW_IP>:27017",
+  priority: 0
+})
+rs.reconfig(rs.conf(), {force: true})
+
+-- check status again
+rs.status()
+rs.conf()
+
+
+# remove old member of the replicaset
+
+rs.status()
+-- on the primary node add new member
+mongosh --host <PRIMARY_HOST> -u <ADMIN_USER> -p <PASSWORD> --authenticationDatabase admin
+rs.remove("192.168.*.<OLD_IP>:27017")
+rs.reconfig(rs.conf(), {force: true})
+
+# add tag for existine member of replicaset
+
+cfg = rs.conf()
+cfg.members.forEach((m, i) => print(i, m.host))
+cfg.members[1].tags = { dc: 'ams' }
+rs.reconfig(cfg)
+
+
+# set default write concern for the replicaset
+
+-- check current settings
+db.adminCommand({ getDefaultRWConcern: 1 })
+-- set new settings (commit only after write to 1 node, wtimeout 0 ms)
+db.adminCommand({setDefaultRWConcern: 1,defaultWriteConcern: { w: 1, wtimeout: 0 }})
+
+
+# add additional DB logging
+
+-- checkpoint verbosity level
+
+db.adminCommand({
+setParameter: 1,
+logComponentVerbosity: {
+    storage: {
+      wt: {
+        wtCheckpoint: { verbosity: 1 }
+      }
+    }
+}
+})
+
+-- disable whole verbosity for storage
+
+db.adminCommand({ setParameter: 1, logComponentVerbosity: { storage: { verbosity: 0 } } })
+
+
+# get all DB parameters
+
+db.adminCommand({ getParameter: "*" })
+
 # docker userful commands
 
 #stop and delete all

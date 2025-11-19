@@ -1,0 +1,137 @@
+function onOpen() {
+  SpreadsheetApp.getUi().createMenu("📥 Экспорт Mongo")
+    .addItem("Создать файл и получить CSV", "copyAndHighlightCellDifferences")
+    .addToUi();
+}
+
+function copyAndHighlightCellDifferences() {
+  // === 🔧 НАСТРОЙКИ ===
+  const sourceFileId = "1ZhePm3a8qWXuzSqN5tSSU5dqfxD9UX2gJFhBxtMZX1g"; // исходный файл
+  const sourceSheetName = "Inventory";             // лист-источник
+  const updateSheetName = "inventory_updates";  // Куда вставлять ссылки
+  const maxSheets = 24;                         // Храним максимум 24 листа
+  const columnOrder = [3, 1, 2, 5];             // Порядок столбцов (новый = старый[3,1,2,5])
+
+  // === 📂 Определяем исходный документ ===
+  const sourceSs = (sourceFileId === "SOURCE_SPREADSHEET_ID")
+    ? SpreadsheetApp.getActiveSpreadsheet()
+    : SpreadsheetApp.openById(sourceFileId);
+  const sourceSheet = sourceSs.getSheetByName(sourceSheetName);
+  if (!sourceSheet) {
+    SpreadsheetApp.getUi().alert("Не найден лист-источник: " + sourceSheetName);
+    return;
+  }
+
+  // === 📋 Получаем данные (без первой строки) ===
+  const lastRow = sourceSheet.getLastRow();
+  const lastCol = sourceSheet.getLastColumn();
+  if (lastRow < 2) {
+    SpreadsheetApp.getUi().alert("Нет данных для копирования.");
+    return;
+  }
+  const sourceValues = sourceSheet.getRange(2, 1, lastRow - 1, lastCol).getValues();
+  const reorderedValues = sourceValues.map(row => columnOrder.map(i => row[i]));
+
+  // === 🕒 Имя листа и CSV-файла ===
+  const now = new Date();
+  const sheetName = Utilities.formatDate(now, Session.getScriptTimeZone(), "yyyy-MM-dd_HH-mm");
+
+  // === 📘 Ищем или создаём mongo_servers_csv ===
+  let files = DriveApp.getFilesByName("mongo_servers_csv");
+  let targetSs;
+  if (files.hasNext()) {
+    targetSs = SpreadsheetApp.open(files.next());
+  } else {
+    targetSs = SpreadsheetApp.create("mongo_servers_csv");
+  }
+
+  // === 🧾 Создаём новый лист ===
+  let finalSheetName = sheetName;
+  if (targetSs.getSheetByName(finalSheetName)) {
+    let n = 1;
+    while (targetSs.getSheetByName(finalSheetName + "_" + n)) n++;
+    finalSheetName = finalSheetName + "_" + n;
+  }
+  const targetSheet = targetSs.insertSheet(finalSheetName);
+  targetSheet.getRange(1, 1, reorderedValues.length, reorderedValues[0].length).setValues(reorderedValues);
+
+  // === 🔍 Поиск предыдущих листов ===
+  const allSheets = targetSs.getSheets();
+  const tsPattern = /^\d{4}-\d{2}-\d{2}_\d{2}-\d{2}(_\d+)?$/;
+  let tsSheets = allSheets.filter(s => tsPattern.test(s.getName())).sort((a, b) => a.getName().localeCompare(b.getName()));
+  const newestIndex = tsSheets.findIndex(s => s.getName() === targetSheet.getName());
+  const prevSheet = (newestIndex > 0) ? tsSheets[newestIndex - 1] : null;
+  const prePrevSheet = (newestIndex > 1) ? tsSheets[newestIndex - 2] : null;
+
+  // === ⚖️ Нормализация значений ===
+  function norm(v) {
+    if (v === null || v === undefined) return "";
+    return String(v).trim();
+  }
+
+  // === 🌈 Подсветка новых изменений ===
+  let changedCount = 0;
+  let prevData = null, prePrevData = null;
+  if (prevSheet) prevData = prevSheet.getDataRange().getValues();
+  if (prePrevSheet) prePrevData = prePrevSheet.getDataRange().getValues();
+
+  if (prevData) {
+    for (let r = 0; r < reorderedValues.length; r++) {
+      const newRow = reorderedValues[r];
+      const prevRow = prevData[r] || [];
+      const prePrevRow = prePrevData ? (prePrevData[r] || []) : null;
+
+      for (let c = 0; c < newRow.length; c++) {
+        const newVal = norm(newRow[c]);
+        const prevVal = norm(prevRow[c]);
+        const prePrevVal = prePrevRow ? norm(prePrevRow[c]) : null;
+
+        const changedNow = newVal !== prevVal;
+        const prevWasDifferent = (prePrevRow !== null) && (prevVal !== prePrevVal);
+        const alreadyRecorded = prevWasDifferent && (newVal === prevVal);
+
+        if (changedNow && !alreadyRecorded) {
+          targetSheet.getRange(r + 1, c + 1).setBackground("#FFFF00");
+          changedCount++;
+        }
+      }
+    }
+  }
+
+  // === 🧱 Форматирование (не влияет на CSV) ===
+  try {
+    targetSheet.autoResizeColumns(1, reorderedValues[0].length);
+    targetSheet.setFrozenRows(1);
+  } catch (e) {}
+
+  // === 🧹 Удаляем старые листы (макс. 24) ===
+  if (tsSheets.length > maxSheets) {
+    while (tsSheets.length > maxSheets) {
+      const oldest = tsSheets.shift();
+      targetSs.deleteSheet(oldest);
+    }
+  }
+
+  // === 💾 Создаём CSV-файл ===
+  const csvName = "mongo_servers_" + sheetName + ".csv";
+  const csvContent = reorderedValues.map(r =>
+    r.map(v => `"${(v ?? "").toString().replace(/"/g, '""')}"`).join(",")
+  ).join("\n");
+  const csvFile = DriveApp.createFile(csvName, csvContent, MimeType.CSV);
+
+  // === 🔗 Ссылка на скачивание ===
+  const csvDownloadUrl = "https://drive.google.com/uc?export=download&id=" + csvFile.getId();
+
+  // === 📋 Добавляем ссылку и количество изменений ===
+  let updateSheet = sourceSs.getSheetByName(updateSheetName);
+  if (!updateSheet) updateSheet = sourceSs.insertSheet(updateSheetName);
+  updateSheet.appendRow([csvDownloadUrl, changedCount]);
+
+  // === ✅ Сообщение пользователю ===
+  SpreadsheetApp.getUi().alert(
+    "✅ Создан новый лист: " + finalSheetName +
+    "\n✅ CSV-файл: " + csvName +
+    "\n📊 Изменённых ячеек: " + changedCount +
+    "\n🔗 Ссылка на скачивание:\n" + csvDownloadUrl
+  );
+}

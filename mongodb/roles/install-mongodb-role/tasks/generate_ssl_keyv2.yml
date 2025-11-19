@@ -1,0 +1,14 @@
+---
+- name: Generate mongod.key on controller
+  run_once: true
+  delegate_to: localhost
+  shell: openssl rand -base64 741 > 'roles/install-mongodb-role/templates/mongod.key.j2'
+  become: no
+
+- name: Copy mongod.key to hosts
+  copy:
+    src: 'roles/install-mongodb-role/templates/mongod.key.j2'
+    dest: "{{ mongod_key_dest }}"
+    mode: 0700
+    owner: 'mongodb'
+    group: 'root'    

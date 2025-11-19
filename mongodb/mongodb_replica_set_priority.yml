@@ -1,0 +1,163 @@
+---
+- name: Manage MongoDB replica set priorities and show members
+  hosts: all
+  gather_facts: false
+
+  vars:
+    mongo_user: "root"
+    mongo_password: "test_password"
+    update_priority: "n"  # y = update priorities, n = display only
+
+  tasks:
+    ####################################################################
+    # 1. Get replica set members with priority, votes, and tags
+    ####################################################################
+    - name: Get replica set members info
+      ansible.builtin.shell: >
+        mongosh --host localhost:27017 -u {{ mongo_user }} -p {{ mongo_password }}
+        --authenticationDatabase admin --quiet --eval "
+        try {
+          const cfg = rs.conf();
+          const result = cfg.members.map(m => ({
+            host: m.host,
+            priority: m.priority,
+            votes: m.votes,
+            tags: m.tags || {}
+          }));
+          print(JSON.stringify(result));
+        } catch (e) {
+          print('[]');
+        }"
+      register: replica_set_members_result
+      run_once: true
+
+    ####################################################################
+    # 2. Display members in a formatted ASCII table
+    ####################################################################
+    - name: Show replica set members (ASCII table)
+      ansible.builtin.debug:
+        msg: |
+          {% set members = replica_set_members_result.stdout | from_json %}
+          {% set col_host = 48 %}
+          {% set col_priority = 8 %}
+          {% set col_votes = 5 %}
+          {% set col_tags = 40 %}
+          {#
+            Собираем общий список ключей тегов по всем нодам,
+            исключая технические-заглушки 'key' и 'value'.
+          #}
+          {% set all_tag_items = members | map(attribute='tags') | list | map('default', {}) | map('dict2items') | list | sum(start=[]) %}
+          {% set filtered_tag_items = all_tag_items | rejectattr('key','equalto','key') | rejectattr('key','equalto','value') | list %}
+          {% set tag_keys = (filtered_tag_items | map(attribute='key') | list | unique | sort) %}
+          {{ '─' * (col_host + col_priority + col_votes + col_tags + 13) }}
+          │{{ ' %-48s │ %-8s │ %-5s │ %-40s │' | format('HOST','PRIORITY','VOTES','TAGS') }}
+          {{ '─' * (col_host + col_priority + col_votes + col_tags + 13) }}
+          {% for m in members -%}
+          {% set m_tags = m.tags | default({}) %}
+          {% if tag_keys | length > 0 -%}
+          {% set tag_parts = [] %}
+          {% for k in tag_keys -%}
+          {% set v = (m_tags[k] if k in m_tags else '-') %}
+          {% set _ = tag_parts.append(k ~ '=' ~ (v if (v is string and v|length > 0) else (v|string if v not in [None, ''] else '-'))) %}
+          {% endfor -%}
+          {% set tag_string = tag_parts | join(',') %}
+          {% else -%}
+          {% set tag_string = '-' %}
+          {% endif -%}
+          {{ '│ %-48s │ %-8s │ %-5s │ %-40s │' | format(m.host, m.priority|string, m.votes|string, tag_string) }}
+          {% endfor %}
+          {{ '─' * (col_host + col_priority + col_votes + col_tags + 13) }}
+      run_once: true
+
+    ####################################################################
+    # 3. Check if priorities differ
+    ####################################################################
+    - name: Check if priorities differ
+      ansible.builtin.set_fact:
+        priorities_differ: >-
+          {{
+            (replica_set_members_result.stdout | from_json | map(attribute='priority') | list | unique | length) > 1
+          }}
+      run_once: true
+
+    - name: Debug if priorities differ
+      ansible.builtin.debug:
+        msg: "Priorities differ: {{ priorities_differ }}"
+      run_once: true
+
+    ####################################################################
+    # 4. Build new config with priority=1 for all members (optional)
+    ####################################################################
+    - name: Show replica set members (ASCII table)
+      ansible.builtin.debug:
+        msg: |
+         {% set members = replica_set_members_result.stdout | from_json %}
+         {% set col_host = 48 %}
+         {% set col_priority = 8 %}
+         {% set col_votes = 5 %}
+         {% set col_tags = 40 %}
+         {% set all_tag_items = members | map(attribute='tags') | list | map('default', {}) | map('dict2items') | list | sum(start=[]) %}
+         {% set filtered_tag_items = all_tag_items | rejectattr('key','equalto','key') | rejectattr('key','equalto','value') | list %}
+         {% set tag_keys = (filtered_tag_items | map(attribute='key') | list | unique | sort) %}
+         {{ '─' * (col_host + col_priority + col_votes + col_tags + 13) }}
+         │{{ ' %-48s │ %-8s │ %-5s │ %-40s │' | format('HOST','PRIORITY','VOTES','TAGS') }}
+         {{ '─' * (col_host + col_priority + col_votes + col_tags + 13) }}
+         {% for m in members -%}
+         {% set m_tags = m.tags | default({}) %}
+         {% if tag_keys | length > 0 -%}
+         {% set tag_parts = [] %}
+         {% for k in tag_keys -%}
+         {% set v = (m_tags[k] if k in m_tags else '-') %}
+         {% set _ = tag_parts.append(k ~ '=' ~ (v if (v is string and v|length > 0) else (v|string if v not in [None, ''] else '-'))) %}
+         {% endfor -%}
+         {% set tag_string = tag_parts | join(',') %}
+         {% else -%}
+         {% set tag_string = '-' %}
+         {% endif -%}
+         {{ '│ %-48s │ %-8s │ %-5s │ %-40s │' | format(m.host, m.priority|string, m.votes|string, tag_string) }}
+         {% endfor %}
+         {{ '─' * (col_host + col_priority + col_votes + col_tags + 13) }}
+      run_once: true
+
+    ####################################################################
+    # 5. Apply the new config using rs.reconfig (optional)
+    ####################################################################
+    - name: Apply new replica set config (rs.reconfig)
+      ansible.builtin.shell: >
+        mongosh --host localhost:27017 -u {{ mongo_user }} -p {{ mongo_password }}
+        --authenticationDatabase admin --quiet --eval "
+        try {
+          const cfg = rs.conf();
+          cfg.version = cfg.version + 1;
+          cfg.protocolVersion = 1;
+          cfg.members = cfg.members.map(m => ({
+            _id: m._id,
+            host: m.host,
+            arbiterOnly: m.arbiterOnly,
+            buildIndexes: m.buildIndexes,
+            hidden: m.hidden,
+            priority: 1,
+            votes: m.votes,
+            tags: m.tags || {},
+            secondaryDelaySecs: (typeof m.secondaryDelaySecs === 'number' ? m.secondaryDelaySecs : 0)
+          }));
+          print('Applying reconfig...');
+          rs.reconfig(cfg, { force: true });
+          print('Reconfig applied');
+        } catch(e) {
+          print('ERROR: ' + e);
+        }"
+      when:
+        - update_priority == "y"
+        - priorities_differ
+      run_once: true
+
+    ####################################################################
+    # 6. Message if no update is needed
+    ####################################################################
+    - name: Debug no changes
+      ansible.builtin.debug:
+        msg: "No priority update required"
+      when:
+        - update_priority != "y" or not priorities_differ
+      run_once: true

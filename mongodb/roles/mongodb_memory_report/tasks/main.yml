@@ -1,0 +1,80 @@
+---
+###############################
+# OS-Level Memory Report
+###############################
+- name: Deploy OS-level memory report script
+  template:
+    src: memory_mongo_report.sh.j2
+    dest: /tmp/memory_mongo_report.sh
+    mode: '0755'
+
+- name: Run OS-level memory report
+  shell: /tmp/memory_mongo_report.sh
+  register: os_memory_report
+  ignore_errors: yes
+
+- name: Display OS-level memory report
+  debug:
+    msg: "{{ os_memory_report.stdout_lines | default([]) }}"
+
+###############################
+# MongoDB Internal Memory Report
+###############################
+- name: Deploy MongoDB memory report script
+  template:
+    src: mongo_memory_cache_report.js.j2
+    dest: /tmp/mongo_memory_cache_report.js
+    mode: '0644'
+
+- name: Run MongoDB internal memory cache report with threshold
+  shell: |
+    timeout 60s mongosh --quiet -u "{{ mongo_user }}" -p "{{ mongo_password }}" --authenticationDatabase admin /tmp/mongo_memory_cache_report.js
+  register: mongo_cache_report
+  changed_when: false
+  ignore_errors: true
+
+- name: Save MongoDB internal memory report to file
+  copy:
+    content: "{{ mongo_cache_report.stdout | default('') }}"
+    dest: /tmp/mongo_memory_cache.txt
+    mode: '0644'
+  when: mongo_cache_report.stdout is defined and mongo_cache_report.stdout != ""
+
+- name: Display MongoDB internal memory report as text
+  debug:
+    msg: "{{ mongo_cache_report.stdout_lines }}"
+  when: mongo_cache_report.stdout_lines is defined and mongo_cache_report.stdout_lines | length > 0
+
+
+# -------------------------
+# MongoDB Profiling Report
+# -------------------------
+
+# Deploy MongoDB current / history RAM consumption (with profiling) report script
+- name: Deploy MongoDB profiling report script
+  template:
+    src: profiling_report.js.j2
+    dest: /tmp/profiling_report.js
+    mode: '0644'
+
+# Run MongoDB current / history RAM consumption (with profiling) report report
+- name: Run MongoDB profiling report
+  shell: |
+    timeout {{ mongodb_profiling_duration_sec + 60 }}s mongosh --quiet -u "{{ mongo_user }}" -p "{{ mongo_password }}" --authenticationDatabase admin /tmp/profiling_report.js
+  register: profiling_output
+  changed_when: false
+
+# Save MongoDB current / history RAM consumption (with profiling) report to file
+- name: Save MongoDB profiling report to file
+  copy:
+    content: "{{ profiling_output.stdout }}"
+    dest: /tmp/profiling_report_output.txt
+    mode: '0644'
+
+# Display MongoDB current / history RAM consumption (with profiling) report as text
+- name: Display MongoDB profiling report as text
+  debug:
+    msg: "{{ profiling_output.stdout_lines }}"
+
+
+

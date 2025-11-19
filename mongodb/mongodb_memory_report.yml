@@ -1,0 +1,7 @@
+---
+- name: Run MongoDB memory analysis
+  hosts: all
+  gather_facts: false
+
+  roles:
+    - role: mongodb_memory_report

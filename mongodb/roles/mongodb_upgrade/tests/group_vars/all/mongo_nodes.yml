@@ -1,0 +1,5 @@
+mongo_replicaset: rs0
+mongo_nodes:
+  - { id: 0, host: "{{ hostvars['mongo-primary'].ansible_host }}", port: 27017, role: "primary" }
+  - { id: 1, host: "{{ hostvars['mongo-secondary1'].ansible_host }}", port: 27017, role: "secondary" }
+  - { id: 2, host: "{{ hostvars['mongo-secondary2'].ansible_host }}", port: 27017, role: "secondary" }

@@ -1,0 +1,125 @@
+---
+- name: Determine package manager
+  ansible.builtin.set_fact:
+    package_manager: "{{ 'apt' if ansible_pkg_mgr == 'apt' else 'yum' }}"
+    repo_module: "{{ 'apt_repository' if ansible_pkg_mgr == 'apt' else 'yum_repository' }}"
+    gpg_module: "{{ 'ansible.builtin.apt_key' if ansible_pkg_mgr == 'apt' else 'ansible.builtin.rpm_key' }}"
+
+- name: Import Elastic GPG key
+  block:
+    - name: Import Elastic GPG key for APT
+      ansible.builtin.apt_key:
+        url: "https://artifacts.elastic.co/GPG-KEY-elasticsearch"
+        state: present
+        keyring: /etc/apt/trusted.gpg.d/elastic-archive-keyring.gpg
+      when: package_manager == "apt"
+      become: true
+
+    - name: Import Elastic GPG key for YUM
+      ansible.builtin.rpm_key:
+        key: "https://artifacts.elastic.co/GPG-KEY-elasticsearch"
+        state: present
+      when: package_manager == "yum"
+      become: true
+
+- name: Add Elastic repository
+  block:
+    - name: Add Elastic APT repository
+      apt_repository:
+        repo: "deb https://artifacts.elastic.co/packages/7.x/apt stable main"
+        state: present
+        filename: "elastic-7.x"
+        update_cache: yes
+      when: package_manager == "apt"
+      become: true
+
+    - name: Add Elastic YUM repository
+      yum_repository:
+        name: elastic-7.x
+        description: "Elastic 7.x YUM repo"
+        baseurl: "https://artifacts.elastic.co/packages/7.x/yum"
+        gpgcheck: yes
+        gpgkey: "https://artifacts.elastic.co/GPG-KEY-elasticsearch"
+        enabled: yes
+      when: package_manager == "yum"
+      become: true        
+
+- name: Install APT
+  apt:
+    name: filebeat
+    state: latest
+    update_cache: yes
+  when: package_manager == "apt"
+  become: true
+
+- name: Install YUM
+  yum:
+    name: filebeat
+    state: latest
+    update_cache: yes
+  when: package_manager == "yum"
+  become: true        
+
+- name: Create filebeat config dir
+  file:
+    state: directory
+    path: "/etc/{{ item.key }}"
+    owner: root
+    group: root
+    mode: 0775
+  with_dict:
+    - "{{ filebeat_config }}"
+  become: true
+
+- name: Create filebeat data dir
+  file:
+    state: directory
+    path: "/var/lib/{{ item.key }}"
+    owner: root
+    group: root
+    mode: 0775
+  with_dict:
+    - "{{ filebeat_config }}"
+  become: true
+
+- name: Create filebeat log dir
+  file:
+    state: directory
+    path: "/var/log/{{ item.key }}"
+    owner: root
+    group: root
+    mode: 0775
+  with_dict:
+    - "{{ filebeat_config }}"
+  become: true
+
+- name: Copy config-files
+  template:
+    src: "filebeat.yml.j2"
+    dest: "/etc/{{ item.key }}/filebeat.yml"
+  with_dict:
+    "{{ filebeat_config }}"
+  become: true
+
+- name: Copy service-files
+  template:
+    src: "filebeat.service.j2"
+    dest: "/etc/systemd/system/{{ item.key }}.service"
+  with_dict:
+    "{{ filebeat_config }}"
+  become: true
+
+- name: Restart Filebeat
+  systemd:
+    name: filebeat
+    state: restarted
+    enabled: yes
+    daemon_reload: yes
+  become: true
+
+- name: Stop Filebeat
+  service:
+    name: filebeat
+    state: stopped
+  when: normal_task_list is undefined
+  become: true

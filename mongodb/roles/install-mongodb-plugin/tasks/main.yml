@@ -1,0 +1,23 @@
+---
+   - name: install zabbix-agent2-plugin-mongodb
+     ansible.builtin.apt:
+      name: zabbix-agent2-plugin-mongodb
+      state: present
+
+   - name: restart zabbix-agent2
+     ansible.builtin.service:
+       name: zabbix-agent2
+       state: restarted
+
+   - name: Pause for 2 seconds
+     ansible.builtin.pause:
+       seconds: 2
+
+   - name: Check service status with service
+     shell: service zabbix-agent2 status | grep -i active | awk '{print $1, $2}'
+     register: service_status_service_za2
+
+
+   - name: Display service status
+     debug:
+       msg: "Zabbix-agent2 Service status: {{ service_status_service_za2.stdout if service_status_service_za2.stdout else service_status_service_za2.stderr }}"

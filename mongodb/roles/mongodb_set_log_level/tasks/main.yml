@@ -1,0 +1,94 @@
+---
+- name: Deploy log level management script
+  ansible.builtin.template:
+    src: log_level_manage_cluster.js.j2
+    dest: "{{ script_path }}"
+    mode: '0755'
+  diff: no
+
+- name: Run log level management script on cluster nodes
+  ansible.builtin.shell: >
+    mongosh --host localhost:27017 -u {{ mongo_user }} -p {{ mongo_password }} --authenticationDatabase admin --quiet --file {{ script_path }}
+  environment:
+    LOG_ACTION: "{{ log_action }}"
+    LOG_LEVEL: "{{ log_level }}"
+    PROFILING_LEVEL: "{{ ProfilingLevel | default('') }}"
+    SLOWMS_THRESHOLD: "{{ slowms_threshold | default('') }}"
+    PROFILING_EXPLICIT: "{{ 'true' if ProfilingLevel is defined else 'false' }}"
+    SLOWMS_EXPLICIT: "{{ 'true' if slowms_threshold is defined else 'false' }}"
+  register: log_level_result
+  ignore_errors: yes
+
+- name: Show script output
+  ansible.builtin.debug:
+    var: log_level_result.stdout_lines
+
+- name: Clean up script file
+  ansible.builtin.file:
+    path: "{{ script_path }}"
+    state: absent
+
+- name: Get replica set members
+  ansible.builtin.shell: >
+    mongosh --host localhost:27017 -u {{ mongo_user }} -p {{ mongo_password }} --authenticationDatabase admin --quiet --eval "
+    try {
+      const rsStatus = db.adminCommand({ replSetGetStatus: 1 });
+      const members = rsStatus.members.map(m => m.name);
+      print(JSON.stringify(members));
+    } catch (e) {
+      print('[]');
+    }"
+  register: replica_set_members_result
+  when: slowms_threshold is defined
+  run_once: true
+
+- name: Set replica set members fact
+  ansible.builtin.set_fact:
+    replica_set_members: "{{ replica_set_members_result.stdout | from_json }}"
+  when: slowms_threshold is defined
+  run_once: true
+
+- name: Extract hostnames from replica set members (remove port numbers)
+  ansible.builtin.set_fact:
+    replica_set_hostnames: "{{ replica_set_members | map('regex_replace', ':.*$', '') | list }}"
+  when: slowms_threshold is defined
+  run_once: true
+
+- name: Deploy operation profiling update script
+  ansible.builtin.template:
+    src: update_operation_profiling.sh.j2
+    dest: "/tmp/update_operation_profiling.sh"
+    mode: '0755'
+  when: slowms_threshold is defined
+  delegate_to: "{{ item }}"
+  loop: "{{ replica_set_hostnames | default([]) }}"
+  vars:
+    ansible_ssh_port: 40022
+  diff: no
+
+- name: Run operation profiling update script
+  ansible.builtin.shell: >
+    bash /tmp/update_operation_profiling.sh {{ slowms_threshold }}
+  when: slowms_threshold is defined
+  become: yes
+  delegate_to: "{{ item }}"
+  loop: "{{ replica_set_hostnames | default([]) }}"
+  vars:
+    ansible_ssh_port: 40022
+  register: profiling_update_result
+  ignore_errors: yes
+
+- name: Show profiling script output
+  ansible.builtin.debug:
+    var: profiling_update_result.results
+  when: slowms_threshold is defined
+
+- name: Clean up profiling script file
+  ansible.builtin.file:
+    path: "/tmp/update_operation_profiling.sh"
+    state: absent
+  when: slowms_threshold is defined
+  delegate_to: "{{ item }}"
+  loop: "{{ replica_set_hostnames | default([]) }}"
+  vars:
+    ansible_ssh_port: 40022

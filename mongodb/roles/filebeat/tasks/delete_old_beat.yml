@@ -1,0 +1,40 @@
+---
+- name: find all filebeat systemd services
+  find:
+    paths: /etc/systemd/system
+    patterns: 'filebeat*.service'
+  register: filebeat_services
+
+- name: stop all filebeat services if they exist
+  systemd:
+    name: "{{ item.path |basename }}"
+    state: stopped
+    enabled: no
+  with_items: "{{ filebeat_services.files }}"
+  when: filebeat_services.matched > 0
+
+- name: delete filebeat services if they exist
+  file:
+    name: "{{ item.path }}"
+    state: absent
+  with_items: "{{ filebeat_services.files }}"
+
+- name: get list of directories to delete in etc
+  shell: "find /etc -type d -name 'filebeat*'"
+  register: filebeat_directories
+
+- name: del filebeat directories in etc
+  file:
+    name: "{{ item }}"
+    state: absent
+  with_items: "{{ filebeat_directories.stdout_lines }}"
+
+- name: get list of directories to delete in /var/log
+  shell: "find /var/log -type d -name 'filebeat*'"
+  register: filebeat_directories
+
+- name: del filebeat directories in /var/log
+  file:
+    name: "{{ item }}"
+    state: absent
+  with_items: "{{ filebeat_directories.stdout_lines }}"

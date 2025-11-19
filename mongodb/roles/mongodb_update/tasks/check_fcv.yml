@@ -1,0 +1,50 @@
+---
+- name: Check MongoDB Feature Compatibility Version
+  shell: >
+    mongosh --quiet --username "root" --password "{{ vault_mongo_admin_password }}" --authenticationDatabase admin --eval '
+    try {
+      var fcvResult = db.adminCommand({ "getParameter": 1, "featureCompatibilityVersion": 1 });
+      if (fcvResult.ok === 1) {
+        print(JSON.stringify({
+          "fcv": fcvResult.featureCompatibilityVersion,
+          "status": "success"
+        }));
+      } else {
+        print(JSON.stringify({
+          "error": "Failed to get FCV: " + fcvResult.errmsg,
+          "status": "error"
+        }));
+      }
+    } catch(e) {
+      print(JSON.stringify({
+        "error": e.message,
+        "status": "error"
+      }));
+    }'
+  register: mongo_fcv
+  changed_when: false
+  failed_when: mongo_fcv.rc != 0
+
+- name: Parse FCV version (alternative)
+  ansible.builtin.set_fact:
+    fcv_version: "{{ (mongo_fcv.stdout | from_json).fcv.version }}"
+
+- name: Get installed MongoDB version
+  ansible.builtin.command: mongod --version
+  register: mongod_version
+  changed_when: false
+
+- name: Parse installed MongoDB version
+  ansible.builtin.set_fact:
+    installed_mongo_version: "{{ (mongod_version.stdout | regex_search('db version v([0-9]+\\.[0-9]+)', '\\1', multiline=True))[0] }}"
+
+- name: Fail if MongoDB FCV does not match installed version
+  ansible.builtin.fail:
+    msg: >
+      "MongoDB FCV ({{ fcv_version }}) does not match installed version ({{ installed_mongo_version }}). Aborting."
+  when: fcv_version != installed_mongo_version
+
+- name: Show success if FCV matches installed version
+  ansible.builtin.debug:
+    msg: "MongoDB FCV ({{ fcv_version }}) matches installed version ({{ installed_mongo_version }})."
+  when: fcv_version == installed_mongo_version

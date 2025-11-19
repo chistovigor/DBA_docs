@@ -1,0 +1,13 @@
+---
+- name: fix repo centos 8 stream
+  hosts: all
+  become: yes
+  tasks:
+    - name: copy script
+      copy:
+        src: ~/repo/mongodb/files/centos8streamrepo.sh
+        dest: /tmp/centos8streamrepo.sh
+        mode: '0755'
+    
+    - name: run on servers
+      shell: /tmp/centos8streamrepo.sh

@@ -1,0 +1,22 @@
+---
+- name: Получаем информацию о сервисах
+  ansible.builtin.service_facts:
+
+- name: Остановить MongoDB перед обновлением
+  ansible.builtin.systemd:
+    name: "mongod"
+    state: stopped
+    daemon_reload: true
+  when:
+    - service_action == "stop"
+    - "'mongod.service' in ansible_facts.services"
+
+- name: Запустить MongoDB после обновления
+  ansible.builtin.systemd:
+    name: "mongod"
+    state: started
+    enabled: true
+    daemon_reload: true
+  when:
+    - service_action == "start"
+    - "'mongod.service' in ansible_facts.services"

@@ -1,0 +1,6 @@
+---
+- name: Auto-generate mongod.conf
+  template:
+    src: "{{ mongod_conf_template }}"
+    dest: "{{ mongod_conf_dest }}"
+

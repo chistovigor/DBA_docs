@@ -1,0 +1,37 @@
+---
+# ================================
+# Главный tasks/main.yml для роли mongodb_update
+# ================================
+
+# 1. Проверяем статус Replica Set и версии MongoDB
+# - name: Проверяем статус Replica Set и версии MongoDB
+#   import_tasks: check_replicaset_status.yml
+- name: Проверяем совместимость
+  import_tasks: check_fcv.yml
+  tags: fcv
+# 2. Добавление репозитория MongoDB
+- name: Добавляем репозиторий MongoDB {{ mongodb_version }}
+  import_tasks: add_repo.yml
+
+# 3. Останавливаем MongoDB перед обновлением (только на нужных серверах)
+- name: Останавливаем MongoDB перед обновлением
+  import_tasks: stop_start_service.yml
+  vars:
+    service_action: stop
+
+
+# 4. Устанавливаем/обновляем MongoDB (только на серверах, где версия отличается)
+- name: Устанавливаем/обновляем MongoDB {{ mongodb_version }}
+  import_tasks: install_mongodb.yml
+
+
+# 5. Запускаем MongoDB после обновления
+- name: Запускаем MongoDB после обновления
+  import_tasks: stop_start_service.yml
+  vars:
+    service_action: start
+
+# 6. Выводим сообщение о том, какие сервера были обновлены
+- name: Выводим сервера, которые были обновлены
+  ansible.builtin.debug:
+    msg: "Обновление на сервере выполнено"

@@ -1,0 +1,434 @@
+// log_level_manage_cluster.js
+// Usage: mongosh --host <host> -u <user> -p <password> --authenticationDatabase admin --file log_level_manage_cluster.js
+// Parameters are passed via environment variables: LOG_ACTION and LOG_LEVEL
+
+// Read parameters from environment variables
+const action = process.env.LOG_ACTION;
+const levelArg = parseInt(process.env.LOG_LEVEL, 10) || 1;
+// Set default values for profiling parameters when not explicitly provided
+const profilingLevel = (process.env.PROFILING_LEVEL !== undefined && process.env.PROFILING_LEVEL !== '') ? parseInt(process.env.PROFILING_LEVEL, 10) : 0;
+const slowmsThreshold = (process.env.SLOWMS_THRESHOLD !== undefined && process.env.SLOWMS_THRESHOLD !== '') ? parseInt(process.env.SLOWMS_THRESHOLD, 10) : 100;
+
+if (!action) {
+    print("❌ Error: LOG_ACTION environment variable is not set");
+    print("Usage: Set LOG_ACTION=enable|disable and LOG_LEVEL=<number> environment variables");
+    quit(1);
+}
+
+print(`Profiling parameters: level=${profilingLevel}, slowms=${slowmsThreshold}`);
+
+// Universal version: works on MongoDB 6.x–8.x, on both PRIMARY and SECONDARY
+function enableSecondaryOk() {
+    try {
+        db.getMongo().setSecondaryOk(true);
+    } catch (e) {}
+    try {
+        db.getMongo().setReadPref("secondaryPreferred");
+    } catch (e) {}
+}
+
+enableSecondaryOk();
+
+// Получаем текущую базу данных admin
+const adminDB = db.getSiblingDB("admin");
+
+// Проверяем, что мы подключены к replica set
+let rsStatus;
+try {
+    rsStatus = adminDB.adminCommand({ replSetGetStatus: 1 });
+} catch (e) {
+    print("❌ Error: Not connected to a replica set or insufficient permissions");
+    quit(1);
+}
+
+print(`Connected to replica set: ${rsStatus.set}`);
+
+// Получаем список всех узлов из реплики
+const nodes = rsStatus.members.map(m => m.name);
+print(`Found ${nodes.length} nodes in replica set`);
+
+// Функция для проверки текущих уровней логирования
+function checkLogLevels(title = "Current Log Level Status") {
+    print(`\n${title}:`);
+    print("┌─────────────────────────────────────────────────────┬──────────────┬──────────────┐");
+    print("│ Server                                              │ Status       │ Log Level    │");
+    print("├─────────────────────────────────────────────────────┼──────────────┼──────────────┤");
+    
+    nodes.forEach(node => {
+        const nodeInfo = rsStatus.members.find(m => m.name === node);
+        const nodeState = nodeInfo.stateStr;
+        
+        try {
+            // Получаем текущий уровень логирования через getLogComponents вместо getParameter
+            const logComponents = adminDB.getLogComponents();
+            const currentLevel = logComponents.verbosity || 0;
+            
+            const serverName = node.padEnd(51);
+            const status = nodeState.padEnd(12);
+            const level = currentLevel.toString().padEnd(12);
+            
+            print(`│ ${serverName} │ ${status} │ ${level} │`);
+        } catch (e) {
+            const serverName = node.padEnd(51);
+            const status = "ERROR".padEnd(12);
+            const level = "N/A".padEnd(12);
+            
+            print(`│ ${serverName} │ ${status} │ ${level} │`);
+        }
+    });
+    
+    print("└─────────────────────────────────────────────────────┴──────────────┴──────────────┘");
+    print("");
+}
+
+// Функция для проверки текущих настроек профилирования
+function checkProfilingStatus(title = "Current Profiling Status") {
+    print(`\n${title}:`);
+    print("┌─────────────────────────────────────────────────────┬──────────────┬────────────────────────────────────────┐");
+    print("│ Server                                              │ Status       │ Profiling                              │");
+    print("├─────────────────────────────────────────────────────┼──────────────┼────────────────────────────────────────┤");
+    
+    const defaultProfilingLevel = 0;
+    const defaultSlowMs = 100;
+    
+    nodes.forEach(node => {
+        const nodeInfo = rsStatus.members.find(m => m.name === node);
+        const nodeState = nodeInfo.stateStr;
+        
+        try {
+            // Подключаемся к узлу для получения настроек профилирования
+            let nodeConnection;
+            try {
+                // For secondary nodes, use connection string with read preference
+                let connectionString = node;
+                if (nodeState === "SECONDARY") {
+                    connectionString = `${node}/?readPreference=secondaryPreferred`;
+                }
+                nodeConnection = new Mongo(connectionString);
+                
+                const nodeAdminDB = nodeConnection.getDB("admin");
+                
+                // Set read preference at database level as backup
+                if (nodeState === "SECONDARY") {
+                    nodeAdminDB.getMongo().setReadPref("secondaryPreferred");
+                }
+                
+                // Authenticate using the same credentials as the main connection
+                nodeAdminDB.auth("{{ mongo_user }}", "{{ mongo_password }}");
+                
+                // Получаем список баз данных с нестандартными настройками профилирования
+                let overridden = [];
+                let hasNonDefaultSettings = false;
+                
+                // For secondary nodes, skip individual database profiling checks
+                if (nodeState === "PRIMARY") {
+                    nodeAdminDB.adminCommand({ listDatabases: 1 }).databases.forEach(function(d) {
+                        const dbName = d.name;
+                        const database = nodeAdminDB.getSiblingDB(dbName);
+                        
+                        try {
+                            const status = database.getProfilingStatus();
+                            const level = status.was;
+                            const slowms = status.slowms;
+                            
+                            if (level !== defaultProfilingLevel || slowms !== defaultSlowMs) {
+                                overridden.push(`${dbName}(${level}/${slowms})`);
+                                hasNonDefaultSettings = true;
+                            }
+                        } catch (e) {
+                            // Ignore errors for individual databases
+                        }
+                    });
+                }
+                
+                const serverName = node.padEnd(51);
+                const status = nodeState.padEnd(12);
+                let profilingInfo;
+                
+                if (nodeState === "SECONDARY") {
+                    profilingInfo = "Secondary".padEnd(40);
+                } else if (hasNonDefaultSettings) {
+                    profilingInfo = overridden.join(", ");
+                    if (profilingInfo.length > 40) {
+                        profilingInfo = profilingInfo.substring(0, 37) + "...";
+                    }
+                    profilingInfo = profilingInfo.padEnd(40);
+                } else {
+                    profilingInfo = "Default".padEnd(40);
+                }
+                
+                print(`│ ${serverName} │ ${status} │ ${profilingInfo} │`);
+                
+                nodeConnection.close();
+            } catch (e) {
+                // Если не можем подключиться к узлу, используем текущее подключение для PRIMARY
+                if (nodeState === "PRIMARY") {
+                    let overridden = [];
+                    let hasNonDefaultSettings = false;
+                    
+                    adminDB.adminCommand({ listDatabases: 1 }).databases.forEach(function(d) {
+                        const dbName = d.name;
+                        const database = adminDB.getSiblingDB(dbName);
+                        
+                        try {
+                            const status = database.getProfilingStatus();
+                            const level = status.was;
+                            const slowms = status.slowms;
+                            
+                            if (level !== defaultProfilingLevel || slowms !== defaultSlowMs) {
+                                overridden.push(`${dbName}(${level}/${slowms})`);
+                                hasNonDefaultSettings = true;
+                            }
+                        } catch (e) {
+                            // Ignore errors for individual databases
+                        }
+                    });
+                    
+                    const serverName = node.padEnd(51);
+                    const status = nodeState.padEnd(12);
+                    let profilingInfo;
+                    
+                    if (hasNonDefaultSettings) {
+                        profilingInfo = overridden.join(", ");
+                        if (profilingInfo.length > 40) {
+                            profilingInfo = profilingInfo.substring(0, 37) + "...";
+                        }
+                        profilingInfo = profilingInfo.padEnd(40);
+                    } else {
+                        profilingInfo = "Default".padEnd(40);
+                    }
+                    
+                    print(`│ ${serverName} │ ${status} │ ${profilingInfo} │`);
+                } else {
+                    const serverName = node.padEnd(51);
+                    const status = "ERROR".padEnd(12);
+                    const profilingInfo = "N/A".padEnd(40);
+                    
+                    print(`│ ${serverName} │ ${status} │ ${profilingInfo} │`);
+                }
+            }
+        } catch (e) {
+            const serverName = node.padEnd(51);
+            const status = "ERROR".padEnd(12);
+            const profilingInfo = "N/A".padEnd(40);
+            
+            print(`│ ${serverName} │ ${status} │ ${profilingInfo} │`);
+        }
+    });
+    
+    print("└─────────────────────────────────────────────────────┴──────────────┴────────────────────────────────────────┘");
+    
+    // Показываем детальную информацию для всех серверов
+    nodes.forEach(node => {
+        const nodeInfo = rsStatus.members.find(m => m.name === node);
+        const nodeState = nodeInfo.stateStr;
+        
+        print(`\nCurrent Profiling Status for server ${node} (${nodeState}):`);
+        
+        let overridden = [];
+        let defaults = [];
+        
+        try {
+            let nodeConnection;
+            let nodeAdminDB;
+            
+            try {
+                // Подключаемся к узлу
+                nodeConnection = new Mongo(node);
+                nodeAdminDB = nodeConnection.getDB("admin");
+                
+                // Enable secondary reads for this connection
+                try {
+                    nodeAdminDB.getMongo().setSecondaryOk(true);
+                } catch (e) {}
+                try {
+                    nodeAdminDB.getMongo().setReadPref("secondaryPreferred");
+                } catch (e) {}
+                
+                // Authenticate using the same credentials as the main connection
+                nodeAdminDB.auth("{{ mongo_user }}", "{{ mongo_password }}");
+            } catch (e) {
+                // Используем текущее подключение для PRIMARY
+                nodeAdminDB = adminDB;
+            }
+            
+            let databases = [];
+            
+            try {
+                const res = nodeAdminDB.adminCommand({ listDatabases: 1 });
+                if (res.ok) {
+                    databases = res.databases;
+                }
+            } catch (e) {
+                print("⚠️  listDatabases failed (secondary or permissions). Falling back to basic DBs...");
+                databases = [ { name: "admin" }, { name: "config" }, { name: "local" } ];
+            }
+            
+            databases.forEach(function(d) {
+                const dbName = d.name;
+                const database = nodeAdminDB.getSiblingDB(dbName);
+                
+                // Ensure secondaryOk for each DB
+                try { database.getMongo().setSecondaryOk(true); } catch (e) {}
+                
+                let status;
+                try {
+                    status = database.getProfilingStatus();
+                } catch (e) {
+                    print(`⚠️  Cannot read profiling status for ${dbName}: ${e.message}`);
+                    return;
+                }
+                
+                const level = status.was;
+                const slowms = status.slowms;
+                
+                if (level !== defaultProfilingLevel || slowms !== defaultSlowMs) {
+                    overridden.push(`DB: ${dbName} | profilingLevel=${level} | slowms=${slowms}`);
+                } else {
+                    defaults.push(dbName);
+                }
+            });
+            
+            // Выводим кастомные настройки
+            if (overridden.length > 0) {
+                print("=== Databases with overridden profiling settings ===");
+                overridden.forEach(line => print(line));
+            } else {
+                print("No databases with overridden profiling settings");
+            }
+            
+            // Потом список дефолтных
+            if (defaults.length > 0) {
+                print(`\n=== Databases with default profiling settings (level=${defaultProfilingLevel}, slowms=${defaultSlowMs}) ===`);
+                print(defaults.join(", "));
+            }
+            
+            // Закрываем соединение если оно было создано
+            if (nodeConnection) {
+                nodeConnection.close();
+            }
+        } catch (e) {
+            print(`❌ Error getting profiling status for ${node}: ${e.message}`);
+        }
+    });
+    print("");
+}
+
+// Функция для установки профилирования на всех узлах replica set
+function setProfilingLevel(level, slowms) {
+    print(`\nSetting profiling level ${level} with slowms ${slowms} on all replica set nodes:`);
+    
+    nodes.forEach(node => {
+        const nodeInfo = rsStatus.members.find(m => m.name === node);
+        const nodeState = nodeInfo.stateStr;
+        
+        try {
+            let nodeConnection;
+            let nodeAdminDB;
+            
+            try {
+                // Пробуем подключиться к узлу
+                nodeConnection = new Mongo(node);
+                nodeAdminDB = nodeConnection.getDB("admin");
+                // Authenticate using the same credentials as the main connection
+                nodeAdminDB.auth("{{ mongo_user }}", "{{ mongo_password }}");
+            } catch (e) {
+                // Если не можем подключиться, используем текущее подключение (для PRIMARY)
+                if (nodeState === "PRIMARY") {
+                    nodeAdminDB = adminDB;
+                } else {
+                    print(`❌ Error connecting to ${node} (${nodeState}): ${e.message}`);
+                    return;
+                }
+            }
+            
+            // Устанавливаем профилирование на admin базе данных узла
+            const result = nodeAdminDB.setProfilingLevel(level, { slowms: slowms });
+            if (result.ok === 1) {
+                print(`✅ Set profiling for ${node} (${nodeState}): level=${level}, slowms=${slowms}`);
+            } else {
+                print(`⚠️  Failed to set profiling for ${node} (${nodeState}): ${result.errmsg || 'Unknown error'}`);
+            }
+            
+            // Закрываем соединение если оно было создано
+            if (nodeConnection) {
+                nodeConnection.close();
+            }
+        } catch (e) {
+            print(`❌ Error setting profiling for ${node} (${nodeState}): ${e.message}`);
+        }
+    });
+    print("");
+}
+
+// Всегда показываем текущие уровни логирования и профилирования перед выполнением действий
+checkLogLevels();
+checkProfilingStatus();
+
+// Определяем, нужно ли применять изменения логирования
+const shouldChangeLogLevel = (action === "enable" || action === "disable");
+
+// Определяем, нужно ли применять изменения профилирования
+// Профилирование изменяется только если параметры были явно переданы через --extra-vars
+const shouldChangeProfiling = (process.env.PROFILING_EXPLICIT === 'true' || process.env.SLOWMS_EXPLICIT === 'true');
+
+// Если действие - только проверка И не нужно менять профилирование, выходим после показа статуса
+if (action === "check" && !shouldChangeProfiling) {
+    quit(0);
+}
+
+// Применяем изменения логирования, если требуется
+if (shouldChangeLogLevel) {
+    nodes.forEach(node => {
+        const nodeInfo = rsStatus.members.find(m => m.name === node);
+        const nodeState = nodeInfo.stateStr;
+        
+        try {
+            if (action === "enable") {
+                // Для всех узлов устанавливаем уровень логирования через административную команду
+                const result = adminDB.adminCommand({ 
+                    setParameter: 1, 
+                    logLevel: levelArg 
+                });
+                if (result.ok === 1) {
+                    print(`✅ Enabled log level ${levelArg} on ${node} (${nodeState})`);
+                } else {
+                    print(`⚠️  Failed to set log level on ${node}: ${result.errmsg || 'Unknown error'}`);
+                }
+            } else if (action === "disable") {
+                // Получаем текущий уровень логирования
+                const currentParams = adminDB.adminCommand({ getParameter: 1, logLevel: 1 });
+                const currentLevel = currentParams.logLevel || 0;
+                
+                if (currentLevel === 0) {
+                    print(`ℹ️  Log level already 0 on ${node} (${nodeState})`);
+                } else {
+                    const result = adminDB.adminCommand({ 
+                        setParameter: 1, 
+                        logLevel: 0 
+                    });
+                    if (result.ok === 1) {
+                        print(`✅ Disabled log level on ${node} (${nodeState}), previous level was ${currentLevel}`);
+                    } else {
+                        print(`⚠️  Failed to disable log level on ${node}: ${result.errmsg || 'Unknown error'}`);
+                    }
+                }
+            }
+        } catch (e) {
+            print(`❌ Error processing ${node}: ${e.message}`);
+        }
+    });
+}
+
+// Устанавливаем профилирование, если переданы соответствующие параметры
+if (shouldChangeProfiling) {
+    setProfilingLevel(profilingLevel, slowmsThreshold);
+}
+
+// Показываем статус после применения изменений, если что-то изменялось
+if (shouldChangeLogLevel || shouldChangeProfiling) {
+    checkLogLevels("Log Level Status After Changes");
+    checkProfilingStatus("Profiling Status After Changes");
+}
+
+print("\n✅ Done.");

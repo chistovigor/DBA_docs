@@ -1,0 +1,103 @@
+// mongo_memory_cache_report.js.j2
+function formatMB(bytes) {
+    return (bytes / (1024 * 1024)).toFixed(2);
+}
+
+function cacheReport(thresholdMB) {
+    var dbs = db.getMongo().getDBNames();
+    var report = [];
+    var topCollections = [];
+
+    dbs.forEach(function(dbName) {
+        var database = db.getSiblingDB(dbName);
+        var collections = [];
+        var dbCacheMB = 0;
+
+        database.getCollectionNames().forEach(function(collName) {
+            try {
+                var stats = database.getCollection(collName).stats();
+                var estimatedCache = stats.size - stats.storageSize;
+
+                // фильтруем коллекции по thresholdMB
+                if (parseFloat(formatMB(estimatedCache)) >= thresholdMB) {
+                    dbCacheMB += estimatedCache;
+
+                    collections.push({
+                        "collectionName": collName.toString(),
+                        "count": stats.count,
+                        "storageSizeMB": formatMB(stats.storageSize),
+                        "totalIndexSizeMB": formatMB(stats.totalIndexSize),
+                        "estimatedCacheMB": formatMB(estimatedCache)
+                    });
+                }
+
+                // Для топ-коллекций
+                topCollections.push({
+                    "dbName": dbName.toString(),
+                    "collectionName": collName.toString(),
+                    "count": stats.count,
+                    "dataSizeMB": formatMB(stats.size),
+                    "storageSizeMB": formatMB(stats.storageSize),
+                    "totalIndexSizeMB": formatMB(stats.totalIndexSize),
+                    "estimatedCacheMB": formatMB(estimatedCache)
+                });
+
+            } catch(e) {
+                // игнорируем view/ошибки
+            }
+        });
+
+        if (collections.length > 0) {
+            report.push({
+                "dbName": dbName.toString(),
+                "dataSizeMB": formatMB(database.stats().dataSize),
+                "storageSizeMB": formatMB(database.stats().storageSize),
+                "indexSizeMB": formatMB(database.stats().indexSize),
+                "estimatedCacheMB": formatMB(dbCacheMB),
+                "collections": collections
+            });
+        }
+    });
+
+    // Сортировка ТОП БД по потреблению памяти (убывание)
+    report.sort(function(a, b) {
+        return parseFloat(b.estimatedCacheMB) - parseFloat(a.estimatedCacheMB);
+    });
+    var top5DBs = report.slice(0, 5);
+
+    // Сортировка топ-коллекций по estimatedCacheMB, фильтруем < 1 MB
+    topCollections = topCollections.filter(function(c) {
+        return parseFloat(c.estimatedCacheMB) >= 1;
+    });
+    topCollections.sort(function(a, b) {
+        return parseFloat(b.estimatedCacheMB) - parseFloat(a.estimatedCacheMB);
+    });
+    var top10Collections = topCollections.slice(0, 10);
+
+    // Текстовый вывод для Ansible
+    print("=== Top 5 Databases by estimatedCacheMB ===");
+    top5DBs.forEach(function(dbItem, idx) {
+        print((idx+1) + ") " + dbItem.dbName +
+              " | dataSizeMB=" + dbItem.dataSizeMB +
+              " | storageSizeMB=" + dbItem.storageSizeMB +
+              " | indexSizeMB=" + dbItem.indexSizeMB +
+              " | estimatedCacheMB=" + dbItem.estimatedCacheMB);
+    });
+
+    print("\n=== Top 10 Collections by estimatedCacheMB (>=1MB) ===");
+    top10Collections.forEach(function(collItem, idx) {
+        print((idx+1) + ") " + collItem.dbName + "." + collItem.collectionName +
+              " | count=" + collItem.count +
+              " | dataSizeMB=" + collItem.dataSizeMB +
+              " | storageSizeMB=" + collItem.storageSizeMB +
+              " | indexSizeMB=" + collItem.totalIndexSizeMB +
+              " | estimatedCacheMB=" + collItem.estimatedCacheMB);
+    });
+}
+
+// Устанавливаем thresholdMB из шаблона Ansible
+if (typeof thresholdMB === 'undefined') {
+    var thresholdMB = {{ mongodb_memory_report_threshold_mb }};
+}
+
+cacheReport(thresholdMB);

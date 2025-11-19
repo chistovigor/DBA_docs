@@ -1,0 +1,51 @@
+---
+- name: Create scripts directory
+  file:
+    path: ~/scripts
+    state: directory
+    mode: '0755'
+
+- name: Deploy MongoDB disk usage analysis script
+  template:
+    src: mongo_disk_usage_analysis.js.j2
+    dest: ~/scripts/mongo_disk_usage_analysis.js
+    mode: '0644'
+
+- name: Deploy OS disk usage analysis script
+  template:
+    src: os_disk_usage_analysis.sh.j2
+    dest: ~/scripts/os_disk_usage_analysis.sh
+    mode: '0755'
+
+- name: Run MongoDB disk usage analysis
+  shell: >
+    mongosh --quiet -u "{{ mongo_user }}" -p "{{ mongo_password }}"
+    --authenticationDatabase admin ~/scripts/mongo_disk_usage_analysis.js
+  register: mongo_disk_usage
+  changed_when: false
+
+- name: Save MongoDB disk usage report to file
+  copy:
+    content: "{{ mongo_disk_usage.stdout }}"
+    dest: ~/scripts/mongo_disk_report.txt
+    mode: '0644'
+
+- name: Run OS disk usage analysis
+  shell: >
+    ~/scripts/os_disk_usage_analysis.sh -d "{{ mongo_analysis_target_dir | default('/') }}" -n 20
+  register: os_disk_usage
+  changed_when: false
+
+- name: Save OS disk usage report to file
+  copy:
+    content: "{{ os_disk_usage.stdout }}"
+    dest: ~/scripts/os_disk_report.txt
+    mode: '0644'
+
+- name: Print final MongoDB disk report
+  debug:
+    msg: "{{ mongo_disk_usage.stdout_lines }}"
+
+- name: Print final OS disk report
+  debug:
+    msg: "{{ os_disk_usage.stdout_lines }}"

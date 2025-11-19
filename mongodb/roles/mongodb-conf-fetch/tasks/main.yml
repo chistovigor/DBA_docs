@@ -1,0 +1,16 @@
+- name: Fetch MongoDB conf file
+  fetch:
+    src: "/etc/mongod.conf"
+    dest: "{{ playbook_dir }}/mongodb_data/{{ inventory_hostname }}/mongod.conf"
+    flat: yes
+  register: fetched_mongod_conf
+  until: fetched_mongod_conf is succeeded
+
+- name: Fetch MongoDB key file
+  fetch:
+    src: "/etc/mongod.key"
+    dest: "{{ playbook_dir }}/mongodb_data/{{ inventory_hostname }}/mongod.key"
+    flat: yes
+  register: fetched_mongod_key
+  until: fetched_mongod_key is succeeded
+

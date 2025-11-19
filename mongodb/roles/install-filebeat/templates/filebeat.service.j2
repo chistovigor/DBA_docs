@@ -1,0 +1,11 @@
+Description=Filebeat sends log files to Logstash or directly to Elasticsearch.
+Documentation=https://www.elastic.co/products/beats/filebeat
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+ExecStart=/usr/share/filebeat/bin/filebeat -c /etc/{{ item.key }}/filebeat.yml -path.home /usr/share/filebeat -path.config /etc/{{ item.key }} -path.data /var/lib/{{ item.key }} -path.logs /var/log/{{ item.key }}
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

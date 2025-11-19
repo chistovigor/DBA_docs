@@ -1,0 +1,12 @@
+/var/log/mongodb/mongod.log {
+    daily
+    missingok
+    rotate 7
+    compress
+    delaycompress
+    dateext
+    notifempty
+    postrotate
+        kill -USR1 `cat /var/run/mongodb/mongod.pid`
+    endscript
+}

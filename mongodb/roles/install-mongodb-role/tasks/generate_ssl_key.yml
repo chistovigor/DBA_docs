@@ -1,0 +1,24 @@
+---
+- name: Generate mongod.key if the template is not empty
+  copy:
+    content: "{{ lookup('file', 'roles/install-mongodb-role/templates/mongod.key.j2') | default('') }}"
+    dest: "{{ mongod_key_dest }}"
+    mode: 0700
+    owner: 'mongodb'
+    group: 'root'
+  when: lookup('file', 'roles/install-mongodb-role/templates/mongod.key.j2') | default('') != ''
+
+- name: Generate mongod.key using openssl if the template is empty
+  shell: openssl rand -base64 741 > "{{ mongod_key_dest }}"
+  args:
+    creates: "{{ mongod_key_dest }}"
+  when: lookup('file', 'roles/install-mongodb-role/templates/mongod.key.j2') | default('') == ''
+
+- name: Set permissions on the SSL key
+  file:
+    path: "{{ mongod_key_dest }}"
+    mode: '0700'
+    owner: 'mongodb'
+    group: 'root'
+  when: mongod_key_dest is defined
+

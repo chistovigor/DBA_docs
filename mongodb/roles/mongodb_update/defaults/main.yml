@@ -1,0 +1,19 @@
+---
+# Репозиторий MongoDB
+mongodb_repo_key_url: "https://www.mongodb.org/static/pgp/server-{{ mongodb_version }}.asc"
+mongodb_repo_key_file: "/usr/share/keyrings/mongodb-server-{{ mongodb_version }}.gpg"
+
+# Соответствие Ubuntu -> кодовое имя репозитория MongoDB
+mongodb_repo_map:
+  "22.04": "jammy"
+  "24.04": "noble"
+
+# Пакеты MongoDB для установки
+mongodb_packages:
+  - mongodb-org
+
+# По умолчанию replicaset_inventory_group не задана
+replicaset_inventory_group: ""
+
+# Список серверов для обновления (по умолчанию пустой)
+# servers_to_update: []

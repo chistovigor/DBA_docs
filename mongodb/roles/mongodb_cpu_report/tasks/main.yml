@@ -1,0 +1,169 @@
+---
+
+# -----------------------------
+# Ensure pidstat dependencies
+# -----------------------------
+- name: Ensure sysstat is installed (pidstat provider)
+  ansible.builtin.package:
+    name: sysstat
+    state: present
+  become: true
+
+# -----------------------------
+# Ensure pidstat log file exists
+# -----------------------------
+- name: Ensure pidstat log file exists
+  ansible.builtin.file:
+    path: /var/log/pidstat_cpu.log
+    state: touch
+    owner: root
+    group: root
+    mode: '0644'
+  become: true
+
+# -----------------------------
+# Check existing service/timer
+# -----------------------------
+- name: Check pidstat-logger service status
+  ansible.builtin.command: systemctl is-active pidstat-logger.service
+  register: pidstat_service_status
+  ignore_errors: true
+
+- name: Check pidstat-logger timer status
+  ansible.builtin.command: systemctl is-active pidstat-logger.timer
+  register: pidstat_timer_status
+  ignore_errors: true
+
+# -----------------------------
+# Remove old broken units if service failed
+# -----------------------------
+- name: Remove broken pidstat-logger.service if failed
+  ansible.builtin.file:
+    path: /etc/systemd/system/pidstat-logger.service
+    state: absent
+  when: pidstat_service_status.rc != 0
+  become: true
+
+- name: Remove broken pidstat-logger.timer if failed
+  ansible.builtin.file:
+    path: /etc/systemd/system/pidstat-logger.timer
+    state: absent
+  when: pidstat_timer_status.rc != 0
+  become: true
+
+# -----------------------------
+# Deploy corrected pidstat logger service
+# -----------------------------
+- name: Deploy pidstat logger service unit
+  ansible.builtin.copy:
+    dest: /etc/systemd/system/pidstat-logger.service
+    mode: '0644'
+    content: |
+      [Unit]
+      Description=Pidstat logger service
+
+      [Service]
+      Type=simple
+      ExecStart=/usr/bin/pidstat -h -r -u -p ALL 5
+      StandardOutput=append:/var/log/pidstat_cpu.log
+      Restart=always
+
+      [Install]
+      WantedBy=multi-user.target
+  become: true
+
+- name: Deploy pidstat logger timer unit
+  ansible.builtin.copy:
+    dest: /etc/systemd/system/pidstat-logger.timer
+    mode: '0644'
+    content: |
+      [Unit]
+      Description=Run pidstat logger every 5 seconds
+
+      [Timer]
+      OnBootSec=10s
+      OnUnitActiveSec=5s
+      AccuracySec=1s
+
+      [Install]
+      WantedBy=timers.target
+  become: true
+
+- name: Reload systemd to apply new units
+  ansible.builtin.systemd:
+    daemon_reload: true
+  become: true
+
+- name: Enable and start pidstat logger timer
+  ansible.builtin.systemd:
+    name: pidstat-logger.timer
+    enabled: true
+    state: started
+  become: true
+
+# -----------------------------
+# Deploy and run OS CPU usage report
+# -----------------------------
+
+- name: Deploy OS CPU usage report script
+  template:
+    src: cpu_usage_report.sh.j2
+    dest: /tmp/cpu_usage_report.sh
+    mode: '0755'
+  become: true
+
+- name: Run OS CPU usage report
+  shell: /tmp/cpu_usage_report.sh --os
+  register: os_cpu_usage_report
+  changed_when: false
+  become: true
+  retries: 5
+  delay: 30
+  until: os_cpu_usage_report.rc == 0
+
+# -----------------------------
+# Deploy and run MongoDB CPU profiling report
+# -----------------------------
+- name: Deploy MongoDB CPU profiling script
+  template:
+    src: profiling_cpu_report.js.j2
+    dest: /tmp/profiling_cpu_report.js
+    mode: '0644'
+  become: true
+
+- name: Run MongoDB CPU profiling report
+  shell: >
+    timeout {{ mongodb_profiling_duration_sec + 60 }}s mongosh --quiet -u "{{ mongo_user }}" -p "{{ mongo_password }}" --authenticationDatabase admin /tmp/profiling_cpu_report.js
+  register: mongo_cpu_profiling
+  changed_when: false
+  become: true
+
+# -----------------------------
+# Save combined CPU report to file on remote host
+# -----------------------------
+- name: Save combined CPU report to file
+  copy:
+    content: |
+      === OS CPU usage report ===
+      {{ os_cpu_usage_report.stdout | default('') }}
+
+      === MongoDB CPU profiling report ===
+      {{ mongo_cpu_profiling.stdout | default('') }}
+    dest: /tmp/mongo_cpu_report.txt
+    mode: '0644'
+  become: true
+
+# -----------------------------
+# Display combined report exactly as in terminal
+# -----------------------------
+- name: Print final MongoDB CPU report exactly as in terminal
+  ansible.builtin.shell: cat /tmp/mongo_cpu_report.txt
+  become: true
+  register: _mongo_cpu_report
+  changed_when: false
+
+- name: Show final report literally
+  ansible.builtin.debug:
+    var: _mongo_cpu_report.stdout_lines
+    
+

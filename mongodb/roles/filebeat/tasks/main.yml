@@ -1,0 +1,7 @@
+---
+- name: Start filebeat reconfigure
+  debug: msg="Start filebeat reconfigure"
+
+- { include_tasks: delete_old_beat.yml, tags: delete_old_beat }
+- { include_tasks: filebeat_kafka.yml, tags: filebeat_kafka }
+

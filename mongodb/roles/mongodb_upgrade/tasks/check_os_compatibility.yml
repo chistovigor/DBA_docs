@@ -1,0 +1,108 @@
+# tasks/check_os_compatibility.yml
+# Проверка совместимости операционной системы
+
+# -----------------------------------------------------------
+# Определяем поддерживаемые версии Ubuntu
+- name: Определяем поддерживаемые версии Ubuntu
+  set_fact:
+    supported_ubuntu_versions:
+      - "22.04"
+      - "24.04"
+    mongodb_supported_ubuntu_map:
+      "8.0":
+        - "22.04"
+        - "24.04"
+      "7.0":
+        - "20.04"
+        - "22.04"
+      "6.0":
+        - "20.04"
+        - "22.04"
+      "5.0":
+        - "18.04"
+        - "20.04"
+        - "22.04"
+      "4.4":
+        - "18.04"
+        - "20.04"
+      "4.2":
+        - "18.04"
+        - "20.04"
+
+# -----------------------------------------------------------
+# Получаем информацию об ОС
+- name: Получаем информацию об ОС
+  setup:
+    gather_subset:
+      - "!all"
+      - "distribution"
+      - "distribution_version"
+  when: ansible_distribution is not defined
+
+- name: Выводим информацию об ОС
+  debug:
+    msg: >-
+      ОС: {{ ansible_distribution }} {{ ansible_distribution_version }}
+      Архитектура: {{ ansible_architecture }}
+      Целевая версия MongoDB: {{ mongodb_version }}
+
+# -----------------------------------------------------------
+# Проверяем, что это Ubuntu
+- name: Проверяем операционную систему
+  fail:
+    msg: "Неподдерживаемая операционная система: {{ ansible_distribution }}
+Поддерживаются только Ubuntu 22.04 и 24.04"
+  when: ansible_distribution != "Ubuntu"
+
+# -----------------------------------------------------------
+# Проверяем версию Ubuntu
+- name: Проверяем версию Ubuntu
+  fail:
+    msg: "Неподдерживаемая версия Ubuntu: {{ ansible_distribution_version }}
+Поддерживаемые версии: {{ supported_ubuntu_versions | join(', ') }}"
+  when: ansible_distribution_version not in supported_ubuntu_versions
+
+# -----------------------------------------------------------
+# Проверяем совместимость версии Ubuntu с целевой версией MongoDB
+- name: Проверяем совместимость Ubuntu с MongoDB {{ mongodb_version }}
+  set_fact:
+    mongodb_version_major: "{{ mongodb_version.split('.')[0] + '.0' }}"
+
+- name: Валидируем совместимость версии MongoDB с Ubuntu
+  fail:
+    msg: "MongoDB {{ mongodb_version }} не поддерживается на Ubuntu {{ ansible_distribution_version }}
+Поддерживаемые версии Ubuntu для MongoDB {{ mongodb_version_major }}: 
+{{ mongodb_supported_ubuntu_map[mongodb_version_major] | default(['неизвестно']) | join(', ') }}"
+  when: 
+    - mongodb_version_major in mongodb_supported_ubuntu_map
+    - ansible_distribution_version not in mongodb_supported_ubuntu_map[mongodb_version_major]
+
+# -----------------------------------------------------------
+# Проверяем архитектуру
+- name: Проверяем архитектуру системы
+  fail:
+    msg: "Неподдерживаемая архитектура: {{ ansible_architecture }}
+MongoDB поддерживается только на x86_64 (amd64)"
+  when: ansible_architecture != "x86_64"
+
+# -----------------------------------------------------------
+# Проверяем наличие необходимых пакетов
+- name: Проверяем наличие curl для загрузки ключей репозитория
+  ansible.builtin.package:
+    name: curl
+    state: present
+  become: yes
+
+- name: Проверяем наличие gnupg для работы с ключами
+  ansible.builtin.package:
+    name: gnupg
+    state: present
+  become: yes
+
+- name: Совместимость ОС успешно проверена
+  ansible.builtin.debug:
+    msg: >-
+      ✓ ОС: Ubuntu {{ ansible_distribution_version }} (поддерживается)
+      ✓ Архитектура: {{ ansible_architecture }} (поддерживается)
+      ✓ MongoDB {{ mongodb_version }} совместима с данной версией Ubuntu
+      ✓ Необходимые пакеты установлены

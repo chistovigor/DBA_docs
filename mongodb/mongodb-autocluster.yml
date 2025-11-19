@@ -1,0 +1,138 @@
+---
+- name: Configure MongoDB Replica Set
+  hosts: all
+  become: true
+  vars_files:
+    - mongodb-users.yml
+
+  tasks:
+
+    - name: Set the target group using the inventory group
+      set_fact:
+        target_group: "{{ item }}"
+      with_items: "{{ group_names }}"
+      when: item == ansible_limit | default('')
+
+    - name: Set the replica_set_name variable
+      set_fact:
+        replica_set_name: "{{ target_group }}"
+
+    - name: Check set vars
+      debug:
+        msg:
+          - "replica set name: {{ replica_set_name }}"
+          - "domain: {{ domain }}"
+
+    - name: Run script
+      command: python3  {{ playbook_dir }}/templates/mongodb-scr-auto-pwd.py
+      args:
+        stdin: "yes\n"
+      register: scr_out
+      delegate_to: localhost
+      become: no
+      run_once: true
+
+    - name: Start MongoDB service
+      service:
+        name: mongod
+        state: started
+
+    - name: Connect to MongoDB and configure Replica Set
+      command: "mongosh --host 127.0.0.1:27017 --eval 'rs.initiate()'"
+       #ignore_errors: yes
+      when: inventory_hostname == groups[replica_set_name][0]
+
+    - name: Wait rs.initiate
+      pause:
+        seconds: 3
+      when: inventory_hostname == groups[replica_set_name][0]
+
+    - name: Add MongoDB nodes to Replica Set
+      command: "mongosh --host 127.0.0.1:27017 --eval 'rs.add(\"{{ item }}\")'"
+      loop: "{{ groups[replica_set_name][1:] | map('regex_replace', '^(.*)$', '\\1.' ~ domain) | list }}"
+      when: inventory_hostname == groups[replica_set_name][0]
+
+    - name: Reconfigure Replica Set (rename first member)
+      command: "mongosh --host 127.0.0.1:27017 --eval 'cfg = rs.conf(); cfg.members[0].host = \"{{ groups[replica_set_name][0] ~ '.' ~ domain ~ ':27017' }}\"; rs.reconfig(cfg)'"
+      when: inventory_hostname == groups[replica_set_name][0]
+
+    - name: Create MongoDB root user
+      command: "mongosh --host 127.0.0.1:27017 --eval 'db.getSiblingDB(\"admin\").createUser({user: \"root\", pwd: \"{{ rootpwd }}\", roles: [{role: \"root\", db: \"admin\"}]})'"
+      when: inventory_hostname == groups[replica_set_name][0]
+
+    - name: Create MongoDB rw user
+      command: "mongosh --host 127.0.0.1:27017 --eval 'db.getSiblingDB(\"admin\").createUser({user: \"rw\", pwd: \"{{ rwpwd }}\", roles: [{role: \"readWriteAnyDatabase\", db: \"admin\"}]})'"
+      when: inventory_hostname == groups[replica_set_name][0]
+
+    - name: Create MongoDB zabbix user
+      command: "mongosh --host 127.0.0.1:27017 --eval 'db.getSiblingDB(\"admin\").createUser({user: \"zabbix\", pwd: \"{{ zabbixpwd }}\", roles: [{role: \"clusterMonitor\", db: \"admin\"}]})'"
+      when: inventory_hostname == groups[replica_set_name][0]
+
+    - name: Create MongoDB grafana user
+      command: "mongosh --host 127.0.0.1:27017 --eval 'db.getSiblingDB(\"admin\").createUser({user: \"grafana\", pwd: \"{{ zabbixpwd }}\", roles: [{role: \"clusterMonitor\", db: \"admin\"}]})'"
+      when: inventory_hostname == groups[replica_set_name][0]
+
+    - name: Create MongoDB admin user
+      command: "mongosh --host 127.0.0.1:27017 --eval 'db.getSiblingDB(\"admin\").createUser({user: \"admin\", pwd: \"{{ adminpwd }}\", roles: [{role: \"clusterMonitor\", db: \"admin\"}, {role: \"readWriteAnyDatabase\", db: \"admin\"}, {role: \"dbAdminAnyDatabase\", db: \"admin\"}, {role: \"userAdminAnyDatabase\", db: \"admin\"}]})'"
+      when: inventory_hostname == groups[replica_set_name][0]
+
+    - name: Uncomment security in mongod.conf
+      replace:
+        path: "/etc/mongod.conf"
+        regexp: '#security:(\s+)#(\s+)(authorization: enabled)(\s+)#(\s+)(keyFile: \/etc\/mongod\.key)'
+        replace: 'security:\1\2\3\4\5\6'
+
+    - name: Sequentially restart MongoDB nodes
+      block:
+        - name: Restart node 3
+          command: "systemctl restart mongod"
+          delegate_to: "{{ groups[replica_set_name][2] }}"
+          become: yes
+
+        - name: Wait for node 3 to be up
+          pause:
+            seconds: 5
+          delegate_to: "{{ groups[replica_set_name][2] }}"
+          become: yes
+
+        - name: Restart node 2
+          command: "systemctl restart mongod"
+          delegate_to: "{{ groups[replica_set_name][1] }}"
+          become: yes
+
+        - name: Wait for node 2 to be up
+          pause:
+            seconds: 5
+          delegate_to: "{{ groups[replica_set_name][1] }}"
+          become: yes
+
+        - name: Restart node 1
+          command: "systemctl restart mongod"
+          delegate_to: "{{ groups[replica_set_name][0] }}"
+          become: yes
+
+        - name: Wait for node 1 to be up
+          pause:
+            seconds: 15
+          delegate_to: "{{ groups[replica_set_name][0] }}"
+          become: yes
+
+        - name: Connect to MongoDB after restart
+          command: >
+            mongosh --host 127.0.0.1 --port 27017
+            --username root
+            --password "{{ rootpwd }}"
+            --authenticationDatabase "admin"
+            --eval 'rs.status()'
+          when: inventory_hostname == groups[replica_set_name][0]
+          register: rs_status
+
+        - name: Display Replica Set status
+          debug:
+            var: rs_status.stdout_lines
+          when: inventory_hostname == groups[replica_set_name][0]
+
+        - name: Print script output
+          debug:
+            msg: "{{ scr_out.stdout }}"
+          run_once: true

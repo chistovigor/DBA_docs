@@ -1,0 +1,121 @@
+# tasks/validate_versions.yml
+# Валидация версий MongoDB для обновления
+
+# -----------------------------------------------------------
+# Определяем поддерживаемые версии для обновления
+- name: Определяем поддерживаемые версии для обновления
+  set_fact:
+    supported_source_versions:
+      - "4.0"
+      - "4.2" 
+      - "4.4"
+      - "5.0"
+      - "6.0"
+      - "7.0"
+    target_version_major: "{{ mongodb_version.split('.')[0] }}"
+
+- name: Выводим информацию о целевой версии
+  debug:
+    msg: >-
+      Целевая версия для обновления: {{ mongodb_full_version | default(mongodb_version) }}
+      Базовая версия: {{ mongodb_version }}
+      Поддерживаемые исходные версии: {{ supported_source_versions | join(', ') }}
+
+# -----------------------------------------------------------
+# Проверяем версии на всех узлах
+- name: Инициализируем словарь текущих версий MongoDB
+  set_fact:
+    current_versions: {}
+    current_versions_full: {}
+
+- name: Получаем текущие версии MongoDB на всех узлах
+  set_fact:
+    current_versions: >-
+      {{
+        current_versions |
+        combine({
+          (item.stdout | from_json).me | split(':') | first: 
+          (item.stdout | from_json).version | regex_replace('^([0-9]+\.[0-9]+).*', '\1')
+        })
+      }}
+    current_versions_full: >-
+      {{
+        current_versions_full |
+        combine({
+          (item.stdout | from_json).me | split(':') | first: 
+          (item.stdout | from_json).version
+        })
+      }}
+  loop: "{{ nodes_status.results }}"
+  when: 
+    - item.stdout is defined
+    - item.stdout != ""
+    - (item.stdout | from_json).error is not defined
+  no_log: true   # скрываем "шумный" вывод
+
+- name: Выводим текущие версии MongoDB
+  debug:
+    msg: "Текущие версии MongoDB: {{ current_versions }}"
+
+# -----------------------------------------------------------
+# Валидируем пути обновления для каждого узла
+- name: Проверяем валидность путей обновления
+  set_fact:
+    invalid_upgrades: >-
+      {{
+        current_versions.items()
+        | rejectattr('1', 'in', supported_source_versions)
+        | rejectattr('1', 'equalto', mongodb_version)
+        | list
+      }}
+
+- name: Выводим узлы с неподдерживаемыми версиями
+  debug:
+    msg: |
+      Узлы с неподдерживаемыми версиями для прямого обновления до {{ mongodb_version }}:
+      {% for host, version in invalid_upgrades %}
+      - {{ host }}: {{ version }}
+      {% endfor %}
+  when: invalid_upgrades | length > 0
+
+# -----------------------------------------------------------
+# Проверяем, что целевая версия выше исходных
+- name: Проверяем направление обновления
+  set_fact:
+    downgrade_attempts: >-
+      {{
+        current_versions.items()
+        | selectattr('1', 'version', target_version_major + '.0', '>')
+        | list
+      }}
+
+- name: Выводим попытки downgrade
+  debug:
+    msg: |
+      Узлы, которые уже имеют версию {{ target_version_major }}.x или выше:
+      {% for host, version in downgrade_attempts %}
+      - {{ host }}: {{ current_versions_full[host] }}
+      {% endfor %}
+  when: downgrade_attempts | length > 0
+
+# -----------------------------------------------------------
+# Финальная валидация
+- name: Проверяем возможность обновления
+  fail:
+    msg: |
+      Обновление невозможно по следующим причинам:
+      {% if invalid_upgrades | length > 0 %}
+      - Неподдерживаемые версии: {% for host, version in invalid_upgrades %}{{ current_versions_full[host] }}{% if not loop.last %}, {% endif %}{% endfor %}
+        Поддерживаемые версии: {{ supported_source_versions | join(', ') }}
+      {% endif %}
+      {% if downgrade_attempts | length > 0 %}  
+      - Попытка downgrade с версий: {% for host, version in downgrade_attempts %}{{ current_versions_full[host] }}{% if not loop.last %}, {% endif %}{% endfor %} на версию {{ mongodb_full_version | default(mongodb_version) }}
+      {% endif %}
+  when: (invalid_upgrades | length > 0) or (downgrade_attempts | length > 0)
+
+- name: Валидация версий успешно завершена
+  debug:
+    msg: 
+      - "✓ Все узлы имеют поддерживаемые версии для обновления до {{ mongodb_full_version | default(mongodb_version) }}"
+      - "✓ Направление обновления корректное"
+      - "✓ Можно продолжить последовательное обновление"

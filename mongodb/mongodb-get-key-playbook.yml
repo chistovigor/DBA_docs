@@ -1,0 +1,18 @@
+- name: get /etc/mongod.key
+  hosts: all
+  become: true
+  become_user: root
+  tasks:
+    - name: check file
+      ansible.builtin.stat:
+        path: /etc/mongod.key
+      register: file_stat
+
+    - name: get file if it exists
+      ansible.builtin.fetch:
+        src: /etc/mongod.key
+        dest: roles/install-mongodb-role/templates/mongod.key.j2
+        flat: yes
+      when: file_stat.stat.exists
+
+

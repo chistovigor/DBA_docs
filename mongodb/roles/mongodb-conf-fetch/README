@@ -1,0 +1,4 @@
+Роль сбора данных (mongo.conf и mongo.key)
+roles/mongodb_conf_fetch/tasks/main.yml
+Создает каталог /mongodb_data
+В нем делает дирку по имени сервера с инвенторя и добавляет файлы mongo.conf и mongo.key

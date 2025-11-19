@@ -1,0 +1,67 @@
+# tasks/check_fcv.yml
+# Проверка featureCompatibilityVersion для каждого сервера
+
+# -----------------------------------------------------------
+# Получаем featureCompatibilityVersion с каждого узла
+- name: Получаем featureCompatibilityVersion со всех узлов
+  ansible.builtin.shell: |
+    mongosh --quiet --host {{ node }} --username "{{ mongodb_user }}" --password "{{ mongodb_password }}" --authenticationDatabase admin --eval '
+    try {
+      var fcvResult = db.adminCommand({ "getParameter": 1, "featureCompatibilityVersion": 1 });
+      if (fcvResult.ok === 1) {
+        print(JSON.stringify({
+          "host": "{{ node }}",
+          "fcv": fcvResult.featureCompatibilityVersion,
+          "status": "success"
+        }));
+      } else {
+        print(JSON.stringify({
+          "host": "{{ node }}",
+          "error": "Failed to get FCV: " + fcvResult.errmsg,
+          "status": "error"
+        }));
+      }
+    } catch(e) {
+      print(JSON.stringify({
+        "host": "{{ node }}",
+        "error": e.message,
+        "status": "error"
+      }));
+    }'
+  loop: "{{ replicaset_hosts }}"
+  loop_control:
+    loop_var: node
+  register: fcv_results
+  ignore_errors: yes
+  check_mode: false
+
+# -----------------------------------------------------------
+# Формируем словарь FCV по узлам
+- name: Формируем словарь featureCompatibilityVersion по узлам
+  set_fact:
+    fcv_by_host: >-
+      {{
+        fcv_by_host | default({}) |
+        combine({
+          (item.stdout | from_json).host: {
+            'fcv': (item.stdout | from_json).fcv | default('неизвестно'),
+            'status': (item.stdout | from_json).status
+          }
+        })
+      }}
+  loop: "{{ fcv_results.results }}"
+  when: 
+    - item.stdout is defined
+    - item.stdout != ""
+    - (item.stdout | from_json).host is defined
+  no_log: true
+
+# -----------------------------------------------------------
+# Выводим featureCompatibilityVersion для всех узлов
+- name: Выводим featureCompatibilityVersion для всех узлов
+  debug:
+    msg: >-
+      featureCompatibilityVersion по узлам:
+      {% for host, fcv_info in (fcv_by_host | default({})).items() %}
+      - {{ host }}: {{ fcv_info.fcv }}{% if fcv_info.status == 'error' %} (ошибка получения){% endif %}
+      {% endfor %}

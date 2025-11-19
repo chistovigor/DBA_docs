@@ -1,0 +1,11 @@
+---
+    - name: Copy logrotate configuration
+      template:
+        src: templates/logrotate_mongod.conf.j2
+        dest: /etc/logrotate.d/mongod
+
+    - name: Restart logrotate service
+      service:
+        name: logrotate
+        state: restarted
+

@@ -1,0 +1,7 @@
+Роль install_mongodb_role, выполняется плейбуком install_mongodb_playbook.yml,
+Имеет шаблон файла конфигурации mongo.conf (templates/mongod.conf.j2), переменные указываются в vars/main.yml
+и mongo.conf (templates/mongod.key.j2)
+mongodb_version: “6.0” - версия монги
+distribution_release: “jammy” - версия убунты, стоит обратить внимание что jammy поттдерживается только начиная с 6-ой версии монги
+остальные переменные должны быть понятными
+

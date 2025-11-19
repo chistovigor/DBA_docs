@@ -1,0 +1,53 @@
+---
+- name: Check if mongod override file exists
+  ansible.builtin.stat:
+    path: /etc/systemd/system/mongod.service.d/override.conf
+  register: mongod_override
+
+# If the file exists → show its contents
+- name: Show existing override file
+  ansible.builtin.command: cat /etc/systemd/system/mongod.service.d/override.conf
+  when: mongod_override.stat.exists
+  register: existing_override
+  changed_when: false
+
+# Print override content cleanly
+- name: Display existing override values
+  ansible.builtin.debug:
+    msg: |
+      The mongod systemd override file already exists. Contents:
+      {{ existing_override.stdout }}
+  when: mongod_override.stat.exists
+
+# Stop the play immediately if override exists
+- name: Stop the play because override already exists
+  ansible.builtin.fail:
+    msg: "Override file already exists — play stopped to avoid overwriting it."
+  when: mongod_override.stat.exists
+
+# Only executed if the file does NOT exist:
+- name: Ensure mongod systemd override directory exists
+  ansible.builtin.file:
+    path: /etc/systemd/system/mongod.service.d
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Install mongod systemd override
+  ansible.builtin.copy:
+    dest: /etc/systemd/system/mongod.service.d/override.conf
+    content: |
+      [Unit]
+      After=cryptsetup.target
+
+      [Service]
+      ExecStartPre=/bin/sleep 120
+      TimeoutStartSec=300
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Reload systemd daemon to apply override
+  ansible.builtin.systemd:
+    daemon_reload: yes

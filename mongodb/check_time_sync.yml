@@ -1,0 +1,19 @@
+- hosts: all
+  gather_facts: no
+  tasks:
+    - name: Get timedatectl status
+      command: timedatectl
+      register: timedatectl_output
+
+    - name: Report if system clock is not synchronized
+      debug:
+        msg: "System clock is NOT synchronized!"
+      when: "'synchronized: yes' not in timedatectl_output.stdout"
+
+    - name: Save unsynchronized hosts to file (on control node)
+      local_action:
+        module: lineinfile
+        path: ./unsynced_hosts.txt
+        line: "{{ inventory_hostname }}"
+        create: yes
+      when: "'synchronized: yes' not in timedatectl_output.stdout"

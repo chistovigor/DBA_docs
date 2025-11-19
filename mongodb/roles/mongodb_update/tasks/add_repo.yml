@@ -1,0 +1,36 @@
+---
+# Установка репозитория MongoDB 8 с корректным ключом
+
+- name: Удаляем старый репозиторий MongoDB 7, если есть
+  ansible.builtin.apt_repository:
+    repo: "deb [arch=amd64] https://repo.mongodb.org/apt/ubuntu {{ ansible_distribution_release }}/mongodb-org/7.0 multiverse"
+    state: absent
+  ignore_errors: yes
+
+- name: Определяем кодовое имя репозитория для текущей Ubuntu
+  set_fact:
+    mongodb_repo_codename: "{{ mongodb_repo_map[ansible_distribution_version] | default(ansible_distribution_release) }}"
+
+- name: Загружаем GPG ключ MongoDB {{ mongodb_version }}
+  ansible.builtin.get_url:
+    url: "{{ mongodb_repo_key_url }}"
+    dest: "/tmp/mongodb-{{ mongodb_version }}.asc"
+    mode: '0644'
+
+- name: Преобразуем ключ в keyring для apt (без запроса подтверждения)
+  ansible.builtin.command: >
+    gpg --dearmor --yes -o {{ mongodb_repo_key_file }} /tmp/mongodb-{{ mongodb_version }}.asc
+  args:
+    creates: "{{ mongodb_repo_key_file }}"
+
+- name: Удаляем временный файл ключа
+  ansible.builtin.file:
+    path: "/tmp/mongodb-{{ mongodb_version }}.asc"
+    state: absent
+
+- name: Добавляем репозиторий MongoDB {{ mongodb_version }}
+  ansible.builtin.apt_repository:
+    repo: "deb [arch=amd64 signed-by={{ mongodb_repo_key_file }}] https://repo.mongodb.org/apt/ubuntu {{ mongodb_repo_codename }}/mongodb-org/{{ mongodb_version }} multiverse"
+    state: present
+    filename: "mongodb-org-{{ mongodb_version }}.list"
+    update_cache: yes

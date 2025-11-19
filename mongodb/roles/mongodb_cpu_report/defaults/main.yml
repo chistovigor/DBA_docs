@@ -1,0 +1,21 @@
+---
+# Путь к логу pidstat
+cpu_log_file: /var/log/pidstat_cpu.log
+
+# Временные интервалы анализа CPU
+cpu_short_range_min: 5     # анализ за последние N минут
+cpu_long_range_min: 60     # анализ за последний час
+cpu_graph_range_min: 5    # график CPU для MongoDB за последние N минут
+cpu_graph_step_sec: 60     # шаг между точками графика в секундах
+
+# Список процессов MongoDB для подсчета отдельного потребления CPU
+cpu_mongo_processes:
+  - mongod
+
+# Параметры профилинга MongoDB
+mongodb_profiling_level: 2                  # уровень профайлинга
+mongodb_profiling_duration_sec: 5         # время профайлинга
+mongodb_profiling_top_n: 8                  # количество топ записей в выводе
+
+# Таймауты для скриптов
+mongodb_cpu_report_timeout_sec: 5         # таймаут для выполнения CPU usage report

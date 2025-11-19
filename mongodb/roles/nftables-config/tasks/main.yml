@@ -1,0 +1,15 @@
+---
+- name: Add element to nftables
+  become: yes
+  command: nft add element ip filter firewall_open_tcp_ports { 27017 }
+
+- name: Save nftables configuration
+  become: yes
+  shell: nft list table filter > /etc/nftables/ipv4-filter.nft
+
+- name: Restart nftables service
+  become: yes
+  service:
+    name: nftables
+    state: restarted
+

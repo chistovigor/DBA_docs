@@ -1,0 +1,9 @@
+---
+# Значения по умолчанию
+log_action: "check"         # enable / disable / check
+log_level: 1
+script_path: "~/log_level_manage_cluster.js"
+
+# Параметры профилирования (удалены defaults, чтобы правильно определять explicit параметры)
+# slowms_threshold: 100       # Порог для медленных запросов в мс
+# ProfilingLevel: 0          # Уровень профилирования (0 - выключено, 1 - только медленные запросы, 2 - все запросы)

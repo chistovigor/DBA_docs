@@ -1,0 +1,7 @@
+---
+- name: Run MongoDB storage level report role
+  hosts: all
+  gather_facts: false
+
+  roles:
+    - role: mongodb_storage_report

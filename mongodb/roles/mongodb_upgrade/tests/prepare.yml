@@ -1,0 +1,35 @@
+---
+- name: Prepare MongoDB test VMs
+  hosts: all
+  become: true
+  gather_facts: true
+
+  tasks:
+    - name: Install Python3 and pip
+      package:
+        name: 
+          - python3
+          - python3-pip
+          - curl
+          - gnupg
+        state: present
+
+    - name: Create MongoDB user
+      user:
+        name: mongodb
+        system: true
+        shell: /bin/false
+        home: /var/lib/mongodb
+        createhome: false
+
+    - name: Create MongoDB directories
+      file:
+        path: "{{ item }}"
+        state: directory
+        owner: mongodb
+        group: mongodb
+        mode: '0755'
+      loop:
+        - /var/lib/mongodb
+        - /var/log/mongodb
+        - /etc/mongodb

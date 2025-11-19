@@ -1,0 +1,5 @@
+---
+- name: Restart pidstat logger
+  systemd:
+    name: pidstat-logger.timer
+    state: restarted

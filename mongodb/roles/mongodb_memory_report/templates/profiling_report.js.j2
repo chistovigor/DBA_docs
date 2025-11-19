@@ -1,0 +1,92 @@
+// profiling_report.js.j2
+
+function formatMB(bytes) {
+    return (bytes / (1024*1024)).toFixed(2);
+}
+
+var profilingLevel = {{ mongodb_profiling_level | default(1) }};
+var profilingDurationSec = {{ mongodb_profiling_duration_sec | default(120) }};
+var opsIntervalSec = {{ mongodb_profiling_ops_interval_sec | default(30) }};
+
+// Получаем и сохраняем исходный уровень профайлинга
+var originalProfiling = db.getProfilingStatus();
+var originalLevel = (originalProfiling.hasOwnProperty("level")) ? originalProfiling.level : 0;
+print("Original profiling level: " + originalLevel);
+
+// --- 1. Снимок текущих активных операций ---
+print("\n=== Current active operations (before profiling) ===\n");
+
+var ops = db.currentOp({active: true, secs_running: {$gte: 0}}).inprog;
+ops.forEach(function(op) {
+    try {
+        if (op.ns && op.op === "query") {
+            var nsParts = op.ns.split(".");
+            var dbName = nsParts[0];
+            var collName = nsParts[1] || "";
+
+            var collStats = db.getSiblingDB(dbName).getCollection(collName).stats();
+            var avgDocSize = collStats.avgObjSize || 1024; // fallback 1KB
+            var estMemoryMB = (op.docsExamined * avgDocSize) / (1024*1024);
+
+            print("opid: " + op.opid +
+                  ", ns: " + op.ns +
+                  ", activeSecs: " + op.secs_running +
+                  ", docsExamined: " + (op.docsExamined || 0) +
+                  ", estMemoryMB: " + formatMB(estMemoryMB));
+        }
+    } catch(e) {
+        // игнорируем операции, которые нельзя подсчитать
+    }
+});
+
+// --- 2. Включаем профайлинг ---
+db.setProfilingLevel(profilingLevel);
+print("\nProfiling enabled at level " + profilingLevel + " for " + profilingDurationSec + " sec...");
+
+// --- 3. Ждем сбор профилинга ---
+sleep(profilingDurationSec * 1000);
+
+// --- 4. Читаем операции из истории профайлинга ---
+print("\n=== Operations from profiling history ===\n");
+
+var profileOps = db.system.profile.find({}).sort({ts: -1}).toArray();
+var report = [];
+
+profileOps.forEach(function(p) {
+    try {
+        if (p.ns && p.op === "query") {
+            var nsParts = p.ns.split(".");
+            var dbName = nsParts[0];
+            var collName = nsParts[1] || "";
+            var estMemoryMB = ((p.docsExamined || 0) * (p.execStats ? p.execStats.avgObjSize || 1024 : 1024)) / (1024*1024);
+
+            report.push({
+                opid: p.opid || p._id,
+                ns: p.ns,
+                millis: p.millis,
+                docsExamined: p.docsExamined || 0,
+                estMemoryMB: formatMB(estMemoryMB)
+            });
+        }
+    } catch(e) {}
+});
+
+// Сортировка по estMemoryMB по убыванию, затем docsExamined
+report.sort(function(a,b) {
+    var memDiff = parseFloat(b.estMemoryMB) - parseFloat(a.estMemoryMB);
+    if (memDiff !== 0) return memDiff;
+    return b.docsExamined - a.docsExamined;
+});
+
+// Выводим топ 10
+report.slice(0,10).forEach(function(r) {
+    print("opid: " + r.opid +
+          ", ns: " + r.ns +
+          ", millis: " + r.millis +
+          ", docsExamined: " + r.docsExamined +
+          ", estMemoryMB: " + r.estMemoryMB);
+});
+
+// --- 5. Возвращаем исходный уровень профайлинга ---
+db.setProfilingLevel(originalLevel);
+print("\nProfiling restored to original level: " + originalLevel);

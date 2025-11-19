@@ -1,0 +1,57 @@
+---
+- name: Install prerequisite packages
+  apt:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - gnupg2
+    - apt-transport-https
+    - ca-certificates
+
+- name: Add MongoDB GPG key
+  apt_key:
+    url: https://www.mongodb.org/static/pgp/server-{{ mongodb_version }}.asc
+    state: present
+  become: yes
+  become_user: root
+
+- name: Set read permissions for _apt on GPG keys
+  become: true
+  file:
+    path: "/etc/apt/trusted.gpg.d/mongodb-{{ mongodb_version }}.gpg"
+    mode: '0644'
+    state: touch    
+
+- name: Add MongoDB repository
+  apt_repository:
+    repo: "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu {{ distribution_release }}/mongodb-org/{{ mongodb_version }} multiverse"
+    state: present
+
+- name: Update package cache
+  apt:
+    update_cache: yes
+
+- name: Install apt package manager
+  become: true
+  apt:
+    name: apt
+    state: present
+
+- name: Install MongoDB packages
+  apt:
+    name: mongodb-org
+    state: present
+
+- include_tasks: generate_ssl_keyv2.yml #generate_ssl_key.yml
+  vars:
+    mongod_key_dest: "{{ mongod_key_path }}"
+
+- include_tasks: generate_mongod_conf.yml
+- include_tasks: move_mongodb_data_dir.yml
+
+- name: Enable MongoDB service
+  systemd:
+    name: mongod
+    enabled: yes
+    state: started
+

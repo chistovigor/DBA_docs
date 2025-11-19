@@ -1,0 +1,60 @@
+---
+- name: check if filebeat is installed
+  stat:
+    path: /etc/filebeat/filebeat.yml
+  register: filebeat_installed
+
+- name: Create filebeat config dir for service filebeat_kafka
+  file:
+    state: directory
+    path: "/etc/filebeat_kafka"
+    owner: root
+    group: root
+    mode: 0775
+
+- name: Create filebeat log dir for service filebeat_kafka
+  file:
+    state: directory
+    path: "/var/log/filebeat_kafka"
+    owner: root
+    group: root
+    mode: 0775
+
+- name: Create filebeat data dir for service filebeat_kafka
+  file:
+    state: directory
+    path: "/var/lib/filebeat_kafka"
+    owner: root
+    group: root
+    mode: 0775
+
+- name: Create config files for kafka
+  template:
+    src: "{{ 'filebeat_kafka_' + kafka_config_type + '.yml.j2' }}"
+    dest: "/etc/filebeat_kafka/filebeat.yml"
+
+- name: Create filebeat service file filebeat_kafka
+  template:
+    src: filebeat_kafka.service.j2
+    dest: "/etc/systemd/system/filebeat_kafka.service"
+
+- name: Reload systemd daemon for filebeat_kafka
+  systemd:
+    daemon_reload: yes
+
+- name: Enable filebeat service for filebeat_kafka
+  systemd:
+    name: "filebeat_kafka"
+    enabled: yes
+
+- name: Start filebeat service for filebeat_kafka
+  systemd:
+    name: "filebeat_kafka"
+    state: started
+
+- name: Restart filebeat services
+  systemd:
+    name: "filebeat_kafka"
+    state: restarted
+
+

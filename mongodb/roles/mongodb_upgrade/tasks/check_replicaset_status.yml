@@ -1,0 +1,152 @@
+# tasks/check_replicaset_status.yml
+
+# -----------------------------------------------------------
+# Определяем список хостов для проверки
+- name: Определяем список хостов для проверки
+  set_fact:
+    replicaset_hosts: "{{ ansible_play_batch | default([inventory_hostname]) }}"
+  tags: debug
+
+- name: Выводим список хостов для проверки
+  debug:
+    msg: "replicaset_hosts = {{ replicaset_hosts }}"
+
+# -----------------------------------------------------------
+# Проверяем статус каждого узла группы (и версию MongoDB)
+- name: Проверяем статус каждого узла группы
+  ansible.builtin.shell: |
+    mongosh --quiet --host {{ node }} --eval '
+    try {
+      var me = rs.isMaster();
+      var ver = db.version();
+      print(JSON.stringify({
+        "me": me.me,
+        "isPrimary": me.ismaster ? "PRIMARY" : "SECONDARY",
+        "primary": me.primary || null,
+        "version": ver
+      }));
+    } catch(e) {
+      print(JSON.stringify({ "error": e.message }));
+    }'
+  loop: "{{ replicaset_hosts }}"
+  loop_control:
+    loop_var: node
+  register: nodes_status
+  ignore_errors: yes
+  check_mode: false
+
+#- name: debug nodes_status
+#  debug:
+#    var: nodes_status
+
+# -----------------------------------------------------------
+# Выводим версии всех узлов
+- name: Формируем словарь версий MongoDB по узлам
+  set_fact:
+    mongodb_versions_by_host: >-
+      {{
+        mongodb_versions_by_host | default({}) |
+        combine({
+          (item.stdout | from_json).me | split(':') | first: 
+          (item.stdout | from_json).version
+        })
+      }}
+  loop: "{{ nodes_status.results }}"
+  when: 
+    - item.stdout is defined
+    - item.stdout != ""
+    - (item.stdout | from_json).error is not defined
+  no_log: true   # скрываем "шумный" вывод
+
+- name: Выводим версии MongoDB на всех узлах
+  debug:
+    msg: >-
+      Версии MongoDB по узлам (текущая -> целевая {{ mongodb_full_version | default(mongodb_version) }}):
+      {% for host, version in (mongodb_versions_by_host | default({})).items() %}
+      - {{ host }}: {{ version }} -> {{ mongodb_full_version | default(mongodb_version) }}
+      {% endfor %}
+
+# -----------------------------------------------------------
+# Находим PRIMARY host
+- name: Находим PRIMARY host
+  set_fact:
+    primary_host: >-
+      {{
+        (item.stdout | from_json).me | split(':') | first
+      }}
+  loop: "{{ nodes_status.results }}"
+  when: 
+    - item.stdout is defined
+    - item.stdout != ""
+    - (item.stdout | from_json).error is not defined
+    - (item.stdout | from_json).isPrimary == "PRIMARY"
+  no_log: true   # скрываем "шумный" вывод
+
+- name: Устанавливаем значение по умолчанию для primary_host если не найден
+  set_fact:
+    primary_host: "не найден"
+  when: primary_host is not defined
+
+- name: Выводим PRIMARY host
+  debug:
+    msg: "PRIMARY = {{ primary_host }}"
+
+# -----------------------------------------------------------
+# Получаем версию MongoDB на PRIMARY
+- name: Получаем версию MongoDB на PRIMARY
+  ansible.builtin.shell: |
+    mongosh --quiet --host {{ primary_host }} --eval '
+    try { print(db.version()) } catch(e) { print("unknown") }'
+  when: primary_host != 'не найден'
+  register: primary_version
+  ignore_errors: yes
+  check_mode: false
+
+- name: Выводим версию MongoDB на PRIMARY
+  debug:
+    msg: "MongoDB version on PRIMARY = {{ primary_version.stdout | default('unknown') }}"
+
+# -----------------------------------------------------------
+# Формируем список хостов для обновления
+- name: Инициализируем список хостов для обновления
+  set_fact:
+    hosts_to_update: []
+
+- name: Отладка версий для сравнения
+  debug:
+    msg: |
+      Хост: {{ (item.stdout | from_json).me | split(':') | first }}
+      Текущая версия: "{{ (item.stdout | from_json).version }}"
+      Целевая версия: "{{ mongodb_full_version | default(mongodb_version) }}"
+      Требуется обновление: {{ (item.stdout | from_json).version != (mongodb_full_version | default(mongodb_version)) }}
+  loop: "{{ nodes_status.results }}"
+  when: 
+    - item.stdout is defined
+    - item.stdout != ""
+    - (item.stdout | from_json).error is not defined
+  no_log: true   # скрываем "шумный" вывод
+
+- name: Добавляем хосты, которые требуют обновления
+  set_fact:
+    hosts_to_update: >-
+      {{
+        hosts_to_update + 
+        [ (item.stdout | from_json).me | split(':') | first ]
+      }}
+  loop: "{{ nodes_status.results }}"
+  vars:
+    current_version: "{{ (item.stdout | from_json).version }}"
+    target_version: "{{ mongodb_full_version | default(mongodb_version) }}"
+    current_major_minor: "{{ current_version | regex_replace('^([0-9]+\\.[0-9]+).*', '\\1') }}"
+    target_major_minor: "{{ target_version | regex_replace('^([0-9]+\\.[0-9]+).*', '\\1') }}"
+  when: 
+    - item.stdout is defined
+    - item.stdout != ""
+    - (item.stdout | from_json).error is not defined
+    - current_version != target_version
+    - current_major_minor == target_major_minor or current_version is version(target_version, '<')
+  no_log: true   # скрываем "шумный" вывод
+
+- name: Выводим список хостов для обновления
+  debug:
+    msg: "{{ hosts_to_update }}"

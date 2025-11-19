@@ -1,0 +1,14 @@
+---
+# Default variables for mongodb_memory_report role
+
+# Уровень профилинга (0=выкл, 1=лог медленных операций, 2=лог всех операций)
+mongodb_profiling_level: 1
+
+# Время (секунд) на которое включается профайлинг
+mongodb_profiling_duration_sec: 120
+
+# Интервал (секунд) между двумя снимками db.currentOp()
+mongodb_profiling_ops_interval_sec: 30
+
+# Порог (MB) для отбора коллекций в cache_report.js
+mongodb_memory_report_threshold_mb: 50

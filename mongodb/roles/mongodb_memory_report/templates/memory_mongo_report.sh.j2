@@ -1,0 +1,56 @@
+#!/bin/bash
+# OS-level memory usage report for MongoDB and other processes
+
+total_mem=$(free -m | awk '/^Mem:/ {print $2}')
+
+echo "================================================"
+echo "📊 Memory usage report (Total: ${total_mem} MB)"
+echo "================================================"
+
+# Используем ps без %mem и считаем MEM_% вручную
+ps -eo pid,comm,rss --sort=-rss | awk -v total_mem=$total_mem '
+BEGIN {
+    printf "%-8s %-20s %-10s %-10s\n", "PID", "COMMAND", "RSS_MB", "MEM_%"
+}
+NR>1 {
+    rss_mb = $3 / 1024
+    mem_pct = (rss_mb / total_mem) * 100
+    process_name = $2
+    if (mem_pct > 0) {
+        printf "%-8s %-20s %-10.2f %-10.2f\n", $1, process_name, rss_mb, mem_pct
+        if (process_name ~ /mongod/) {
+            mongo_rss += rss_mb
+            mongo_pct += mem_pct
+        } else {
+            other_rss[process_name] += rss_mb
+            other_pct[process_name] += mem_pct
+        }
+    }
+}
+END {
+    small_rss = 0
+    small_pct = 0
+    for (p in other_rss) {
+        if (other_pct[p] < 1) {
+            small_rss += other_rss[p]
+            small_pct += other_pct[p]
+            delete other_rss[p]
+            delete other_pct[p]
+        }
+    }
+
+    print "------------------------------------------------"
+    printf "%-20s %-10.2f %-10.2f\n", "MongoDB total", mongo_rss, mongo_pct
+
+    for (p in other_rss) {
+        printf "%-20s %-10.2f %-10.2f\n", p, other_rss[p], other_pct[p]
+    }
+
+    if (small_rss > 0) {
+        printf "%-20s %-10.2f %-10.2f\n", "other <1% RAM", small_rss, small_pct
+    }
+
+    print "================================================"
+}'
+
+echo "✅ OS-level memory report complete"

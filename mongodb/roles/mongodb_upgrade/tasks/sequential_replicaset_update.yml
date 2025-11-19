@@ -1,0 +1,60 @@
+# tasks/sequential_replicaset_update.yml
+# Поочередное обновление членов replica set MongoDB
+
+# -----------------------------------------------------------
+# Проверяем, что есть хосты для обновления
+- name: Проверяем наличие хостов для обновления
+  fail:
+    msg: "Нет хостов для обновления. hosts_to_update пуст."
+  when: hosts_to_update | length == 0
+
+# -----------------------------------------------------------
+# Обновляем secondary узлы поочередно
+- name: Обновляем secondary узлы поочередно
+  include_tasks: update_single_node.yml
+  vars:
+    target_host: "{{ item }}"
+    node_type: "secondary"
+  loop: "{{ secondary_hosts }}"
+  when: secondary_hosts | length > 0
+
+# -----------------------------------------------------------
+# Обновляем primary узел (если требуется)
+- name: Обновляем primary узел
+  include_tasks: update_single_node.yml
+  vars:
+    target_host: "{{ primary_to_update }}"
+    node_type: "primary"
+  when: primary_to_update is defined and primary_to_update != None
+
+# -----------------------------------------------------------
+# Финальная проверка статуса replica set
+- name: Финальная проверка статуса replica set
+  ansible.builtin.shell: |
+    mongosh --quiet --host {{ primary_host }} --eval '
+    try {
+      var status = rs.status();
+      var members = status.members.map(function(m) {
+        return {
+          name: m.name,
+          stateStr: m.stateStr,
+          health: m.health
+        };
+      });
+      print(JSON.stringify({ members: members, ok: status.ok }));
+    } catch(e) {
+      print(JSON.stringify({ error: e.message }));
+    }'
+  register: final_replicaset_status
+  ignore_errors: yes
+
+- name: Выводим финальный статус replica set
+  debug:
+    msg: "Финальный статус replica set: {{ final_replicaset_status.stdout | from_json }}"
+
+- name: Проверяем успешность обновления
+  assert:
+    that:
+      - final_replicaset_status.stdout | from_json | json_query('ok') == 1
+    fail_msg: "Replica set находится в неисправном состоянии после обновления"
+    success_msg: "Все узлы replica set успешно обновлены"

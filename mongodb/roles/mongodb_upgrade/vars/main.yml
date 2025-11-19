@@ -1,0 +1,7 @@
+---
+# Определяем репозиторий в зависимости от Ubuntu
+mongodb_repo: "{{ 'jammy' if ansible_distribution_release == 'jammy' else 'noble' }}"
+# Имя сервиса MongoDB
+mongodb_service_name: mongod
+# Пакеты для установки берём из defaults/main.yml
+mongodb_packages: "{{ mongodb_packages }}"

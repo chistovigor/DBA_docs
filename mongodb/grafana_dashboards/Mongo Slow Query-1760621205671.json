@@ -1,0 +1,637 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "description": "This dashboard picks up the logs for ELK and uploads them into Grafana, creating a dashboard for slow queries.",
+  "editable": false,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": 868,
+  "links": [],
+  "panels": [
+    {
+      "datasource": {
+        "type": "elasticsearch",
+        "uid": "${datasource}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "color-text",
+              "wrapText": true
+            },
+            "filterable": true,
+            "inspect": false
+          },
+          "fieldMinMax": false,
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Duration"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "ms"
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": 0
+                    },
+                    {
+                      "color": "#EAB839",
+                      "value": 50
+                    },
+                    {
+                      "color": "red",
+                      "value": 100
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Server"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 300
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Docs examined"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 138
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Client"
+            },
+            "properties": []
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "CPU time"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "ns"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 15,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 4,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "Duration"
+          }
+        ]
+      },
+      "pluginVersion": "12.1.1",
+      "repeat": "datasource",
+      "repeatDirection": "v",
+      "targets": [
+        {
+          "alias": "",
+          "bucketAggs": [],
+          "datasource": {
+            "type": "elasticsearch",
+            "uid": "${datasource}"
+          },
+          "metrics": [
+            {
+              "id": "1",
+              "settings": {
+                "limit": "500"
+              },
+              "type": "logs"
+            }
+          ],
+          "query": "",
+          "refId": "A",
+          "timeField": "@timestamp"
+        }
+      ],
+      "title": "$datasource",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "@metadata.beat": true,
+              "@metadata.type": true,
+              "@metadata.version": true,
+              "@timestamp": false,
+              "@version": true,
+              "_id": true,
+              "_index": true,
+              "_source": true,
+              "_type": true,
+              "agent.ephemeral_id": true,
+              "agent.hostname": false,
+              "agent.id": true,
+              "agent.name": true,
+              "agent.type": true,
+              "agent.version": true,
+              "attr.client": true,
+              "attr.connectionCount": true,
+              "attr.connectionId": true,
+              "attr.db": true,
+              "attr.doc.driver.name": true,
+              "attr.doc.driver.version": true,
+              "attr.doc.os.architecture": true,
+              "attr.doc.os.name": true,
+              "attr.doc.os.type": true,
+              "attr.doc.os.version": true,
+              "attr.doc.platform": true,
+              "attr.doc.version": true,
+              "attr.durationMicros": true,
+              "attr.elapsedMicros": true,
+              "attr.elapsedMillis": true,
+              "attr.error.code": true,
+              "attr.error.codeName": true,
+              "attr.error.errmsg": true,
+              "attr.extraInfo": true,
+              "attr.hostAndPort": true,
+              "attr.isClusterMember": true,
+              "attr.isSpeculative": true,
+              "attr.limitMicros": true,
+              "attr.mechanism": true,
+              "attr.metric": true,
+              "attr.metrics.conversation_duration.micros": true,
+              "attr.metrics.conversation_duration.summary.0.duration_micros": true,
+              "attr.metrics.conversation_duration.summary.0.step": true,
+              "attr.metrics.conversation_duration.summary.0.step_total": true,
+              "attr.metrics.conversation_duration.summary.1.duration_micros": true,
+              "attr.metrics.conversation_duration.summary.1.step": true,
+              "attr.metrics.conversation_duration.summary.1.step_total": true,
+              "attr.metrics.conversation_duration.summary.2.duration_micros": true,
+              "attr.metrics.conversation_duration.summary.2.step": true,
+              "attr.metrics.conversation_duration.summary.2.step_total": true,
+              "attr.micros": true,
+              "attr.numOpenConns": true,
+              "attr.remote": true,
+              "attr.result": true,
+              "attr.user": true,
+              "attr.uuid.uuid.$uuid": true,
+              "c": true,
+              "ctx": true,
+              "ecs.version": true,
+              "event.original": true,
+              "highlight": true,
+              "host.name": true,
+              "id": true,
+              "input.type": true,
+              "log.file.path": true,
+              "log.offset": true,
+              "log_type": true,
+              "message": true,
+              "message.attr_s.CRUD": true,
+              "message.attr_s.appName": true,
+              "message.attr_s.authorization": true,
+              "message.attr_s.client": false,
+              "message.attr_s.collectionType": true,
+              "message.attr_s.command": false,
+              "message.attr_s.command_s.$db": true,
+              "message.attr_s.command_s.$oplogQueryData": true,
+              "message.attr_s.command_s.$replData": true,
+              "message.attr_s.command_s._refreshQueryAnalyzerConfiguration": true,
+              "message.attr_s.command_s.active": true,
+              "message.attr_s.command_s.aggregate": true,
+              "message.attr_s.command_s.authorizedDatabases": true,
+              "message.attr_s.command_s.batchSize": true,
+              "message.attr_s.command_s.buildInfo": true,
+              "message.attr_s.command_s.collStats": true,
+              "message.attr_s.command_s.collection": true,
+              "message.attr_s.command_s.compression": true,
+              "message.attr_s.command_s.configTerm": true,
+              "message.attr_s.command_s.configVersion": true,
+              "message.attr_s.command_s.conversationId": true,
+              "message.attr_s.command_s.currentOp": true,
+              "message.attr_s.command_s.dbStats": true,
+              "message.attr_s.command_s.delete": true,
+              "message.attr_s.command_s.endSessions": true,
+              "message.attr_s.command_s.filter": true,
+              "message.attr_s.command_s.find": true,
+              "message.attr_s.command_s.findAndModify": true,
+              "message.attr_s.command_s.freeStorage": true,
+              "message.attr_s.command_s.from": true,
+              "message.attr_s.command_s.fromId": true,
+              "message.attr_s.command_s.getCmdLineOpts": true,
+              "message.attr_s.command_s.getDiagnosticData": true,
+              "message.attr_s.command_s.getMore": true,
+              "message.attr_s.command_s.hbv": true,
+              "message.attr_s.command_s.hello": true,
+              "message.attr_s.command_s.helloOk": true,
+              "message.attr_s.command_s.insert": true,
+              "message.attr_s.command_s.isMaster": true,
+              "message.attr_s.command_s.limit": true,
+              "message.attr_s.command_s.listCollections": true,
+              "message.attr_s.command_s.listDatabases": true,
+              "message.attr_s.command_s.listIndexes": true,
+              "message.attr_s.command_s.maxAwaitTimeMS": true,
+              "message.attr_s.command_s.maxTimeMS": true,
+              "message.attr_s.command_s.maxTimeMSOpOnly": true,
+              "message.attr_s.command_s.mayBypassWriteBlocking": true,
+              "message.attr_s.command_s.mechanism": true,
+              "message.attr_s.command_s.mirrored": true,
+              "message.attr_s.command_s.multi": true,
+              "message.attr_s.command_s.name": true,
+              "message.attr_s.command_s.nameOnly": true,
+              "message.attr_s.command_s.new": true,
+              "message.attr_s.command_s.numQueriesExecutedPerSecond": true,
+              "message.attr_s.command_s.optimes": true,
+              "message.attr_s.command_s.ordered": true,
+              "message.attr_s.command_s.payload": true,
+              "message.attr_s.command_s.ping": true,
+              "message.attr_s.command_s.pipeline": true,
+              "message.attr_s.command_s.primaryId": true,
+              "message.attr_s.command_s.q": true,
+              "message.attr_s.command_s.query": true,
+              "message.attr_s.command_s.recordStats": true,
+              "message.attr_s.command_s.replSetGetConfig": true,
+              "message.attr_s.command_s.replSetGetStatus": true,
+              "message.attr_s.command_s.replSetHeartbeat": true,
+              "message.attr_s.command_s.replSetUpdatePosition": true,
+              "message.attr_s.command_s.saslContinue": true,
+              "message.attr_s.command_s.saslStart": true,
+              "message.attr_s.command_s.saslSupportedMechs": true,
+              "message.attr_s.command_s.scale": true,
+              "message.attr_s.command_s.serverStatus": true,
+              "message.attr_s.command_s.singleBatch": true,
+              "message.attr_s.command_s.term": true,
+              "message.attr_s.command_s.top": true,
+              "message.attr_s.command_s.txnNumber": true,
+              "message.attr_s.command_s.u": true,
+              "message.attr_s.command_s.update": true,
+              "message.attr_s.command_s.upsert": true,
+              "message.attr_s.connectionCount": true,
+              "message.attr_s.connectionId": true,
+              "message.attr_s.cpuNanos": false,
+              "message.attr_s.currentCommittedSnapshotOpTime": true,
+              "message.attr_s.currentTopologyVersionCounter": true,
+              "message.attr_s.cursorExhausted": true,
+              "message.attr_s.cursorid": true,
+              "message.attr_s.db": true,
+              "message.attr_s.deadline": true,
+              "message.attr_s.doc": true,
+              "message.attr_s.docsExamined": false,
+              "message.attr_s.durationMillis": false,
+              "message.attr_s.elapsedMillis": true,
+              "message.attr_s.errCode": true,
+              "message.attr_s.errName": true,
+              "message.attr_s.error": true,
+              "message.attr_s.extraInfo": true,
+              "message.attr_s.flowControl": true,
+              "message.attr_s.fromPlanCache": true,
+              "message.attr_s.hostAndPort": true,
+              "message.attr_s.index": true,
+              "message.attr_s.isClusterMember": true,
+              "message.attr_s.isFromUserConnection": true,
+              "message.attr_s.isLoadBalanced": true,
+              "message.attr_s.isSpeculative": true,
+              "message.attr_s.keysDeleted": true,
+              "message.attr_s.keysExamined": true,
+              "message.attr_s.keysInserted": true,
+              "message.attr_s.locks": true,
+              "message.attr_s.mechanism": true,
+              "message.attr_s.message": true,
+              "message.attr_s.metric": true,
+              "message.attr_s.metrics": true,
+              "message.attr_s.micros": true,
+              "message.attr_s.nBatches": true,
+              "message.attr_s.nMatched": true,
+              "message.attr_s.nModified": true,
+              "message.attr_s.nUpserted": true,
+              "message.attr_s.namespace": true,
+              "message.attr_s.ndeleted": true,
+              "message.attr_s.negotiatedCompressors": true,
+              "message.attr_s.ninserted": true,
+              "message.attr_s.nreturned": false,
+              "message.attr_s.ns": false,
+              "message.attr_s.numDeleted": true,
+              "message.attr_s.numYields": true,
+              "message.attr_s.ok": true,
+              "message.attr_s.opId": true,
+              "message.attr_s.opTime": true,
+              "message.attr_s.originatingCommand": true,
+              "message.attr_s.pendingIdentsCount": true,
+              "message.attr_s.planCacheKey": true,
+              "message.attr_s.planCacheShapeHash": true,
+              "message.attr_s.planSummary": false,
+              "message.attr_s.planningTimeMicros": true,
+              "message.attr_s.protocol": true,
+              "message.attr_s.queryFramework": true,
+              "message.attr_s.queryHash": false,
+              "message.attr_s.queryShapeHash": true,
+              "message.attr_s.queues": true,
+              "message.attr_s.readConcern": true,
+              "message.attr_s.remote": true,
+              "message.attr_s.reslen": true,
+              "message.attr_s.resolvedViews": true,
+              "message.attr_s.result": true,
+              "message.attr_s.status": true,
+              "message.attr_s.storage": true,
+              "message.attr_s.timestamp": true,
+              "message.attr_s.totalOplogSlotDurationMicros": true,
+              "message.attr_s.type": true,
+              "message.attr_s.user": false,
+              "message.attr_s.uuid": true,
+              "message.attr_s.waitForWriteConcernDurationMillis": true,
+              "message.attr_s.workingMillis": true,
+              "message.attr_s.writeConcern": true,
+              "message.c": true,
+              "message.ctx": true,
+              "message.id": true,
+              "message.msg": false,
+              "message.s": true,
+              "message.size_s.command": true,
+              "message.size_s.originatingCommand": true,
+              "message.t_s.$date": true,
+              "message.truncated_s.command": true,
+              "message.truncated_s.command_s.filter": true,
+              "message.truncated_s.originatingCommand": true,
+              "msg": true,
+              "new-test": true,
+              "s": true,
+              "size.command": true,
+              "sort": true,
+              "t.$date": true,
+              "tags": true,
+              "truncated.command.documents.0.data.body.dailies.0.timeOffsetHeartRateSamples.13845.size": true,
+              "truncated.command.documents.0.data.body.dailies.0.timeOffsetHeartRateSamples.13845.type": true,
+              "truncated.command.documents.0.data.body.sleeps.0.timeOffsetSleepRespiration.30180.size": true,
+              "truncated.command.documents.0.data.body.sleeps.0.timeOffsetSleepRespiration.30180.type": true,
+              "truncated.command.pipeline.0.$match.user_id.$in.376.size": true,
+              "truncated.command.pipeline.0.$match.user_id.$in.376.type": true,
+              "truncated.command.update.$set.sent_to.user_ids.326.size": true,
+              "truncated.command.update.$set.sent_to.user_ids.326.type": true,
+              "truncated.command.update.$set.sent_to.user_ids.327.size": true,
+              "truncated.command.update.$set.sent_to.user_ids.327.type": true
+            },
+            "includeByName": {},
+            "indexByName": {
+              "@metadata.beat": 1,
+              "@metadata.type": 2,
+              "@metadata.version": 3,
+              "@timestamp": 0,
+              "_id": 4,
+              "_index": 5,
+              "_source": 6,
+              "_type": 7,
+              "agent.ephemeral_id": 8,
+              "agent.hostname": 9,
+              "agent.id": 10,
+              "agent.name": 11,
+              "agent.type": 12,
+              "agent.version": 13,
+              "ecs.version": 14,
+              "highlight": 15,
+              "host.name": 16,
+              "id": 17,
+              "input.type": 18,
+              "log.file.path": 19,
+              "log.offset": 20,
+              "message.attr_s.CRUD": 21,
+              "message.attr_s.appName": 81,
+              "message.attr_s.client": 22,
+              "message.attr_s.command": 25,
+              "message.attr_s.command_s.$db": 26,
+              "message.attr_s.command_s.$oplogQueryData": 82,
+              "message.attr_s.command_s.$replData": 83,
+              "message.attr_s.command_s.aggregate": 84,
+              "message.attr_s.command_s.batchSize": 85,
+              "message.attr_s.command_s.collStats": 86,
+              "message.attr_s.command_s.collection": 27,
+              "message.attr_s.command_s.delete": 87,
+              "message.attr_s.command_s.filter": 28,
+              "message.attr_s.command_s.find": 29,
+              "message.attr_s.command_s.getMore": 30,
+              "message.attr_s.command_s.insert": 31,
+              "message.attr_s.command_s.limit": 88,
+              "message.attr_s.command_s.listCollections": 89,
+              "message.attr_s.command_s.listDatabases": 90,
+              "message.attr_s.command_s.maxTimeMS": 91,
+              "message.attr_s.command_s.multi": 73,
+              "message.attr_s.command_s.nameOnly": 92,
+              "message.attr_s.command_s.ordered": 32,
+              "message.attr_s.command_s.pipeline": 93,
+              "message.attr_s.command_s.q": 74,
+              "message.attr_s.command_s.term": 94,
+              "message.attr_s.command_s.txnNumber": 33,
+              "message.attr_s.command_s.u": 75,
+              "message.attr_s.command_s.update": 34,
+              "message.attr_s.command_s.upsert": 76,
+              "message.attr_s.connectionCount": 95,
+              "message.attr_s.connectionId": 96,
+              "message.attr_s.cpuNanos": 35,
+              "message.attr_s.cursorExhausted": 36,
+              "message.attr_s.cursorid": 37,
+              "message.attr_s.db": 97,
+              "message.attr_s.doc": 38,
+              "message.attr_s.docsExamined": 40,
+              "message.attr_s.durationMillis": 39,
+              "message.attr_s.elapsedMillis": 98,
+              "message.attr_s.extraInfo": 99,
+              "message.attr_s.flowControl": 42,
+              "message.attr_s.fromPlanCache": 43,
+              "message.attr_s.isClusterMember": 100,
+              "message.attr_s.isSpeculative": 101,
+              "message.attr_s.keysDeleted": 77,
+              "message.attr_s.keysExamined": 44,
+              "message.attr_s.keysInserted": 45,
+              "message.attr_s.locks": 46,
+              "message.attr_s.mechanism": 102,
+              "message.attr_s.metric": 103,
+              "message.attr_s.metrics": 104,
+              "message.attr_s.micros": 105,
+              "message.attr_s.nBatches": 47,
+              "message.attr_s.nMatched": 78,
+              "message.attr_s.nModified": 79,
+              "message.attr_s.nUpserted": 80,
+              "message.attr_s.ndeleted": 106,
+              "message.attr_s.negotiatedCompressors": 48,
+              "message.attr_s.ninserted": 49,
+              "message.attr_s.nreturned": 41,
+              "message.attr_s.ns": 24,
+              "message.attr_s.numYields": 50,
+              "message.attr_s.originatingCommand": 51,
+              "message.attr_s.planCacheKey": 52,
+              "message.attr_s.planSummary": 53,
+              "message.attr_s.planningTimeMicros": 54,
+              "message.attr_s.protocol": 55,
+              "message.attr_s.queryFramework": 56,
+              "message.attr_s.queryHash": 57,
+              "message.attr_s.readConcern": 58,
+              "message.attr_s.remote": 59,
+              "message.attr_s.reslen": 60,
+              "message.attr_s.result": 107,
+              "message.attr_s.storage": 61,
+              "message.attr_s.totalOplogSlotDurationMicros": 62,
+              "message.attr_s.type": 63,
+              "message.attr_s.user": 23,
+              "message.attr_s.uuid": 108,
+              "message.attr_s.waitForWriteConcernDurationMillis": 64,
+              "message.attr_s.writeConcern": 65,
+              "message.c": 66,
+              "message.ctx": 67,
+              "message.id": 68,
+              "message.msg": 69,
+              "message.s": 70,
+              "message.t_s.$date": 71,
+              "sort": 72
+            },
+            "orderBy": [
+              {
+                "desc": false,
+                "type": "name"
+              }
+            ],
+            "orderByMode": "manual",
+            "renameByName": {
+              "@timestamp": "Timestamp",
+              "agent.hostname": "Server",
+              "agent.id": "",
+              "message.attr_s.client": "Client",
+              "message.attr_s.command": "Query",
+              "message.attr_s.command_s.$db": "Database",
+              "message.attr_s.command_s.authorizedDatabases": "",
+              "message.attr_s.command_s.collection": "Collection",
+              "message.attr_s.cpuNanos": "CPU time",
+              "message.attr_s.db": "",
+              "message.attr_s.docsExamined": "Docs examined",
+              "message.attr_s.durationMillis": "Duration",
+              "message.attr_s.elapsedMillis": "",
+              "message.attr_s.errCode": "",
+              "message.attr_s.errMsg": "Error message",
+              "message.attr_s.errName": "",
+              "message.attr_s.extraInfo": "",
+              "message.attr_s.isFromUserConnection": "",
+              "message.attr_s.nreturned": "Docs returned",
+              "message.attr_s.ns": "Namespace",
+              "message.attr_s.numYields": "numYields",
+              "message.attr_s.ok": "",
+              "message.attr_s.originatingCommand": "Command",
+              "message.attr_s.planCacheKey": "",
+              "message.attr_s.planSummary": "planSummary",
+              "message.attr_s.queryFramework": "",
+              "message.attr_s.queryHash": "Query Hash",
+              "message.attr_s.remote": "",
+              "message.attr_s.type": "",
+              "message.attr_s.user": "User",
+              "message.msg": "Message",
+              "message.t_s.$date": ""
+            }
+          }
+        }
+      ],
+      "type": "table"
+    }
+  ],
+  "preload": false,
+  "refresh": "1m",
+  "schemaVersion": 41,
+  "tags": [],
+  "templating": {
+    "list": [
+      {
+        "current": {
+          "text": [
+            "ams-mraschet",
+            "lux-mraschet"
+          ],
+          "value": [
+            "ff14d0siamq68e",
+            "eez82qtlwjthcb"
+          ]
+        },
+        "includeAll": true,
+        "multi": true,
+        "name": "datasource",
+        "options": [],
+        "query": "elasticsearch",
+        "refresh": 1,
+        "regex": "",
+        "type": "datasource"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "Mongo Slow Query",
+  "uid": "adqmfc6p2jt34a1",
+  "version": 37
+}

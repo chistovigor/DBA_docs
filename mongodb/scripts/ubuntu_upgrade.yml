@@ -1,0 +1,71 @@
+---
+- name: Проверка и обновление Ubuntu систем
+  hosts: all
+  become: yes
+  vars:
+    dry_run: false
+    upgrade_type: "package_update"  # или "os_upgrade"
+
+  pre_tasks:
+    - name: Проверка что система Ubuntu
+      ansible.builtin.assert:
+        that:
+          - ansible_distribution == 'Ubuntu'
+          - ansible_distribution_version | float >= 20.04
+        fail_msg: "Требуется Ubuntu 20.04 или новее, текущая версия: {{ ansible_distribution_version }}"
+
+  tasks:
+    - name: Обновление индекса пакетов
+      ansible.builtin.apt:
+        update_cache: yes
+      changed_when: false
+
+    - name: Проверка доступных обновлений
+      ansible.builtin.shell: |
+        apt list --upgradable 2>/dev/null | wc -l
+      register: apt_check
+      changed_when: false
+      check_mode: false
+
+    - name: Установка количества обновлений
+      ansible.builtin.set_fact:
+        updates_count: "{{ (apt_check.stdout | int) - 1 }}"
+      when: apt_check.stdout | int > 0
+
+    - name: Вывод информации об обновлениях
+      ansible.builtin.debug:
+        msg: "Доступно обновлений: {{ updates_count | default(0) }}"
+
+    - block:
+        - name: Обновление всех пакетов
+          ansible.builtin.apt:
+            upgrade: dist
+            autoremove: yes
+          when: upgrade_type == "package_update"
+
+        - name: Подготовка к обновлению ОС
+          ansible.builtin.apt:
+            name: update-manager-core
+            state: present
+          when: upgrade_type == "os_upgrade"
+
+        - name: Обновление ОС
+          ansible.builtin.command: |
+            DEBIAN_FRONTEND=noninteractive do-release-upgrade -f DistUpgradeViewNonInteractive -q
+          when: upgrade_type == "os_upgrade"
+          ignore_errors: yes
+
+      when: 
+        - (updates_count | default(0) | int) > 0
+        - not (dry_run | bool)
+
+    - name: Dry-run уведомление
+      ansible.builtin.debug:
+        msg: |
+          В режиме проверки (dry-run) были бы выполнены:
+          {% if upgrade_type == 'package_update' %}
+          - Обновление {{ updates_count | default(0) }} пакетов
+          {% else %}
+          - Обновление ОС до следующей версии
+          {% endif %}
+      when: dry_run | bool

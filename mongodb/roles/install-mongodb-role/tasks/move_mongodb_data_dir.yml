@@ -1,0 +1,3 @@
+---
+- name: Move MongoDB data directory
+  command: mv /var/lib/mongodb {{ mongodb_data_dest }}

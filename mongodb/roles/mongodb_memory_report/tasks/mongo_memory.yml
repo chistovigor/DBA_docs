@@ -1,0 +1,79 @@
+---
+- name: Deploy MongoDB memory report JS script
+  template:
+    src: mongo_memory_cache_report.js.j2
+    dest: /tmp/mongo_memory_cache_report.js
+    mode: '0644'
+
+###############################
+# Internal Memory Report
+###############################
+- name: Run MongoDB internal memory report
+  shell: >
+    mongosh --quiet \
+      -u "{{ mongo_user }}" -p "{{ mongo_password }}" \
+      --authenticationDatabase admin \
+      /tmp/mongo_memory_cache_report.js
+  register: mongo_internal_report
+  ignore_errors: yes
+
+- name: Save MongoDB internal memory report to file
+  copy:
+    content: "{{ mongo_internal_report.stdout }}"
+    dest: /tmp/mongo_internal_memory_report.json
+  when: mongo_internal_report.stdout != ""
+
+- name: Display MongoDB internal memory report
+  debug:
+    msg: "{{ mongo_internal_report.stdout_lines | default([]) }}"
+  when: mongo_internal_report.stdout != ""
+
+###############################
+# OS-level Memory Report
+###############################
+- name: Deploy OS-level memory report script
+  template:
+    src: memory_mongo_report.sh.j2
+    dest: /tmp/memory_mongo_report.sh
+    mode: '0755'
+
+- name: Run OS-level memory report
+  shell: /tmp/memory_mongo_report.sh
+  register: os_memory_report
+  ignore_errors: yes
+
+- name: Display OS-level memory report
+  debug:
+    msg: "{{ os_memory_report.stdout_lines }}"
+
+###############################
+# Cache Report with Threshold
+###############################
+- name: Run MongoDB memory cache report with threshold
+  shell: >
+    mongosh --quiet \
+      -u "{{ mongo_user }}" -p "{{ mongo_password }}" \
+      --authenticationDatabase admin \
+      --eval "var thresholdMB={{ mongodb_memory_report_threshold_mb }}" \
+      /tmp/mongo_memory_cache_report.js
+  register: mongo_cache_report
+  ignore_errors: yes
+
+- name: Save MongoDB cache report to file
+  copy:
+    content: "{{ mongo_cache_report.stdout }}"
+    dest: /tmp/mongo_cache_report.json
+
+- name: Display MongoDB internal memory report cleanly
+  shell: cat /tmp/mongo_internal_memory_report.json
+  register: mongo_internal_raw
+  changed_when: false
+
+- name: Show MongoDB internal memory report raw
+  debug:
+    msg: "{{ mongo_internal_raw.stdout }}"
+
+
+
+
+

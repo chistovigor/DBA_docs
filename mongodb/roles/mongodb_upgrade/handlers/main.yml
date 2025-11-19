@@ -1,0 +1,12 @@
+---
+# Обработчики роли
+- name: restart mongodb
+  ansible.builtin.systemd:
+    name: mongod
+    state: restarted
+    daemon_reload: true
+
+- name: reload mongodb
+  ansible.builtin.systemd:
+    name: mongod
+    state: reloaded

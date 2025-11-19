@@ -1,0 +1,13 @@
+---
+mongodb_version: "6.0"
+distribution_release: "jammy" # ubuntu version focal or jammy WARNING * 22.04 LTS ("Jammy") (Starting in MongoDB 6.0.4)
+mongod_conf_template: "mongod.conf.j2" # configuration file mongodb  "/templates/mongod.conf.j2"
+mongodb_data_dest: "/opt/mongodb"
+mongod_conf_dest: "/etc/mongod.conf"
+mongod_key_path: "/etc/mongod.key"
+#____________________________
+# variables mongod.conf file
+#____________________________
+ip: 10.17.48.198 #bindIp network interfaces
+rsname: testreplname #replSetName
+oplog: 4096 #oplogSizeMB

@@ -1,0 +1,7 @@
+---
+- name: Run MongoDB cpu analysis
+  hosts: all
+  gather_facts: false
+
+  roles:
+    - role: mongodb_cpu_report

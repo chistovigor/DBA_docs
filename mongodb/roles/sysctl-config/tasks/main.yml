@@ -1,0 +1,13 @@
+---
+- name: Copy sysctl config
+  template:
+    src: "99-mongodb.conf.j2"
+    dest: "/etc/sysctl.d/99-mongodb.conf"
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Apply sysctl
+  command: "sysctl --system"
+  ignore_errors: yes
+

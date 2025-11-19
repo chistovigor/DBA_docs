@@ -1,0 +1,114 @@
+// profiling_cpu_report.js.j2
+
+function median(values) {
+    if (!values.length) return 0;
+    values.sort((a,b)=>a-b);
+    var half = Math.floor(values.length/2);
+    if(values.length % 2) return values[half];
+    return (values[half-1] + values[half])/2;
+}
+
+// Настройки из Ansible
+var profilingLevel = {{ mongodb_profiling_level }};
+var profilingDurationSec = {{ mongodb_profiling_duration_sec }};
+var topN = {{ mongodb_profiling_top_n }};
+
+// Получаем список всех БД
+var dbs = db.adminCommand({ listDatabases: 1 }).databases.map(d=>d.name);
+var systemDBs = ["admin","local","config"];
+var profiledDBs = [];
+
+// --- Включаем профилинг ---
+dbs.forEach(dbName=>{
+    if(systemDBs.includes(dbName)) return;
+    try {
+        var dbObj = db.getSiblingDB(dbName);
+        var origLevel = dbObj.getProfilingStatus().hasOwnProperty("level") ? dbObj.getProfilingStatus().level : 0;
+        dbObj.setProfilingLevel(profilingLevel);
+        print(`Profiling enabled for DB: ${dbName}`);
+        profiledDBs.push({db: dbObj, originalLevel: origLevel, name: dbName});
+    } catch(e) {
+        print(`Skip DB ${dbName} (error: ${e})`);
+    }
+});
+
+print(`\nProfiling enabled for ${profilingDurationSec} seconds on all DBs...`);
+
+// --- Ждем сбор профилинга ---
+sleep(profilingDurationSec * 1000);
+
+// --- Собираем все профилинги ---
+var allProfiles = [];
+
+profiledDBs.forEach(d=>{
+    try {
+        var profiles = d.db.system.profile.find({
+            ts: { $gte: new Date(Date.now() - profilingDurationSec*2000) }
+        }).toArray();
+
+        profiles.forEach(p=>{
+            if(!p.cpuNanos) return;
+            allProfiles.push({
+                db: d.name,
+                ns: p.ns,
+                queryHash: p.queryHash || "null",
+                cpuNanos: BigInt(p.cpuNanos),
+                client: p.client || "",
+                appName: p.appName || "",
+                user: p.user || "",
+                command: p.command || {}
+            });
+        });
+    } catch(e) {
+        print(`Error reading profile for DB ${d.name}: ${e}`);
+    }
+});
+
+// --- Вывод топ-N запросов по cpuNanos ---
+allProfiles.sort((a,b)=>Number(b.cpuNanos - a.cpuNanos));
+print("\n=== CPU profiling (all DBs) ===");
+allProfiles.slice(0, topN).forEach((p, idx)=>{
+    print(`#${idx+1} | db: ${p.db} | queryHash: ${p.queryHash} | cpuNanos: ${p.cpuNanos} | client: ${p.client} | appName: ${p.appName} | ns: ${p.ns} | user: ${p.user} | command: ${JSON.stringify(p.command)}`);
+});
+
+// --- Группировка по DB/client/appName/ns/user ---
+var summary = {};
+allProfiles.forEach(p=>{
+    var key = `${p.db}|${p.client}|${p.appName}|${p.ns}|${p.user}`;
+    if(!summary[key]) summary[key] = [];
+    summary[key].push(p.cpuNanos);
+});
+
+var groupedSummary = [];
+for(var key in summary){
+    var arr = summary[key];
+    var total = arr.reduce((a,b)=>a + b, BigInt(0)); // суммируем через BigInt
+    var medVal = median(arr.map(x=>Number(x)));
+    var parts = key.split("|");
+    groupedSummary.push({
+        db: parts[0],
+        client: parts[1],
+        appName: parts[2],
+        ns: parts[3],
+        user: parts[4],
+        totalCpuNanos: total,
+        medianCpuNanos: medVal,
+        count: arr.length
+    });
+}
+
+groupedSummary.sort((a,b)=>Number(b.totalCpuNanos - a.totalCpuNanos));
+print("\n=== CPU profiling summary by DB/client/appName/ns/user ===");
+groupedSummary.slice(0, topN).forEach((r, idx)=>{
+    print(`#${idx+1} | db: ${r.db} | client: ${r.client} | appName: ${r.appName} | ns: ${r.ns} | user: ${r.user} | totalCpuNanos: ${r.totalCpuNanos} | medianCpuNanos: ${r.medianCpuNanos} | count: ${r.count}`);
+});
+
+// --- Восстановление профилинга ---
+profiledDBs.forEach(d=>{
+    try {
+        d.db.setProfilingLevel(d.originalLevel);
+        print(`Profiling restored for DB: ${d.name} (level ${d.originalLevel})`);
+    } catch(e) {
+        print(`Error restoring profiling for DB ${d.name}: ${e}`);
+    }
+});

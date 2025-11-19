@@ -1,4 +1,4 @@
-MONGO_SOURCE_URI="mongodb://root:dBKcxsiyuDGYOGhGRvb83kau@sc-lux99-x-test-chistov-mongo-1.xbet.lan:27017/admin"
+MONGO_SOURCE_URI="mongodb://root:***@some_server.xbet.lan:27017/admin"
 SOURCE_DB="test2"
 MONGO_URI_BASE="${MONGO_SOURCE_URI%/*}"
 TARGET_DB="ferret_test2"

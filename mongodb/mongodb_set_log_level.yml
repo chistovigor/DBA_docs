@@ -1,0 +1,7 @@
+---
+- name: Run MongoDB log level role
+  hosts: all
+  gather_facts: false
+
+  roles:
+    - role: mongodb_set_log_level

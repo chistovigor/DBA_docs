@@ -1,0 +1,7 @@
+---
+- name: Устанавливаем MongoDB {{ mongodb_version }}
+  ansible.builtin.apt:
+    name: "mongodb-org"
+    state: latest
+    force: yes
+    update_cache: yes

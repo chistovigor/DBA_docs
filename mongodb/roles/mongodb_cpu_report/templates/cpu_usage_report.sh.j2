@@ -1,0 +1,120 @@
+#!/bin/bash
+set -euo pipefail
+
+LOG_FILE="{{ cpu_log_file }}"
+NOW=$(date +%s)
+INTERVAL={{ cpu_graph_step_sec }}            # шаг между точками графика
+DURATION={{ cpu_graph_range_min }}           # длительность графика в минутах
+GRAPH_POINTS=$(( (DURATION*60)/INTERVAL ))
+
+echo "================================================"
+echo "📊 CPU usage analysis report"
+echo "================================================"
+
+if [ ! -f "$LOG_FILE" ]; then
+  echo "⚠️ Log file not found: $LOG_FILE"
+  echo "ℹ️ Возможно, сервис pidstat-logger ещё не запущен или не успел собрать данные."
+  exit 1
+fi
+
+if [ ! -s "$LOG_FILE" ]; then
+  echo "⚠️ Log file exists but is empty: $LOG_FILE"
+  echo "ℹ️ Подождите несколько минут ({{ cpu_graph_step_sec }}s * несколько итераций)."
+  exit 1
+fi
+
+analyze_range() {
+  local RANGE_MIN=$1
+  local LABEL=$2
+
+  START_TS=$((NOW - RANGE_MIN * 60))
+
+  echo
+  echo "▶ Top processes CPU usage (last $LABEL)"
+  echo "   Time range: $(date -d @$START_TS '+%H:%M:%S') – $(date '+%H:%M:%S')"
+
+  awk -v start="$START_TS" '
+    ($1 ~ /^[0-9]{2}:[0-9]{2}:[0-9]{2}$/ && $3 ~ /^[0-9]+$/) {
+      split($1, t, ":")
+      sample_ts = mktime(strftime("%Y %m %d") " " t[1] " " t[2] " " t[3])
+      if (sample_ts >= start) {
+        cmd=$10
+        cpu=$8
+        proc_cpu[cmd]+=cpu
+        cnt[cmd]++
+        ts_total[sample_ts]+=cpu
+        ts_cnt[sample_ts]=1
+        if (cmd=="mongod" || cmd=="mongodb_exporter") {
+          mongo_cpu[sample_ts]+=cpu
+        }
+      }
+    }
+    END {
+      n=0
+      for (c in proc_cpu) {
+        if (cnt[c]>0) {
+          avg=proc_cpu[c]/cnt[c]
+          process[n,"cmd"]=c
+          process[n,"cpu"]=avg
+          n++
+        }
+      }
+      # сортировка по CPU (пузырьком)
+      for(i=0;i<n-1;i++) {
+        for(j=i+1;j<n;j++) {
+          if(process[i,"cpu"] < process[j,"cpu"]) {
+            tmp_c=process[i,"cpu"]; tmp_cmd=process[i,"cmd"]
+            process[i,"cpu"]=process[j,"cpu"]; process[i,"cmd"]=process[j,"cmd"]
+            process[j,"cpu"]=tmp_c; process[j,"cmd"]=tmp_cmd
+          }
+        }
+      }
+
+      print "   --- Top 5 processes ---"
+      for(i=0;i<5 && i<n;i++) {
+        printf "%-30s %6.2f\n", process[i,"cmd"], process[i,"cpu"]
+      }
+
+      # суммарная CPU всех процессов
+      sum_total=0; cnt_ts=0
+      for(ts in ts_total) { sum_total+=ts_total[ts]; cnt_ts++ }
+      if(cnt_ts>0)
+        printf "\n   Total CPU usage across all processes: %.2f%%\n", sum_total/cnt_ts
+
+      # суммарная CPU MongoDB
+      sum_mongo=0
+      for(ts in mongo_cpu) { sum_mongo+=mongo_cpu[ts] }
+      if(cnt_ts>0)
+        printf "   Total CPU usage by MongoDB: %.2f%%\n", sum_mongo/cnt_ts
+    }' "$LOG_FILE"
+}
+
+# Анализ за диапазоны из defaults/main.yml
+analyze_range {{ cpu_short_range_min }} "last {{ cpu_short_range_min }} minutes"
+analyze_range {{ cpu_long_range_min }} "last {{ cpu_long_range_min }} minutes"
+
+# ====================================================
+# ASCII-график только для mongod
+# ====================================================
+START_TS=$((NOW - DURATION * 60))
+
+echo
+echo "================================================"
+echo "📊 MongoDB (mongod) CPU usage trend (last {{ cpu_graph_range_min }} minutes)"
+echo "================================================"
+echo "Time    CPU%  Graph"
+
+for ((i=0; i<GRAPH_POINTS; i++)); do
+    POINT_TS=$((START_TS + i*INTERVAL))
+    TIME_STR=$(date -d @$POINT_TS '+%H:%M:%S')
+    CPU=$(awk -v ts="$POINT_TS" -v intv="$INTERVAL" '
+        ($1 ~ /^[0-9]{2}:[0-9]{2}:[0-9]{2}$/ && $3 ~ /^[0-9]+$/ && $10=="mongod") {
+            split($1, t, ":")
+            sample_ts=mktime(strftime("%Y %m %d") " " t[1] " " t[2] " " t[3])
+            if(sample_ts>=ts && sample_ts<ts+intv) { sum+=$8; cnt++ }
+        }
+        END { if(cnt>0) printf "%.2f", sum/cnt; else print "0" }' "$LOG_FILE")
+    BAR_LEN=$(awk -v cpu="$CPU" 'BEGIN{printf "%d", cpu*2}')
+    BAR=$(printf "%0.s#" $(seq 1 $BAR_LEN))
+    printf "%s %5s%% |%s\n" "$TIME_STR" "$CPU" "$BAR"
+done

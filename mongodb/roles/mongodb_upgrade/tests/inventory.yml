@@ -1,0 +1,14 @@
+all:
+  hosts:
+    mongo-primary:
+      ansible_host: 10.17.28.11
+      ansible_port: 40022
+      ansible_user: "{{ lookup('env','USER') }}"
+    mongo-secondary1:
+      ansible_host: 10.17.28.51
+      ansible_port: 40022
+      ansible_user: "{{ lookup('env','USER') }}"
+    mongo-secondary2:
+      ansible_host: 10.17.28.52
+      ansible_port: 40022
+      ansible_user: "{{ lookup('env','USER') }}"

@@ -21,6 +21,19 @@ databases=$(mongosh --quiet --host="$SRC_HOST" \
     .sort()
     .join("\n")')
 
+# another example with like filter
+#databases=$(mongosh --quiet --host="$SRC_HOST" \
+#  --username="$SRC_USER" \
+#  --password="$SRC_PASS" \
+#  --authenticationDatabase="$AUTH_DB" \
+#  --eval 'db.adminCommand("listDatabases").databases
+#    .map(db => db.name)
+#    .filter(name => !name.startsWith("mm"))
+#    .filter(name => !["admin", "local", "config", "gamesdb"].includes(name))
+#    .sort()
+#    .join("\n")')
+#
+
 # Loop through each database and process if not already done
 echo "$databases" | while read -r db; do
   if grep -Fxq "$db" "$DONE_FILE"; then

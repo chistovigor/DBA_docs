@@ -1,0 +1,5929 @@
+✅ Session initialized: ej40roullpi607nvcn01qur04c
+
+📁 Using CSV file: mongo_servers_2025-10-14_16-58.csv
+
+❌ Computer 'sc-lux1-slots-prod-mongo-1' not found
+❌ Computer 'sc-lux1-slots-prod-mongo-2' not found
+❌ Computer 'sc-lux1-slots-prod-mongo-3' not found
+✅ Found computer 'sc-lux1-slots-prod-slots-mongo-1' -> id=3433
+   Current notes:
+
+
+Проект / сервис: Slots
+Владелец: У Елисеева нет инфо
+Чат / группа: Mancala (ex XSLOT) админство slots-*
+
+
+Проект / сервис: Slots Production
+Владелец: Team Lead
+Чат / группа: Slots Admin Chat
+
+
+Проект / сервис: Slots
+Владелец: нет инфо!
+Чат / группа: Mancala (ex XSLOT) админство slots-*
+   no update. same information given
+
+✅ Found computer 'sc-lux1-slots-prod-slots-mongo-2' -> id=3434
+   Current notes:
+
+
+Проект / сервис: Slots
+Владелец: У Елисеева нет инфо
+Чат / группа: Mancala (ex XSLOT) админство slots-*
+
+
+Проект / сервис: Slots
+Владелец: нет инфо!
+Чат / группа: Mancala (ex XSLOT) админство slots-*
+   no update. same information given
+
+✅ Found computer 'sc-lux1-slots-prod-slots-mongo-3' -> id=3436
+   Current notes:
+
+
+Проект / сервис: Slots
+Владелец: У Елисеева нет инфо
+Чат / группа: Mancala (ex XSLOT) админство slots-*
+
+
+Проект / сервис: Slots
+Владелец: нет инфо!
+Чат / группа: Mancala (ex XSLOT) админство slots-*
+   no update. same information given
+
+❌ Computer 'sc-lux1-slots-prod-two-mongo-1' not found
+❌ Computer 'sc-lux1-slots-prod-two-mongo-2' not found
+❌ Computer 'sc-lux1-slots-prod-two-mongo-3' not found
+✅ Found computer 'sc-lux1-slots-prod-three-mongo-1' -> id=5015
+   Current notes:
+
+
+Проект / сервис: Slots
+Владелец: У Елисеева нет инфо
+Чат / группа: Mancala (ex XSLOT) админство slots-*
+
+
+Проект / сервис: Slots
+Владелец: нет инфо!
+Чат / группа: Mancala (ex XSLOT) админство slots-*
+   no update. same information given
+
+✅ Found computer 'sc-lux1-slots-prod-three-mongo-2' -> id=5016
+   Current notes:
+
+
+Проект / сервис: Slots
+Владелец: У Елисеева нет инфо
+Чат / группа: Mancala (ex XSLOT) админство slots-*
+
+
+Проект / сервис: Slots
+Владелец: нет инфо!
+Чат / группа: Mancala (ex XSLOT) админство slots-*
+   no update. same information given
+
+✅ Found computer 'sc-lux1-slots-prod-three-mongo-3' -> id=5017
+   Current notes:
+
+
+Проект / сервис: Slots
+Владелец: У Елисеева нет инфо
+Чат / группа: Mancala (ex XSLOT) админство slots-*
+
+
+Проект / сервис: Slots
+Владелец: нет инфо!
+Чат / группа: Mancala (ex XSLOT) админство slots-*
+   no update. same information given
+
+✅ Found computer 'sc-lux1-slots-prod-cluster-mongo-backup1' -> id=10440
+   Current notes:
+
+
+Проект / сервис: Slots
+Владелец: нет инфо!
+Чат / группа: Mancala (ex XSLOT) админство slots-*
+   no update. same information given
+
+✅ Found computer 'sc-lux1-slots-prod-cluster-mongo-mongos4' -> id=10446
+   Current notes:
+
+
+Проект / сервис: Slots
+Владелец: нет инфо!
+Чат / группа: Mancala (ex XSLOT) админство slots-*
+   no update. same information given
+
+✅ Found computer 'sc-lux1-slots-prod-cluster-mongo-mongos5' -> id=10445
+   Current notes:
+
+
+Проект / сервис: Slots
+Владелец: нет инфо!
+Чат / группа: Mancala (ex XSLOT) админство slots-*
+   no update. same information given
+
+✅ Found computer 'sc-lux1-slots-prod-cluster-mongo-mongos6' -> id=10444
+   Current notes:
+
+
+Проект / сервис: Slots
+Владелец: нет инфо!
+Чат / группа: Mancala (ex XSLOT) админство slots-*
+   no update. same information given
+
+✅ Found computer 'sc-lux1-slots-prod-cluster-mongo-cfg1' -> id=9500
+   Current notes:
+
+
+Проект / сервис: Slots
+Владелец: У Елисеева нет инфо
+Чат / группа: slots shard mongodb (временный)
+
+
+Проект / сервис: Slots
+Владелец: нет инфо!
+Чат / группа: slots shard mongodb (временный)
+   no update. same information given
+
+✅ Found computer 'sc-lux1-slots-prod-cluster-mongo-cfg2' -> id=9503
+   Current notes:
+
+
+Проект / сервис: Slots
+Владелец: У Елисеева нет инфо
+Чат / группа: slots shard mongodb (временный)
+
+
+Проект / сервис: Slots
+Владелец: нет инфо!
+Чат / группа: slots shard mongodb (временный)
+   no update. same information given
+
+✅ Found computer 'sc-lux1-slots-prod-cluster-mongo-cfg3' -> id=9502
+   Current notes:
+
+
+Проект / сервис: Slots
+Владелец: У Елисеева нет инфо
+Чат / группа: slots shard mongodb (временный)
+
+
+Проект / сервис: Slots
+Владелец: нет инфо!
+Чат / группа: slots shard mongodb (временный)
+   no update. same information given
+
+✅ Found computer 'sc-lux1-slots-prod-cluster-mongo-mongos1' -> id=9611
+   Current notes:
+
+
+Проект / сервис: Slots
+Владелец: У Елисеева нет инфо
+Чат / группа: slots shard mongodb (временный)
+
+
+Проект / сервис: Slots
+Владелец: нет инфо!
+Чат / группа: slots shard mongodb (временный)
+   no update. same information given
+
+✅ Found computer 'sc-lux1-slots-prod-cluster-mongo-mongos2' -> id=9612
+   Current notes:
+
+
+Проект / сервис: Slots
+Владелец: У Елисеева нет инфо
+Чат / группа: slots shard mongodb (временный)
+
+
+Проект / сервис: Slots
+Владелец: нет инфо!
+Чат / группа: slots shard mongodb (временный)
+   no update. same information given
+
+✅ Found computer 'sc-lux1-slots-prod-cluster-mongo-mongos3' -> id=9915
+   Current notes:
+
+
+Проект / сервис: Slots
+Владелец: У Елисеева нет инфо
+Чат / группа: slots shard mongodb (временный)
+
+
+Проект / сервис: Slots
+Владелец: нет инфо!
+Чат / группа: slots shard mongodb (временный)
+   no update. same information given
+
+✅ Found computer 'sc-lux1-slots-prod-cluster-mongo-pmm1' -> id=9633
+   Current notes:
+
+
+Проект / сервис: Slots
+Владелец: У Елисеева нет инфо
+Чат / группа: slots shard mongodb (временный)
+
+
+Проект / сервис: Slots
+Владелец: нет инфо!
+Чат / группа: slots shard mongodb (временный)
+   no update. same information given
+
+✅ Found computer 'sc-lux1-slots-prod-cluster-mongo-shard1n1' -> id=9533
+   Current notes:
+
+
+Проект / сервис: Slots
+Владелец: У Елисеева нет инфо
+Чат / группа: slots shard mongodb (временный)
+
+
+Проект / сервис: Slots
+Владелец: нет инфо!
+Чат / группа: slots shard mongodb (временный)
+   no update. same information given
+
+✅ Found computer 'sc-lux1-slots-prod-cluster-mongo-shard1n2' -> id=9534
+   Current notes:
+
+
+Проект / сервис: Slots
+Владелец: У Елисеева нет инфо
+Чат / группа: slots shard mongodb (временный)
+
+
+Проект / сервис: Slots
+Владелец: нет инфо!
+Чат / группа: slots shard mongodb (временный)
+   no update. same information given
+
+✅ Found computer 'sc-lux1-slots-prod-cluster-mongo-shard1n3' -> id=9535
+   Current notes:
+
+
+Проект / сервис: Slots
+Владелец: У Елисеева нет инфо
+Чат / группа: slots shard mongodb (временный)
+
+
+Проект / сервис: Slots
+Владелец: нет инфо!
+Чат / группа: slots shard mongodb (временный)
+   no update. same information given
+
+✅ Found computer 'sc-lux1-slots-prod-cluster-mongo-shard2n1' -> id=9537
+   Current notes:
+
+
+Проект / сервис: Slots
+Владелец: У Елисеева нет инфо
+Чат / группа: slots shard mongodb (временный)
+
+
+Проект / сервис: Slots
+Владелец: нет инфо!
+Чат / группа: slots shard mongodb (временный)
+   no update. same information given
+
+✅ Found computer 'sc-lux1-slots-prod-cluster-mongo-shard2n2' -> id=9536
+   Current notes:
+
+
+Проект / сервис: Slots
+Владелец: У Елисеева нет инфо
+Чат / группа: slots shard mongodb (временный)
+
+
+Проект / сервис: Slots
+Владелец: нет инфо!
+Чат / группа: slots shard mongodb (временный)
+   no update. same information given
+
+✅ Found computer 'sc-lux1-slots-prod-cluster-mongo-shard2n3' -> id=9538
+   Current notes:
+
+
+Проект / сервис: Slots
+Владелец: У Елисеева нет инфо
+Чат / группа: slots shard mongodb (временный)
+
+
+Проект / сервис: Slots
+Владелец: нет инфо!
+Чат / группа: slots shard mongodb (временный)
+   no update. same information given
+
+✅ Found computer 'sc-lux1-slots-prod-cluster-mongo-shard3n1' -> id=9540
+   Current notes:
+
+
+Проект / сервис: Slots
+Владелец: У Елисеева нет инфо
+Чат / группа: slots shard mongodb (временный)
+
+
+Проект / сервис: Slots
+Владелец: нет инфо!
+Чат / группа: slots shard mongodb (временный)
+   no update. same information given
+
+✅ Found computer 'sc-lux1-slots-prod-cluster-mongo-shard3n2' -> id=9541
+   Current notes:
+
+
+Проект / сервис: Slots
+Владелец: У Елисеева нет инфо
+Чат / группа: slots shard mongodb (временный)
+
+
+Проект / сервис: Slots
+Владелец: нет инфо!
+Чат / группа: slots shard mongodb (временный)
+   no update. same information given
+
+✅ Found computer 'sc-lux1-slots-prod-cluster-mongo-shard3n3' -> id=9539
+   Current notes:
+
+
+Проект / сервис: Slots
+Владелец: У Елисеева нет инфо
+Чат / группа: slots shard mongodb (временный)
+
+
+Проект / сервис: Slots
+Владелец: нет инфо!
+Чат / группа: slots shard mongodb (временный)
+   no update. same information given
+
+✅ Found computer 'sc-lux1-slots-dev-mongo-1' -> id=4837
+   Current notes:
+
+
+Проект / сервис: Slots
+Владелец: У Елисеева нет инфо
+Чат / группа: Mancala (ex XSLOT) админство slots-*
+
+
+Проект / сервис: Slots
+Владелец: нет инфо!
+Чат / группа: Mancala (ex XSLOT) админство slots-*
+   no update. same information given
+
+✅ Found computer 'sc-lux1-slots-dev-mongo-2' -> id=4838
+   Current notes:
+
+
+Проект / сервис: Slots
+Владелец: У Елисеева нет инфо
+Чат / группа: Mancala (ex XSLOT) админство slots-*
+
+
+Проект / сервис: Slots
+Владелец: нет инфо!
+Чат / группа: Mancala (ex XSLOT) админство slots-*
+   no update. same information given
+
+✅ Found computer 'sc-lux1-slots-dev-mongo-3' -> id=6397
+   Current notes:
+
+
+Проект / сервис: Slots
+Владелец: У Елисеева нет инфо
+Чат / группа: Mancala (ex XSLOT) админство slots-*
+
+
+Проект / сервис: Slots
+Владелец: нет инфо!
+Чат / группа: Mancala (ex XSLOT) админство slots-*
+   no update. same information given
+
+✅ Found computer 'sc-lux1-slots-test-cluster-mongo-conf1' -> id=7500
+   Current notes:
+
+
+Проект / сервис: Slots
+Владелец: У Елисеева нет инфо
+Чат / группа: Mancala (ex XSLOT) админство slots-*
+
+
+Проект / сервис: Slots
+Владелец: нет инфо!
+Чат / группа: Mancala (ex XSLOT) админство slots-*
+   no update. same information given
+
+✅ Found computer 'sc-lux1-slots-test-cluster-mongo-conf2' -> id=7501
+   Current notes:
+
+
+Проект / сервис: Slots
+Владелец: У Елисеева нет инфо
+Чат / группа: Mancala (ex XSLOT) админство slots-*
+
+
+Проект / сервис: Slots
+Владелец: нет инфо!
+Чат / группа: Mancala (ex XSLOT) админство slots-*
+   no update. same information given
+
+✅ Found computer 'sc-lux1-slots-test-cluster-mongo-mongos1' -> id=7498
+   Current notes:
+
+
+Проект / сервис: Slots
+Владелец: У Елисеева нет инфо
+Чат / группа: Mancala (ex XSLOT) админство slots-*
+
+
+Проект / сервис: Slots
+Владелец: нет инфо!
+Чат / группа: Mancala (ex XSLOT) админство slots-*
+   no update. same information given
+
+✅ Found computer 'sc-lux1-slots-test-cluster-mongo-mongos2' -> id=7499
+   Current notes:
+
+
+Проект / сервис: Slots
+Владелец: У Елисеева нет инфо
+Чат / группа: Mancala (ex XSLOT) админство slots-*
+
+
+Проект / сервис: Slots
+Владелец: нет инфо!
+Чат / группа: Mancala (ex XSLOT) админство slots-*
+   no update. same information given
+
+✅ Found computer 'sc-lux1-slots-test-cluster-mongo-shard1n1' -> id=7502
+   Current notes:
+
+
+Проект / сервис: Slots
+Владелец: У Елисеева нет инфо
+Чат / группа: slots shard mongodb (временный)
+
+
+Проект / сервис: Slots
+Владелец: нет инфо!
+Чат / группа: slots shard mongodb (временный)
+   no update. same information given
+
+✅ Found computer 'sc-lux1-slots-test-cluster-mongo-shard1n2' -> id=7503
+   Current notes:
+
+
+Проект / сервис: Slots
+Владелец: У Елисеева нет инфо
+Чат / группа: slots shard mongodb (временный)
+
+
+Проект / сервис: Slots
+Владелец: нет инфо!
+Чат / группа: slots shard mongodb (временный)
+   no update. same information given
+
+✅ Found computer 'sc-lux1-slots-test-cluster-mongo-shard2n1' -> id=7504
+   Current notes:
+
+
+Проект / сервис: Slots
+Владелец: У Елисеева нет инфо
+Чат / группа: slots shard mongodb (временный)
+
+
+Проект / сервис: Slots
+Владелец: нет инфо!
+Чат / группа: slots shard mongodb (временный)
+   no update. same information given
+
+✅ Found computer 'sc-lux1-slots-test-cluster-mongo-shard2n2' -> id=7505
+   Current notes:
+
+
+Проект / сервис: Slots
+Владелец: У Елисеева нет инфо
+Чат / группа: slots shard mongodb (временный)
+
+
+Проект / сервис: Slots
+Владелец: нет инфо!
+Чат / группа: slots shard mongodb (временный)
+   no update. same information given
+
+✅ Found computer 'sc-lux1-slots-test-cluster-mongo-shard3n1' -> id=7506
+   Current notes:
+
+
+Проект / сервис: Slots
+Владелец: У Елисеева нет инфо
+Чат / группа: slots shard mongodb (временный)
+
+
+Проект / сервис: Slots
+Владелец: нет инфо!
+Чат / группа: slots shard mongodb (временный)
+   no update. same information given
+
+✅ Found computer 'sc-lux1-slots-test-cluster-mongo-shard3n2' -> id=7507
+   Current notes:
+
+
+Проект / сервис: Slots
+Владелец: У Елисеева нет инфо
+Чат / группа: slots shard mongodb (временный)
+
+
+Проект / сервис: Slots
+Владелец: нет инфо!
+Чат / группа: slots shard mongodb (временный)
+   no update. same information given
+
+❌ Computer 'bit-vaultmongo1' not found
+❌ Computer 'bit-vaultmongo2' not found
+❌ Computer 'bit-vaultmongo3' not found
+✅ Found computer 'dew-ams-bit-prod-mongo-1' -> id=9159
+   Current notes:
+команда первая
+Владелец: имя владельца 1
+
+
+Проект / сервис: Bit / cpr
+Владелец: У Елисеева нет инфо
+Чат / группа: Крипта (админство)
+
+
+Проект / сервис: Bit / cpr
+Владелец: нет инфо!
+Чат / группа: Крипта (админство)
+   no update. same information given
+
+✅ Found computer 'dew-ams-bit-prod-mongo-2' -> id=9160
+   Current notes:
+
+
+Проект / сервис: Bit / cpr
+Владелец: У Елисеева нет инфо
+Чат / группа: Крипта (админство)
+
+
+Проект / сервис: Bit / cpr
+Владелец: нет инфо!
+Чат / группа: Крипта (админство)
+   no update. same information given
+
+✅ Found computer 'dew-ams-bit-prod-mongo-3' -> id=9161
+   Current notes:
+
+
+Проект / сервис: Bit / cpr
+Владелец: У Елисеева нет инфо
+Чат / группа: Крипта (админство)
+
+
+Проект / сервис: Bit / cpr
+Владелец: нет инфо!
+Чат / группа: Крипта (админство)
+   no update. same information given
+
+✅ Found computer 'cpr-mongo1' -> id=2383
+   Current notes:
+
+
+Проект / сервис: Bit / cpr
+Владелец: У Елисеева нет инфо
+Чат / группа: Крипта (админство)
+
+
+Проект / сервис: Bit / cpr
+Владелец: нет инфо!
+Чат / группа: Крипта (админство)
+   no update. same information given
+
+✅ Found computer 'cpr-mongo2' -> id=2384
+   Current notes:
+
+
+Проект / сервис: Bit / cpr
+Владелец: У Елисеева нет инфо
+Чат / группа: Крипта (админство)
+
+
+Проект / сервис: Bit / cpr
+Владелец: нет инфо!
+Чат / группа: Крипта (админство)
+   no update. same information given
+
+✅ Found computer 'cpr-mongo3' -> id=2382
+   Current notes:
+
+
+Проект / сервис: Bit / cpr
+Владелец: У Елисеева нет инфо
+Чат / группа: Крипта (админство)
+
+
+Проект / сервис: Bit / cpr
+Владелец: нет инфо!
+Чат / группа: Крипта (админство)
+   no update. same information given
+
+✅ Found computer 'ref-mongo1' -> id=6087
+   Current notes:
+
+
+Проект / сервис: Ref
+Владелец: У Елисеева нет инфо
+Чат / группа: Вопросы по MongoDB
+
+
+Проект / сервис: Ref
+Владелец: нет инфо!
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'ref-mongo2' -> id=6088
+   Current notes:
+
+
+Проект / сервис: Ref
+Владелец: У Елисеева нет инфо
+Чат / группа: Вопросы по MongoDB
+
+
+Проект / сервис: Ref
+Владелец: нет инфо!
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'ref-mongo3' -> id=8589
+   Current notes:
+
+
+Проект / сервис: Ref
+Владелец: У Елисеева нет инфо
+Чат / группа: Вопросы по MongoDB
+
+
+Проект / сервис: Ref
+Владелец: нет инфо!
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'ref-new-mcl1' -> id=5972
+   Current notes:
+
+
+Проект / сервис: Ref
+Владелец: У Елисеева нет инфо
+Чат / группа: Вопросы по MongoDB
+
+
+Проект / сервис: Ref
+Владелец: нет инфо!
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'ref-new-mcl2' -> id=5971
+   Current notes:
+
+
+Проект / сервис: Ref
+Владелец: У Елисеева нет инфо
+Чат / группа: Вопросы по MongoDB
+
+
+Проект / сервис: Ref
+Владелец: нет инфо!
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'ref-new-mcl3' -> id=5973
+   Current notes:
+
+
+Проект / сервис: Ref
+Владелец: У Елисеева нет инфо
+Чат / группа: Вопросы по MongoDB
+
+
+Проект / сервис: Ref
+Владелец: нет инфо!
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-ams1-cons-prod-mongo-1' -> id=6846
+   Current notes:
+
+
+Проект / сервис: Consultant
+Владелец: У Елисеева нет инфо
+Чат / группа: Consultant / Админство
+
+
+Проект / сервис: Consultant
+Владелец: нет инфо!
+Чат / группа: Consultant / Админство
+   no update. same information given
+
+✅ Found computer 'sc-ams1-cons-prod-mongo-2' -> id=6844
+   Current notes:
+
+
+Проект / сервис: Consultant
+Владелец: У Елисеева нет инфо
+Чат / группа: Consultant / Админство
+
+
+Проект / сервис: Consultant
+Владелец: нет инфо!
+Чат / группа: Consultant / Админство
+   no update. same information given
+
+✅ Found computer 'sc-ams1-cons-prod-mongo-3' -> id=6845
+   Current notes:
+
+
+Проект / сервис: Consultant
+Владелец: У Елисеева нет инфо
+Чат / группа: Consultant / Админство
+
+
+Проект / сервис: Consultant
+Владелец: нет инфо!
+Чат / группа: Consultant / Админство
+   no update. same information given
+
+✅ Found computer 'sc-ams1-cons-prod-mongo-ro4' -> id=7233
+   Current notes:
+
+
+Проект / сервис: Consultant
+Владелец: У Елисеева нет инфо
+Чат / группа: Consultant / Админство
+
+
+Проект / сервис: Consultant
+Владелец: нет инфо!
+Чат / группа: Consultant / Админство
+   no update. same information given
+
+✅ Found computer 'sc-ams1-cons-prod-mongo-5' -> id=10409
+   Current notes:
+
+
+Проект / сервис: Consultant
+Владелец: нет инфо!
+Чат / группа: Consultant / Админство
+   no update. same information given
+
+✅ Found computer 'sc-ams1-cons-test-feature-mongo-1' -> id=9487
+   Current notes:
+
+
+Проект / сервис: Consultant
+Владелец: У Елисеева нет инфо
+Чат / группа: Consultant / Админство
+
+
+Проект / сервис: Consultant
+Владелец: нет инфо!
+Чат / группа: Consultant / Админство
+   no update. same information given
+
+✅ Found computer 'sc-ams1-cons-test-feature-mongo-2' -> id=9488
+   Current notes:
+
+
+Проект / сервис: Consultant
+Владелец: У Елисеева нет инфо
+Чат / группа: Consultant / Админство
+
+
+Проект / сервис: Consultant
+Владелец: нет инфо!
+Чат / группа: Consultant / Админство
+   no update. same information given
+
+✅ Found computer 'sc-ams1-cons-test-feature-mongo-3' -> id=9489
+   Current notes:
+
+
+Проект / сервис: Consultant
+Владелец: У Елисеева нет инфо
+Чат / группа: Consultant / Админство
+
+
+Проект / сервис: Consultant
+Владелец: нет инфо!
+Чат / группа: Consultant / Админство
+   no update. same information given
+
+✅ Found computer 'sc-ams1-cons-test-mongo-1' -> id=8631
+   Current notes:
+
+
+Проект / сервис: Consultant
+Владелец: У Елисеева нет инфо
+Чат / группа: Consultant / Админство
+
+
+Проект / сервис: Consultant
+Владелец: нет инфо!
+Чат / группа: Consultant / Админство
+   no update. same information given
+
+✅ Found computer 'sc-ams1-cons-test-mongo-2' -> id=8632
+   Current notes:
+
+
+Проект / сервис: Consultant
+Владелец: У Елисеева нет инфо
+Чат / группа: Consultant / Админство
+
+
+Проект / сервис: Consultant
+Владелец: нет инфо!
+Чат / группа: Consultant / Админство
+   no update. same information given
+
+✅ Found computer 'sc-ams1-cons-test-mongo-3' -> id=8633
+   Current notes:
+
+
+Проект / сервис: Consultant
+Владелец: У Елисеева нет инфо
+Чат / группа: Consultant / Админство
+
+
+Проект / сервис: Consultant
+Владелец: нет инфо!
+Чат / группа: Consultant / Админство
+   no update. same information given
+
+✅ Found computer 'sc-ams1-cons-test-vm-mongo-1' -> id=8146
+   Current notes:
+
+
+Проект / сервис: Consultant
+Владелец: У Елисеева нет инфо
+Чат / группа: Consultant / Админство
+
+
+Проект / сервис: Consultant
+Владелец: нет инфо!
+Чат / группа: Consultant / Админство
+   no update. same information given
+
+✅ Found computer 'sc-ams1-cons-test-vm-mongo-2' -> id=8147
+   Current notes:
+
+
+Проект / сервис: Consultant
+Владелец: У Елисеева нет инфо
+Чат / группа: Consultant / Админство
+
+
+Проект / сервис: Consultant
+Владелец: нет инфо!
+Чат / группа: Consultant / Админство
+   no update. same information given
+
+✅ Found computer 'sc-ams1-cons-test-vm-mongo-3' -> id=8145
+   Current notes:
+
+
+Проект / сервис: Consultant
+Владелец: У Елисеева нет инфо
+Чат / группа: Consultant / Админство
+
+
+Проект / сервис: Consultant
+Владелец: нет инфо!
+Чат / группа: Consultant / Админство
+   no update. same information given
+
+✅ Found computer 'sc-ams2-btmk-prod-mongo-1' -> id=8136
+   Current notes:
+
+
+Проект / сервис: MoneyGO / BTMK
+Владелец: Спросите Евгений Ковальцов
+Чат / группа: MoneyGo, web+admin
+
+
+Проект / сервис: MoneyGO / BTMK
+Владелец: нет инфо! Евгений Ковальцов?
+Чат / группа: MoneyGo, web+admin
+   no update. same information given
+
+✅ Found computer 'sc-ams2-btmk-prod-mongo-2' -> id=8137
+   Current notes:
+
+
+Проект / сервис: MoneyGO / BTMK
+Владелец: Спросите Евгений Ковальцов
+Чат / группа: MoneyGo, web+admin
+
+
+Проект / сервис: MoneyGO / BTMK
+Владелец: нет инфо! Евгений Ковальцов?
+Чат / группа: MoneyGo, web+admin
+   no update. same information given
+
+✅ Found computer 'sc-ams2-btmk-prod-mongo-3' -> id=8138
+   Current notes:
+
+
+Проект / сервис: MoneyGO / BTMK
+Владелец: Спросите Евгений Ковальцов
+Чат / группа: MoneyGo, web+admin
+
+
+Проект / сервис: MoneyGO / BTMK
+Владелец: нет инфо! Евгений Ковальцов?
+Чат / группа: MoneyGo, web+admin
+   no update. same information given
+
+✅ Found computer 'sc-ams2-btmk-dev-mongo-1' -> id=8139
+   Current notes:
+
+
+Проект / сервис: MoneyGO / BTMK
+Владелец: Спросите Евгений Ковальцов
+Чат / группа: MoneyGo, web+admin
+
+
+Проект / сервис: MoneyGO / BTMK
+Владелец: нет инфо! Евгений Ковальцов?
+Чат / группа: MoneyGo, web+admin
+   no update. same information given
+
+✅ Found computer 'sc-ams2-btmk-dev-mongo-2' -> id=8140
+   Current notes:
+
+
+Проект / сервис: MoneyGO / BTMK
+Владелец: Спросите Евгений Ковальцов
+Чат / группа: MoneyGo, web+admin
+
+
+Проект / сервис: MoneyGO / BTMK
+Владелец: нет инфо! Евгений Ковальцов?
+Чат / группа: MoneyGo, web+admin
+   no update. same information given
+
+✅ Found computer 'sc-ams2-btmk-dev-mongo-3' -> id=8141
+   Current notes:
+
+
+Проект / сервис: MoneyGO / BTMK
+Владелец: Спросите Евгений Ковальцов
+Чат / группа: MoneyGo, web+admin
+
+
+Проект / сервис: MoneyGO / BTMK
+Владелец: нет инфо! Евгений Ковальцов?
+Чат / группа: MoneyGo, web+admin
+   no update. same information given
+
+✅ Found computer 'sc-ams2-mgo-prod-notification-mongo-1' -> id=9809
+   Current notes:
+
+
+Проект / сервис: MoneyGO / BTMK
+Владелец: У Елисеева нет инфо
+Чат / группа: MoneyGo, web+admin
+
+
+Проект / сервис: MoneyGO / BTMK
+Владелец: нет инфо!
+Чат / группа: MoneyGo, web+admin
+   no update. same information given
+
+✅ Found computer 'sc-ams2-mgo-prod-notification-mongo-2' -> id=9808
+   Current notes:
+
+
+Проект / сервис: MoneyGO / BTMK
+Владелец: У Елисеева нет инфо
+Чат / группа: MoneyGo, web+admin
+
+
+Проект / сервис: MoneyGO / BTMK
+Владелец: нет инфо!
+Чат / группа: MoneyGo, web+admin
+   no update. same information given
+
+✅ Found computer 'sc-ams2-mgo-prod-notification-mongo-3' -> id=9810
+   Current notes:
+
+
+Проект / сервис: MoneyGO / BTMK
+Владелец: У Елисеева нет инфо
+Чат / группа: MoneyGo, web+admin
+
+
+Проект / сервис: MoneyGO / BTMK
+Владелец: нет инфо!
+Чат / группа: MoneyGo, web+admin
+   no update. same information given
+
+✅ Found computer 'sc-ams2-mgo-stage-mongo-1' -> id=9262
+   Current notes:
+
+
+Проект / сервис: MoneyGO / BTMK
+Владелец: У Елисеева нет инфо
+Чат / группа: MoneyGo, web+admin
+
+
+Проект / сервис: MoneyGO / BTMK
+Владелец: нет инфо!
+Чат / группа: MoneyGo, web+admin
+   no update. same information given
+
+✅ Found computer 'sc-ams2-mgo-stage-mongo-2' -> id=9263
+   Current notes:
+
+
+Проект / сервис: MoneyGO / BTMK
+Владелец: У Елисеева нет инфо
+Чат / группа: MoneyGo, web+admin
+
+
+Проект / сервис: MoneyGO / BTMK
+Владелец: нет инфо!
+Чат / группа: MoneyGo, web+admin
+   no update. same information given
+
+✅ Found computer 'sc-ams2-mgo-stage-mongo-3' -> id=9264
+   Current notes:
+
+
+Проект / сервис: MoneyGO / BTMK
+Владелец: У Елисеева нет инфо
+Чат / группа: MoneyGo, web+admin
+
+
+Проект / сервис: MoneyGO / BTMK
+Владелец: нет инфо!
+Чат / группа: MoneyGo, web+admin
+   no update. same information given
+
+✅ Found computer 'ams-mongophp1' -> id=124
+   Current notes:
+
+
+Проект / сервис: PHP Service
+Владелец: Yurkin Eugene
+Чат / группа: Web Projects Admin
+
+
+Проект / сервис: PHP
+Владелец: Спросите Евгений Юркин
+Чат / группа: Админство веб-проектов
+
+
+Проект / сервис: PHP
+Владелец: нет инфо!  Евгений Юркин?
+Чат / группа: Админство веб-проектов
+   no update. same information given
+
+✅ Found computer 'ams-mongophp2' -> id=196
+   Current notes:
+
+
+Проект / сервис: PHP
+Владелец: Спросите Евгений Юркин
+Чат / группа: Админство веб-проектов
+
+
+Проект / сервис: PHP
+Владелец: нет инфо!  Евгений Юркин?
+Чат / группа: Админство веб-проектов
+   no update. same information given
+
+✅ Found computer 'ams-mongophp3' -> id=212
+   Current notes:
+
+
+Проект / сервис: PHP
+Владелец: Спросите Евгений Юркин
+Чат / группа: Админство веб-проектов
+
+
+Проект / сервис: PHP
+Владелец: нет инфо!  Евгений Юркин?
+Чат / группа: Админство веб-проектов
+   no update. same information given
+
+✅ Found computer 'ams-mongophp4' -> id=114
+   Current notes:
+
+
+Проект / сервис: PHP
+Владелец: Спросите Евгений Юркин
+Чат / группа: Админство веб-проектов
+
+
+Проект / сервис: PHP
+Владелец: нет инфо!  Евгений Юркин?
+Чат / группа: Админство веб-проектов
+   no update. same information given
+
+✅ Found computer 'ams-mongophp5' -> id=199
+   Current notes:
+
+
+Проект / сервис: PHP
+Владелец: Спросите Евгений Юркин
+Чат / группа: Админство веб-проектов
+
+
+Проект / сервис: PHP
+Владелец: нет инфо!  Евгений Юркин?
+Чат / группа: Админство веб-проектов
+   no update. same information given
+
+✅ Found computer 'ams-mongophp6' -> id=2506
+   Current notes:
+
+
+Проект / сервис: PHP
+Владелец: Спросите Евгений Юркин
+Чат / группа: Админство веб-проектов
+
+
+Проект / сервис: PHP
+Владелец: нет инфо!  Евгений Юркин?
+Чат / группа: Админство веб-проектов
+   no update. same information given
+
+✅ Found computer 'ams-mongophp7' -> id=2505
+   Current notes:
+
+
+Проект / сервис: PHP
+Владелец: Спросите Евгений Юркин
+Чат / группа: Админство веб-проектов
+
+
+Проект / сервис: PHP
+Владелец: нет инфо!  Евгений Юркин?
+Чат / группа: Админство веб-проектов
+   no update. same information given
+
+✅ Found computer 'ams-mongophp8' -> id=2504
+   Current notes:
+
+
+Проект / сервис: PHP
+Владелец: Спросите Евгений Юркин
+Чат / группа: Админство веб-проектов
+
+
+Проект / сервис: PHP
+Владелец: нет инфо!  Евгений Юркин?
+Чат / группа: Админство веб-проектов
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-mweb-mongo-1' -> id=9229
+   Current notes:
+
+
+Проект / сервис: PHP
+Владелец: Спросите Евгений Юркин
+Чат / группа: Админство веб-проектов
+
+
+Проект / сервис: PHP
+Владелец: нет инфо!  Евгений Юркин?
+Чат / группа: Админство веб-проектов
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-mweb-mongo-2' -> id=9228
+   Current notes:
+
+
+Проект / сервис: PHP
+Владелец: Спросите Евгений Юркин
+Чат / группа: Админство веб-проектов
+
+
+Проект / сервис: PHP
+Владелец: нет инфо!  Евгений Юркин?
+Чат / группа: Админство веб-проектов
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-mweb-mongo-3' -> id=9230
+   Current notes:
+
+
+Проект / сервис: PHP
+Владелец: Спросите Евгений Юркин
+Чат / группа: Админство веб-проектов
+
+
+Проект / сервис: PHP
+Владелец: нет инфо!  Евгений Юркин?
+Чат / группа: Админство веб-проектов
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-mweb-mongo-1' -> id=9022
+   Current notes:
+
+
+Проект / сервис: PHP
+Владелец: Спросите Евгений Юркин
+Чат / группа: Админство веб-проектов
+
+
+Проект / сервис: PHP
+Владелец: нет инфо!  Евгений Юркин?
+Чат / группа: Админство веб-проектов
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-mweb-mongo-2' -> id=9023
+   Current notes:
+
+
+Проект / сервис: PHP
+Владелец: Спросите Евгений Юркин
+Чат / группа: Админство веб-проектов
+
+
+Проект / сервис: PHP
+Владелец: нет инфо!  Евгений Юркин?
+Чат / группа: Админство веб-проектов
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-mweb-mongo-3' -> id=9024
+   Current notes:
+
+
+Проект / сервис: PHP
+Владелец: Спросите Евгений Юркин
+Чат / группа: Админство веб-проектов
+
+
+Проект / сервис: PHP
+Владелец: нет инфо!  Евгений Юркин?
+Чат / группа: Админство веб-проектов
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-web-mongo-1' -> id=6872
+   Current notes:
+
+
+Проект / сервис: PHP
+Владелец: Спросите Евгений Юркин
+Чат / группа: Админство веб-проектов
+
+
+Проект / сервис: PHP
+Владелец: нет инфо!  Евгений Юркин?
+Чат / группа: Админство веб-проектов
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-web-mongo-2' -> id=6870
+   Current notes:
+
+
+Проект / сервис: PHP
+Владелец: Спросите Евгений Юркин
+Чат / группа: Админство веб-проектов
+
+
+Проект / сервис: PHP
+Владелец: нет инфо!  Евгений Юркин?
+Чат / группа: Админство веб-проектов
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-web-mongo-3' -> id=6871
+   Current notes:
+
+
+Проект / сервис: PHP
+Владелец: Спросите Евгений Юркин
+Чат / группа: Админство веб-проектов
+
+
+Проект / сервис: PHP
+Владелец: нет инфо!  Евгений Юркин?
+Чат / группа: Админство веб-проектов
+   no update. same information given
+
+✅ Found computer 'ams-mtransport1' -> id=230
+   Current notes:
+
+
+Проект / сервис: Транспортный кластер.
+Используется для парсеров, прокачки в Obelis и не только
+Владелец: Общий Betting
+Евгений Трегубенко/Кирилл Водинский/Дмитрий Поздняков
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'ams-mtransport2' -> id=841
+   Current notes:
+
+
+Проект / сервис: Транспортный кластер.
+Используется для парсеров, прокачки в Obelis и не только
+Владелец: Общий Betting
+Евгений Трегубенко/Кирилл Водинский/Дмитрий Поздняков
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'ams-mtransport3' -> id=842
+   Current notes:
+
+
+Проект / сервис: Транспортный кластер.
+Используется для парсеров, прокачки в Obelis и не только
+Владелец: Общий Betting
+Евгений Трегубенко/Кирилл Водинский/Дмитрий Поздняков
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'ams-mtransport4' -> id=767
+   Current notes:
+
+
+Проект / сервис: Транспортный кластер.
+Используется для парсеров, прокачки в Obelis и не только
+Владелец: Общий Betting
+Евгений Трегубенко/Кирилл Водинский/Дмитрий Поздняков
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'ams-mtransport5' -> id=764
+   Current notes:
+
+
+Проект / сервис: Транспортный кластер.
+Используется для парсеров, прокачки в Obelis и не только
+Владелец: Общий Betting
+Евгений Трегубенко/Кирилл Водинский/Дмитрий Поздняков
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'ams-m4test1' -> id=3264
+   Current notes:
+
+
+Проект / сервис: Общий тестовый кластер
+Владелец: Кирилл Водинский/Дмитрий Поздняков
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'ams-m4test2' -> id=166
+   Current notes:
+
+
+Проект / сервис: Общий тестовый кластер
+Владелец: Кирилл Водинский/Дмитрий Поздняков
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'ams-m4test3' -> id=169
+   Current notes:
+
+
+Проект / сервис: Общий тестовый кластер
+Владелец: Кирилл Водинский/Дмитрий Поздняков
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-mtest-mongo-1' -> id=8576
+   Current notes:
+
+
+Проект / сервис: Feeds Stage
+Владелец: Дмитрий Щербаков
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-mtest-mongo-2' -> id=8577
+   Current notes:
+
+
+Проект / сервис: Feeds Stage
+Владелец: Дмитрий Щербаков
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-mtest-mongo-3' -> id=8578
+   Current notes:
+
+
+Проект / сервис: Feeds Stage
+Владелец: Дмитрий Щербаков
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-mtest-mongo-4' -> id=8579
+   Current notes:
+
+
+Проект / сервис: Feeds Stage
+Владелец: Дмитрий Щербаков
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-mtest-mongo-5' -> id=8580
+   Current notes:
+
+
+Проект / сервис: Feeds Stage
+Владелец: Дмитрий Щербаков
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-msocial-mongo-1' -> id=9646
+   Current notes:
+
+
+Проект / сервис: Старые ТГ боты
+Владелец: Селезнев Дмитрий
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-msocial-mongo-2' -> id=9647
+   Current notes:
+
+
+Проект / сервис: Старые ТГ боты
+Владелец: Селезнев Дмитрий
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-msocial-mongo-3' -> id=9648
+   Current notes:
+
+
+Проект / сервис: Старые ТГ боты
+Владелец: Селезнев Дмитрий
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'ams-mpartners1' -> id=223
+   Current notes:
+
+
+Проект / сервис: Integration / CRM
+Владелец: Суханов Влад / Хохлов Алексей
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'ams-mpartners2' -> id=185
+   Current notes:
+
+
+Проект / сервис: Integration / CRM
+Владелец: Суханов Влад / Хохлов Алексей
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'ams-mpartners3' -> id=217
+   Current notes:
+
+
+Проект / сервис: Integration / CRM
+Владелец: Суханов Влад / Хохлов Алексей
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'ams-mwuf1' -> id=137
+   Current notes:
+
+
+Проект / сервис: LiveRisk
+Владелец: Кудрин Илья
+Чат / группа: Live: Работы на mongo
+   no update. same information given
+
+✅ Found computer 'ams-mwuf2' -> id=128
+   Current notes:
+
+
+Проект / сервис: LiveRisk
+Владелец: Кудрин Илья
+Чат / группа: Live: Работы на mongo
+   no update. same information given
+
+✅ Found computer 'ams-mwuf3' -> id=1190
+   Current notes:
+
+
+Проект / сервис: LiveRisk
+Владелец: Кудрин Илья
+Чат / группа: Live: Работы на mongo
+   no update. same information given
+
+✅ Found computer 'ams-mwuf4' -> id=1188
+   Current notes:
+
+
+Проект / сервис: LiveRisk
+Владелец: Кудрин Илья
+Чат / группа: Live: Работы на mongo
+   no update. same information given
+
+✅ Found computer 'ams-mwuf5' -> id=1173
+   Current notes:
+
+
+Проект / сервис: LiveRisk
+Владелец: Кудрин Илья
+Чат / группа: Live: Работы на mongo
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-wufarchive-mongo-1' -> id=8206
+   Current notes:
+
+
+Проект / сервис: LiveRisk
+Владелец: Кудрин Илья
+Чат / группа: Live: Работы на mongo
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-wufarchive-mongo-2' -> id=8207
+   Current notes:
+
+
+Проект / сервис: LiveRisk
+Владелец: Кудрин Илья
+Чат / группа: Live: Работы на mongo
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-wufarchive-mongo-3' -> id=8208
+   Current notes:
+
+
+Проект / сервис: LiveRisk
+Владелец: Кудрин Илья
+Чат / группа: Live: Работы на mongo
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-live-mongo-1' -> id=7572
+   Current notes:
+
+
+Проект / сервис: LiveRisk
+Владелец: Кирилл Водинский
+Чат / группа: Live: Работы на mongo
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-live-mongo-2' -> id=7571
+   Current notes:
+
+
+Проект / сервис: LiveRisk
+Владелец: Кирилл Водинский
+Чат / группа: Live: Работы на mongo
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-live-mongo-3' -> id=7573
+   Current notes:
+
+
+Проект / сервис: LiveRisk
+Владелец: Кирилл Водинский
+Чат / группа: Live: Работы на mongo
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-live-mongo-4' -> id=7574
+   Current notes:
+
+
+Проект / сервис: LiveRisk
+Владелец: Кирилл Водинский
+Чат / группа: Live: Работы на mongo
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-live-mongo-5' -> id=7570
+   Current notes:
+
+
+Проект / сервис: LiveRisk
+Владелец: Кирилл Водинский
+Чат / группа: Live: Работы на mongo
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-livearchive-mongo-1' -> id=7377
+   Current notes:
+
+
+Проект / сервис: LiveRisk Архив
+Владелец: Кирилл Водинский
+Чат / группа: Live: Работы на mongo
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-livearchive-mongo-2' -> id=7399
+   Current notes:
+
+
+Проект / сервис: LiveRisk Архив
+Владелец: Кирилл Водинский
+Чат / группа: Live: Работы на mongo
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-livearchive-mongo-3' -> id=7398
+   Current notes:
+
+
+Проект / сервис: LiveRisk Архив
+Владелец: Кирилл Водинский
+Чат / группа: Live: Работы на mongo
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-mlive-mongo-1' -> id=8567
+   Current notes:
+
+
+Проект / сервис: live
+Владелец: У Елисеева нет инфо
+Чат / группа: Live: Работы на mongo
+
+
+Проект / сервис: live
+Владелец: нет инфо!
+Чат / группа: Live: Работы на mongo
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-mlive-mongo-2' -> id=8568
+   Current notes:
+
+
+Проект / сервис: live
+Владелец: У Елисеева нет инфо
+Чат / группа: Live: Работы на mongo
+
+
+Проект / сервис: live
+Владелец: нет инфо!
+Чат / группа: Live: Работы на mongo
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-mlive-mongo-3' -> id=8569
+   Current notes:
+
+
+Проект / сервис: live
+Владелец: У Елисеева нет инфо
+Чат / группа: Live: Работы на mongo
+
+
+Проект / сервис: live
+Владелец: нет инфо!
+Чат / группа: Live: Работы на mongo
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-mqueue-mongo-1' -> id=9334
+   Current notes:
+
+
+Проект / сервис: live
+Владелец: У Елисеева нет инфо
+Чат / группа: Live: Работы на mongo
+
+
+Проект / сервис: live
+Владелец: нет инфо!
+Чат / группа: Live: Работы на mongo
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-mqueue-mongo-2' -> id=9336
+   Current notes:
+
+
+Проект / сервис: live
+Владелец: У Елисеева нет инфо
+Чат / группа: Live: Работы на mongo
+
+
+Проект / сервис: live
+Владелец: нет инфо!
+Чат / группа: Live: Работы на mongo
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-mqueue-mongo-3' -> id=9335
+   Current notes:
+
+
+Проект / сервис: live
+Владелец: У Елисеева нет инфо
+Чат / группа: Live: Работы на mongo
+
+
+Проект / сервис: live
+Владелец: нет инфо!
+Чат / группа: Live: Работы на mongo
+   no update. same information given
+
+✅ Found computer 'ams-mtestlms1' -> id=167
+   Current notes:
+
+
+Проект / сервис: live
+Владелец: У Елисеева нет инфо
+Чат / группа: Live: Работы на mongo
+
+
+Проект / сервис: live
+Владелец: нет инфо!
+Чат / группа: Live: Работы на mongo
+   no update. same information given
+
+✅ Found computer 'ams-mtestlms2' -> id=142
+   Current notes:
+
+
+Проект / сервис: live
+Владелец: У Елисеева нет инфо
+Чат / группа: Live: Работы на mongo
+
+
+Проект / сервис: live
+Владелец: нет инфо!
+Чат / группа: Live: Работы на mongo
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-notifi-mongo-1' -> id=7301
+   Current notes:
+
+
+Проект / сервис: Feeds Мобильные уведомления
+Владелец: Михаил Кудряшов
+Чат / группа: Live: Работы на mongo
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-notifi-mongo-2' -> id=7296
+   Current notes:
+
+
+Проект / сервис: Feeds Мобильные уведомления
+Владелец: Михаил Кудряшов
+Чат / группа: Live: Работы на mongo
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-notifi-mongo-3' -> id=7295
+   Current notes:
+
+
+Проект / сервис: Feeds Мобильные уведомления
+Владелец: Михаил Кудряшов
+Чат / группа: Live: Работы на mongo
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-notifi-mongo-1' -> id=8604
+   Current notes:
+
+
+Проект / сервис: Feeds Мобильные уведомления
+Владелец: Михаил Кудряшов
+Чат / группа: Live: Работы на mongo
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-notifi-mongo-2' -> id=8606
+   Current notes:
+
+
+Проект / сервис: Feeds Мобильные уведомления
+Владелец: Михаил Кудряшов
+Чат / группа: Live: Работы на mongo
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-notifi-mongo-3' -> id=8607
+   Current notes:
+
+
+Проект / сервис: Feeds Мобильные уведомления
+Владелец: Михаил Кудряшов
+Чат / группа: Live: Работы на mongo
+   no update. same information given
+
+✅ Found computer 'ams-mline1' -> id=135
+   Current notes:
+
+
+Проект / сервис: Линия
+Владелец: Дмитрий Поздняков
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'ams-mline2' -> id=122
+   Current notes:
+
+
+Проект / сервис: Линия
+Владелец: Дмитрий Поздняков
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'ams-mline3' -> id=138
+   Current notes:
+
+
+Проект / сервис: Линия
+Владелец: Дмитрий Поздняков
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'ams-mline4' -> id=170
+   Current notes:
+
+
+Проект / сервис: Линия
+Владелец: Дмитрий Поздняков
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'ams-mline5' -> id=201
+   Current notes:
+
+
+Проект / сервис: Линия
+Владелец: Дмитрий Поздняков
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'ams-mline6' -> id=830
+   Current notes:
+
+
+Проект / сервис: Линия
+Владелец: Дмитрий Поздняков
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'ams-mlinehist1' -> id=178
+   Current notes:
+
+
+Проект / сервис: Линия Архив
+Владелец: Дмитрий Поздняков
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'ams-mlinehist2' -> id=117
+   Current notes:
+
+
+Проект / сервис: Линия Архив
+Владелец: Дмитрий Поздняков
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'ams-mlinehist3' -> id=119
+   Current notes:
+
+
+Проект / сервис: Линия Архив
+Владелец: Дмитрий Поздняков
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-mline-mongo-1' -> id=8573
+   Current notes:
+
+
+Проект / сервис: Линия
+Владелец: Дмитрий Поздняков
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-mline-mongo-2' -> id=8574
+   Current notes:
+
+
+Проект / сервис: Линия
+Владелец: Дмитрий Поздняков
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-mline-mongo-3' -> id=8575
+   Current notes:
+
+
+Проект / сервис: Линия
+Владелец: Дмитрий Поздняков
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-mcrm-mongo-1' -> id=9962
+   Current notes:
+
+
+Проект / сервис: crm/prm/xrm
+Владелец: Игорь Крузе
+Чат / группа: CRM + PRM. Админство /   CRM.MongoDb
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-mcrm-mongo-2' -> id=9961
+   Current notes:
+
+
+Проект / сервис: crm/prm/xrm
+Владелец: Игорь Крузе
+Чат / группа: CRM + PRM. Админство /   CRM.MongoDb
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-mcrm-mongo-3' -> id=9963
+   Current notes:
+
+
+Проект / сервис: crm/prm/xrm
+Владелец: Игорь Крузе
+Чат / группа: CRM + PRM. Админство /   CRM.MongoDb
+   no update. same information given
+
+✅ Found computer 'sc-ams99-crm-prod-bonusdrive-mongo-1' -> id=7395
+   Current notes:
+
+
+Проект / сервис: crm/prm/xrm
+Владелец: Игорь Крузе
+Чат / группа: CRM + PRM. Админство /   CRM.MongoDb
+   no update. same information given
+
+✅ Found computer 'sc-ams99-crm-prod-bonusdrive-mongo-2' -> id=7388
+   Current notes:
+
+
+Проект / сервис: crm/prm/xrm
+Владелец: Игорь Крузе
+Чат / группа: CRM + PRM. Админство /   CRM.MongoDb
+   no update. same information given
+
+✅ Found computer 'sc-ams99-crm-prod-bonusdrive-mongo-3' -> id=7389
+   Current notes:
+
+
+Проект / сервис: crm/prm/xrm
+Владелец: Игорь Крузе
+Чат / группа: CRM + PRM. Админство /   CRM.MongoDb
+   no update. same information given
+
+✅ Found computer 'sc-ams99-crm-prod-bonuspromotions-mongo-1' -> id=7392
+   Current notes:
+
+
+Проект / сервис: crm/prm/xrm
+Владелец: Игорь Крузе
+Чат / группа: CRM + PRM. Админство /   CRM.MongoDb
+   no update. same information given
+
+✅ Found computer 'sc-ams99-crm-prod-bonuspromotions-mongo-2' -> id=7391
+   Current notes:
+
+
+Проект / сервис: crm/prm/xrm
+Владелец: Игорь Крузе
+Чат / группа: CRM + PRM. Админство /   CRM.MongoDb
+   no update. same information given
+
+✅ Found computer 'sc-ams99-crm-prod-bonuspromotions-mongo-3' -> id=7390
+   Current notes:
+
+
+Проект / сервис: crm/prm/xrm
+Владелец: Игорь Крузе
+Чат / группа: CRM + PRM. Админство /   CRM.MongoDb
+   no update. same information given
+
+✅ Found computer 'sc-ams99-crm-prod-freespins-mongo-1' -> id=7393
+   Current notes:
+
+
+Проект / сервис: crm/prm/xrm
+Владелец: Игорь Крузе
+Чат / группа: CRM + PRM. Админство /   CRM.MongoDb
+   no update. same information given
+
+✅ Found computer 'sc-ams99-crm-prod-freespins-mongo-2' -> id=7387
+   Current notes:
+
+
+Проект / сервис: crm/prm/xrm
+Владелец: Игорь Крузе
+Чат / группа: CRM + PRM. Админство /   CRM.MongoDb
+   no update. same information given
+
+✅ Found computer 'sc-ams99-crm-prod-freespins-mongo-3' -> id=7397
+   Current notes:
+
+
+Проект / сервис: crm/prm/xrm
+Владелец: Игорь Крузе
+Чат / группа: CRM + PRM. Админство /   CRM.MongoDb
+   no update. same information given
+
+✅ Found computer 'sc-ams99-crm-prod-marketingpromo-mongo-1' -> id=7412
+   Current notes:
+
+
+Проект / сервис: crm/prm/xrm
+Владелец: Игорь Крузе
+Чат / группа: CRM + PRM. Админство /   CRM.MongoDb
+   no update. same information given
+
+✅ Found computer 'sc-ams99-crm-prod-marketingpromo-mongo-2' -> id=7413
+   Current notes:
+
+
+Проект / сервис: crm/prm/xrm
+Владелец: Игорь Крузе
+Чат / группа: CRM + PRM. Админство /   CRM.MongoDb
+   no update. same information given
+
+✅ Found computer 'sc-ams99-crm-prod-marketingpromo-mongo-3' -> id=7411
+   Current notes:
+
+
+Проект / сервис: crm/prm/xrm
+Владелец: Игорь Крузе
+Чат / группа: CRM + PRM. Админство /   CRM.MongoDb
+   no update. same information given
+
+✅ Found computer 'sc-ams99-crm-prod-mcrm-mongo-1' -> id=7837
+   Current notes:
+
+
+Проект / сервис: crm/prm/xrm
+Владелец: Игорь Крузе
+Чат / группа: CRM + PRM. Админство /   CRM.MongoDb
+   no update. same information given
+
+✅ Found computer 'sc-ams99-crm-prod-mcrm-mongo-2' -> id=7838
+   Current notes:
+
+
+Проект / сервис: crm/prm/xrm
+Владелец: Игорь Крузе
+Чат / группа: CRM + PRM. Админство /   CRM.MongoDb
+   no update. same information given
+
+✅ Found computer 'sc-ams99-crm-prod-mcrm-mongo-3' -> id=7839
+   Current notes:
+
+
+Проект / сервис: crm/prm/xrm
+Владелец: Игорь Крузе
+Чат / группа: CRM + PRM. Админство /   CRM.MongoDb
+   no update. same information given
+
+✅ Found computer 'sc-ams99-crm-prod-promocodescasino-mongo-1' -> id=7425
+   Current notes:
+
+
+Проект / сервис: crm/prm/xrm
+Владелец: Игорь Крузе
+Чат / группа: CRM + PRM. Админство /   CRM.MongoDb
+   no update. same information given
+
+✅ Found computer 'sc-ams99-crm-prod-promocodescasino-mongo-2' -> id=7396
+   Current notes:
+
+
+Проект / сервис: crm/prm/xrm
+Владелец: Игорь Крузе
+Чат / группа: CRM + PRM. Админство /   CRM.MongoDb
+   no update. same information given
+
+✅ Found computer 'sc-ams99-crm-prod-promocodescasino-mongo-3' -> id=7394
+   Current notes:
+
+
+Проект / сервис: crm/prm/xrm
+Владелец: Игорь Крузе
+Чат / группа: CRM + PRM. Админство /   CRM.MongoDb
+   no update. same information given
+
+✅ Found computer 'sc-ams99-crm-prod-tournaments-mongo-1' -> id=7013
+   Current notes:
+
+
+Проект / сервис: crm/prm/xrm
+Владелец: Игорь Крузе
+Чат / группа: CRM + PRM. Админство /   CRM.MongoDb
+   no update. same information given
+
+✅ Found computer 'sc-ams99-crm-prod-tournaments-mongo-2' -> id=7014
+   Current notes:
+
+
+Проект / сервис: crm/prm/xrm
+Владелец: Игорь Крузе
+Чат / группа: CRM + PRM. Админство /   CRM.MongoDb
+   no update. same information given
+
+✅ Found computer 'sc-ams99-crm-prod-tournaments-mongo-3' -> id=6863
+   Current notes:
+
+
+Проект / сервис: crm/prm/xrm
+Владелец: Игорь Крузе
+Чат / группа: CRM + PRM. Админство /   CRM.MongoDb
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-crmcj-mongo-1' -> id=6373
+   Current notes:
+
+
+Проект / сервис: crm/prm/xrm
+Владелец: Игорь Крузе
+Чат / группа: CRM + PRM. Админство /   CRM.MongoDb
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-crmcj-mongo-2' -> id=6374
+   Current notes:
+
+
+Проект / сервис: crm/prm/xrm
+Владелец: Игорь Крузе
+Чат / группа: CRM + PRM. Админство /   CRM.MongoDb
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-crmcj-mongo-3' -> id=6372
+   Current notes:
+
+
+Проект / сервис: crm/prm/xrm
+Владелец: Игорь Крузе
+Чат / группа: CRM + PRM. Админство /   CRM.MongoDb
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-mcrm-mongo-1' -> id=9962
+   Current notes:
+
+
+Проект / сервис: crm/prm/xrm
+Владелец: Игорь Крузе
+Чат / группа: CRM + PRM. Админство /   CRM.MongoDb
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-mcrm-mongo-2' -> id=9961
+   Current notes:
+
+
+Проект / сервис: crm/prm/xrm
+Владелец: Игорь Крузе
+Чат / группа: CRM + PRM. Админство /   CRM.MongoDb
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-mcrm-mongo-3' -> id=9963
+   Current notes:
+
+
+Проект / сервис: crm/prm/xrm
+Владелец: Игорь Крузе
+Чат / группа: CRM + PRM. Админство /   CRM.MongoDb
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-mcrmcl2-mongo-1' -> id=5805
+   Current notes:
+
+
+Проект / сервис: crm/prm/xrm
+Владелец: Игорь Крузе
+Чат / группа: CRM + PRM. Админство /   CRM.MongoDb
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-mcrmcl2-mongo-2' -> id=5806
+   Current notes:
+
+
+Проект / сервис: crm/prm/xrm
+Владелец: Игорь Крузе
+Чат / группа: CRM + PRM. Админство /   CRM.MongoDb
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-mcrmcl2-mongo-3' -> id=5807
+   Current notes:
+
+
+Проект / сервис: crm/prm/xrm
+Владелец: Игорь Крузе
+Чат / группа: CRM + PRM. Админство /   CRM.MongoDb
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-mcrmcl2-mongo-4' -> id=9637
+   Current notes:
+
+
+Проект / сервис: crm/prm/xrm
+Владелец: Игорь Крузе
+Чат / группа: CRM + PRM. Админство /   CRM.MongoDb
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-mcrmcl3-mongo-1' -> id=5832
+   Current notes:
+
+
+Проект / сервис: crm/prm/xrm
+Владелец: Игорь Крузе
+Чат / группа: CRM + PRM. Админство /   CRM.MongoDb
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-mcrmcl3-mongo-2' -> id=5833
+   Current notes:
+
+
+Проект / сервис: crm/prm/xrm
+Владелец: Игорь Крузе
+Чат / группа: CRM + PRM. Админство /   CRM.MongoDb
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-mcrmcl3-mongo-3' -> id=5834
+   Current notes:
+
+
+Проект / сервис: crm/prm/xrm
+Владелец: Игорь Крузе
+Чат / группа: CRM + PRM. Админство /   CRM.MongoDb
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-mcrmcl4-mongo-1' -> id=6745
+   Current notes:
+
+
+Проект / сервис: crm/prm/xrm
+Владелец: Игорь Крузе
+Чат / группа: CRM + PRM. Админство /   CRM.MongoDb
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-mcrmcl4-mongo-2' -> id=6747
+   Current notes:
+
+
+Проект / сервис: crm/prm/xrm
+Владелец: Игорь Крузе
+Чат / группа: CRM + PRM. Админство /   CRM.MongoDb
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-mcrmcl4-mongo-3' -> id=6746
+   Current notes:
+
+
+Проект / сервис: crm/prm/xrm
+Владелец: Игорь Крузе
+Чат / группа: CRM + PRM. Админство /   CRM.MongoDb
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-mcrmcl5-mongo-1' -> id=6807
+   Current notes:
+
+
+Проект / сервис: crm/prm/xrm
+Владелец: Игорь Крузе
+Чат / группа: CRM + PRM. Админство /   CRM.MongoDb
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-mcrmcl5-mongo-2' -> id=6808
+   Current notes:
+
+
+Проект / сервис: crm/prm/xrm
+Владелец: Игорь Крузе
+Чат / группа: CRM + PRM. Админство /   CRM.MongoDb
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-mcrmcl5-mongo-3' -> id=6806
+   Current notes:
+
+
+Проект / сервис: crm/prm/xrm
+Владелец: Игорь Крузе
+Чат / группа: CRM + PRM. Админство /   CRM.MongoDb
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-mprm-mongo-1' -> id=7824
+   Current notes:
+
+
+Проект / сервис: crm/prm/xrm
+Владелец: Игорь Крузе
+Чат / группа: CRM + PRM. Админство /   CRM.MongoDb
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-mprm-mongo-2' -> id=7822
+   Current notes:
+
+
+Проект / сервис: crm/prm/xrm
+Владелец: Игорь Крузе
+Чат / группа: CRM + PRM. Админство /   CRM.MongoDb
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-mprm-mongo-3' -> id=7823
+   Current notes:
+
+
+Проект / сервис: crm/prm/xrm
+Владелец: Игорь Крузе
+Чат / группа: CRM + PRM. Админство /   CRM.MongoDb
+   no update. same information given
+
+✅ Found computer 'sc-ams99-xmr-stage-players-mongo-1' -> id=7872
+   Current notes:
+
+
+Проект / сервис: crm/prm/xrm
+Владелец: Игорь Крузе
+Чат / группа: CRM + PRM. Админство /   CRM.MongoDb
+   no update. same information given
+
+✅ Found computer 'sc-ams99-xmr-stage-players-mongo-2' -> id=7873
+   Current notes:
+
+
+Проект / сервис: crm/prm/xrm
+Владелец: Игорь Крузе
+Чат / группа: CRM + PRM. Админство /   CRM.MongoDb
+   no update. same information given
+
+✅ Found computer 'sc-ams99-xmr-stage-players-mongo-3' -> id=7874
+   Current notes:
+
+
+Проект / сервис: crm/prm/xrm
+Владелец: Игорь Крузе
+Чат / группа: CRM + PRM. Админство /   CRM.MongoDb
+   no update. same information given
+
+✅ Found computer 'sc-ams99-xrm-prod-b2b-mongo-1' -> id=9672
+   Current notes:
+
+
+Проект / сервис: crm/prm/xrm
+Владелец: Игорь Крузе
+Чат / группа: CRM + PRM. Админство /   CRM.MongoDb
+   no update. same information given
+
+✅ Found computer 'sc-ams99-xrm-prod-b2b-mongo-2' -> id=9673
+   Current notes:
+
+
+Проект / сервис: crm/prm/xrm
+Владелец: Игорь Крузе
+Чат / группа: CRM + PRM. Админство /   CRM.MongoDb
+   no update. same information given
+
+✅ Found computer 'sc-ams99-xrm-prod-b2b-mongo-3' -> id=9674
+   Current notes:
+
+
+Проект / сервис: crm/prm/xrm
+Владелец: Игорь Крузе
+Чат / группа: CRM + PRM. Админство /   CRM.MongoDb
+   no update. same information given
+
+✅ Found computer 'sc-ams99-xrm-prod-local-mongo-1' -> id=8949
+   Current notes:
+
+
+Проект / сервис: crm/prm/xrm
+Владелец: Игорь Крузе
+Чат / группа: CRM + PRM. Админство /   CRM.MongoDb
+   no update. same information given
+
+✅ Found computer 'sc-ams99-xrm-prod-local-mongo-2' -> id=8950
+   Current notes:
+
+
+Проект / сервис: crm/prm/xrm
+Владелец: Игорь Крузе
+Чат / группа: CRM + PRM. Админство /   CRM.MongoDb
+   no update. same information given
+
+✅ Found computer 'sc-ams99-xrm-prod-local-mongo-3' -> id=8951
+   Current notes:
+
+
+Проект / сервис: crm/prm/xrm
+Владелец: Игорь Крузе
+Чат / группа: CRM + PRM. Админство /   CRM.MongoDb
+   no update. same information given
+
+✅ Found computer 'sc-ams99-xrm-prod-obe-mongo-1' -> id=8952
+   Current notes:
+
+
+Проект / сервис: crm/prm/xrm
+Владелец: Игорь Крузе
+Чат / группа: CRM + PRM. Админство /   CRM.MongoDb
+   no update. same information given
+
+✅ Found computer 'sc-ams99-xrm-prod-obe-mongo-2' -> id=8953
+   Current notes:
+
+
+Проект / сервис: crm/prm/xrm
+Владелец: Игорь Крузе
+Чат / группа: CRM + PRM. Админство /   CRM.MongoDb
+   no update. same information given
+
+✅ Found computer 'sc-ams99-xrm-prod-obe-mongo-3' -> id=8954
+   Current notes:
+
+
+Проект / сервис: crm/prm/xrm
+Владелец: Игорь Крузе
+Чат / группа: CRM + PRM. Админство /   CRM.MongoDb
+   no update. same information given
+
+✅ Found computer 'sc-ams99-xrm-prod-sls-mongo-1' -> id=9266
+   Current notes:
+
+
+Проект / сервис: crm/prm/xrm
+Владелец: Игорь Крузе
+Чат / группа: CRM + PRM. Админство /   CRM.MongoDb
+   no update. same information given
+
+✅ Found computer 'sc-ams99-xrm-prod-sls-mongo-2' -> id=9267
+   Current notes:
+
+
+Проект / сервис: crm/prm/xrm
+Владелец: Игорь Крузе
+Чат / группа: CRM + PRM. Админство /   CRM.MongoDb
+   no update. same information given
+
+✅ Found computer 'sc-ams99-xrm-prod-sls-mongo-3' -> id=9268
+   Current notes:
+
+
+Проект / сервис: crm/prm/xrm
+Владелец: Игорь Крузе
+Чат / группа: CRM + PRM. Админство /   CRM.MongoDb
+   no update. same information given
+
+✅ Found computer 'sc-ams99-xrm-prod-software-mongo-1' -> id=9858
+   Current notes:
+
+
+Проект / сервис: crm/prm/xrm
+Владелец: Игорь Крузе
+Чат / группа: CRM + PRM. Админство /   CRM.MongoDb
+   no update. same information given
+
+✅ Found computer 'sc-ams99-xrm-prod-software-mongo-2' -> id=9859
+   Current notes:
+
+
+Проект / сервис: crm/prm/xrm
+Владелец: Игорь Крузе
+Чат / группа: CRM + PRM. Админство /   CRM.MongoDb
+   no update. same information given
+
+✅ Found computer 'sc-ams99-xrm-prod-software-mongo-3' -> id=9860
+   Current notes:
+
+
+Проект / сервис: crm/prm/xrm
+Владелец: Игорь Крузе
+Чат / группа: CRM + PRM. Админство /   CRM.MongoDb
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-stage-crmcl1-mongo-1' -> id=5839
+   Current notes:
+
+
+Проект / сервис: crm/prm/xrm
+Владелец: Игорь Крузе
+Чат / группа: CRM + PRM. Админство /   CRM.MongoDb
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-stage-crmcl1-mongo-2' -> id=5840
+   Current notes:
+
+
+Проект / сервис: crm/prm/xrm
+Владелец: Игорь Крузе
+Чат / группа: CRM + PRM. Админство /   CRM.MongoDb
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-stage-crmcl1-mongo-3' -> id=5843
+   Current notes:
+
+
+Проект / сервис: crm/prm/xrm
+Владелец: Игорь Крузе
+Чат / группа: CRM + PRM. Админство /   CRM.MongoDb
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-stage-crmcl2-mongo-1' -> id=5837
+   Current notes:
+
+
+Проект / сервис: crm/prm/xrm
+Владелец: Игорь Крузе
+Чат / группа: CRM + PRM. Админство /   CRM.MongoDb
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-stage-crmcl2-mongo-2' -> id=5841
+   Current notes:
+
+
+Проект / сервис: crm/prm/xrm
+Владелец: Игорь Крузе
+Чат / группа: CRM + PRM. Админство /   CRM.MongoDb
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-stage-crmcl2-mongo-3' -> id=5836
+   Current notes:
+
+
+Проект / сервис: crm/prm/xrm
+Владелец: Игорь Крузе
+Чат / группа: CRM + PRM. Админство /   CRM.MongoDb
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-stage-crmcl3-mongo-1' -> id=5845
+   Current notes:
+
+
+Проект / сервис: crm/prm/xrm
+Владелец: Игорь Крузе
+Чат / группа: CRM + PRM. Админство /   CRM.MongoDb
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-stage-crmcl3-mongo-2' -> id=5844
+   Current notes:
+
+
+Проект / сервис: crm/prm/xrm
+Владелец: Игорь Крузе
+Чат / группа: CRM + PRM. Админство /   CRM.MongoDb
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-stage-crmcl3-mongo-3' -> id=5838
+   Current notes:
+
+
+Проект / сервис: crm/prm/xrm
+Владелец: Игорь Крузе
+Чат / группа: CRM + PRM. Админство /   CRM.MongoDb
+   no update. same information given
+
+✅ Found computer 'sc-ams99-xrm-prod-local-mongo-1' -> id=8949
+   Current notes:
+
+
+Проект / сервис: crm/prm/xrm
+Владелец: Игорь Крузе
+Чат / группа: CRM + PRM. Админство /   CRM.MongoDb
+   no update. same information given
+
+✅ Found computer 'sc-ams99-xrm-prod-local-mongo-2' -> id=8950
+   Current notes:
+
+
+Проект / сервис: crm/prm/xrm
+Владелец: Игорь Крузе
+Чат / группа: CRM + PRM. Админство /   CRM.MongoDb
+   no update. same information given
+
+✅ Found computer 'sc-ams99-xrm-prod-local-mongo-3' -> id=8951
+   Current notes:
+
+
+Проект / сервис: crm/prm/xrm
+Владелец: Игорь Крузе
+Чат / группа: CRM + PRM. Админство /   CRM.MongoDb
+   no update. same information given
+
+✅ Found computer 'sc-ams99-xrm-prod-obe-mongo-1' -> id=8952
+   Current notes:
+
+
+Проект / сервис: crm/prm/xrm
+Владелец: Игорь Крузе
+Чат / группа: CRM + PRM. Админство /   CRM.MongoDb
+   no update. same information given
+
+✅ Found computer 'sc-ams99-xrm-prod-obe-mongo-2' -> id=8953
+   Current notes:
+
+
+Проект / сервис: crm/prm/xrm
+Владелец: Игорь Крузе
+Чат / группа: CRM + PRM. Админство /   CRM.MongoDb
+   no update. same information given
+
+✅ Found computer 'sc-ams99-xrm-prod-obe-mongo-3' -> id=8954
+   Current notes:
+
+
+Проект / сервис: crm/prm/xrm
+Владелец: Игорь Крузе
+Чат / группа: CRM + PRM. Админство /   CRM.MongoDb
+   no update. same information given
+
+✅ Found computer 'sc-lux99-xrm-stage-sls-mongo-1' -> id=9269
+   Current notes:
+
+
+Проект / сервис: crm/prm/xrm
+Владелец: Игорь Крузе
+Чат / группа: CRM + PRM. Админство /   CRM.MongoDb
+   no update. same information given
+
+✅ Found computer 'sc-lux99-xrm-stage-sls-mongo-2' -> id=9270
+   Current notes:
+
+
+Проект / сервис: crm/prm/xrm
+Владелец: Игорь Крузе
+Чат / группа: CRM + PRM. Админство /   CRM.MongoDb
+   no update. same information given
+
+✅ Found computer 'sc-lux99-xrm-stage-sls-mongo-3' -> id=9271
+   Current notes:
+
+
+Проект / сервис: crm/prm/xrm
+Владелец: Игорь Крузе
+Чат / группа: CRM + PRM. Админство /   CRM.MongoDb
+   no update. same information given
+
+✅ Found computer 'sc-lux99-xrm-test-b2b-mongo-1' -> id=9675
+   Current notes:
+
+
+Проект / сервис: crm/prm/xrm
+Владелец: Игорь Крузе
+Чат / группа: CRM + PRM. Админство /   CRM.MongoDb
+   no update. same information given
+
+✅ Found computer 'sc-lux99-xrm-test-b2b-mongo-2' -> id=9676
+   Current notes:
+
+
+Проект / сервис: crm/prm/xrm
+Владелец: Игорь Крузе
+Чат / группа: CRM + PRM. Админство /   CRM.MongoDb
+   no update. same information given
+
+✅ Found computer 'sc-lux99-xrm-test-b2b-mongo-3' -> id=9677
+   Current notes:
+
+
+Проект / сервис: crm/prm/xrm
+Владелец: Игорь Крузе
+Чат / группа: CRM + PRM. Админство /   CRM.MongoDb
+   no update. same information given
+
+✅ Found computer 'sc-lux99-xrm-test-local-mongo-1' -> id=8966
+   Current notes:
+
+
+Проект / сервис: crm/prm/xrm
+Владелец: Игорь Крузе
+Чат / группа: CRM + PRM. Админство /   CRM.MongoDb
+   no update. same information given
+
+✅ Found computer 'sc-lux99-xrm-test-local-mongo-2' -> id=8961
+   Current notes:
+
+
+Проект / сервис: crm/prm/xrm
+Владелец: Игорь Крузе
+Чат / группа: CRM + PRM. Админство /   CRM.MongoDb
+   no update. same information given
+
+✅ Found computer 'sc-lux99-xrm-test-local-mongo-3' -> id=8962
+   Current notes:
+
+
+Проект / сервис: crm/prm/xrm
+Владелец: Игорь Крузе
+Чат / группа: CRM + PRM. Админство /   CRM.MongoDb
+   no update. same information given
+
+✅ Found computer 'sc-lux99-xrm-test-obe-mongo-1' -> id=8963
+   Current notes:
+
+
+Проект / сервис: crm/prm/xrm
+Владелец: Игорь Крузе
+Чат / группа: CRM + PRM. Админство /   CRM.MongoDb
+   no update. same information given
+
+✅ Found computer 'sc-lux99-xrm-test-obe-mongo-2' -> id=8965
+   Current notes:
+
+
+Проект / сервис: crm/prm/xrm
+Владелец: Игорь Крузе
+Чат / группа: CRM + PRM. Админство /   CRM.MongoDb
+   no update. same information given
+
+✅ Found computer 'sc-lux99-xrm-test-obe-mongo-3' -> id=8964
+   Current notes:
+
+
+Проект / сервис: crm/prm/xrm
+Владелец: Игорь Крузе
+Чат / группа: CRM + PRM. Админство /   CRM.MongoDb
+   no update. same information given
+
+✅ Found computer 'sc-lux99-xrm-test-software-mongo-1' -> id=9855
+   Current notes:
+
+
+Проект / сервис: crm/prm/xrm
+Владелец: Игорь Крузе
+Чат / группа: CRM + PRM. Админство /   CRM.MongoDb
+   no update. same information given
+
+✅ Found computer 'sc-lux99-xrm-test-software-mongo-2' -> id=9856
+   Current notes:
+
+
+Проект / сервис: crm/prm/xrm
+Владелец: Игорь Крузе
+Чат / группа: CRM + PRM. Админство /   CRM.MongoDb
+   no update. same information given
+
+✅ Found computer 'sc-lux99-xrm-test-software-mongo-3' -> id=9857
+   Current notes:
+
+
+Проект / сервис: crm/prm/xrm
+Владелец: Игорь Крузе
+Чат / группа: CRM + PRM. Админство /   CRM.MongoDb
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-mcrmcl2-mongo-1' -> id=9431
+   Current notes:
+
+
+Проект / сервис: crm/prm/xrm
+Владелец: Игорь Крузе
+Чат / группа: CRM + PRM. Админство /   CRM.MongoDb
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-mcrmcl2-mongo-2' -> id=9430
+   Current notes:
+
+
+Проект / сервис: crm/prm/xrm
+Владелец: Игорь Крузе
+Чат / группа: CRM + PRM. Админство /   CRM.MongoDb
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-mcrmcl2-mongo-3' -> id=9429
+   Current notes:
+
+
+Проект / сервис: crm/prm/xrm
+Владелец: Игорь Крузе
+Чат / группа: CRM + PRM. Админство /   CRM.MongoDb
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-crm-mongo-1' -> id=8684
+   Current notes:
+
+
+Проект / сервис: crm/prm/xrm
+Владелец: Игорь Крузе
+Чат / группа: CRM + PRM. Админство /   CRM.MongoDb
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-crm-mongo-2' -> id=8685
+   Current notes:
+
+
+Проект / сервис: crm/prm/xrm
+Владелец: Игорь Крузе
+Чат / группа: CRM + PRM. Админство /   CRM.MongoDb
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-crm-mongo-3' -> id=8686
+   Current notes:
+
+
+Проект / сервис: crm/prm/xrm
+Владелец: Игорь Крузе
+Чат / группа: CRM + PRM. Админство /   CRM.MongoDb
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-crmcj-mongo-1' -> id=6376
+   Current notes:
+
+
+Проект / сервис: crm/prm/xrm
+Владелец: Игорь Крузе
+Чат / группа: CRM + PRM. Админство /   CRM.MongoDb
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-crmcj-mongo-2' -> id=6377
+   Current notes:
+
+
+Проект / сервис: crm/prm/xrm
+Владелец: Игорь Крузе
+Чат / группа: CRM + PRM. Админство /   CRM.MongoDb
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-crmcj-mongo-3' -> id=6375
+   Current notes:
+
+
+Проект / сервис: crm/prm/xrm
+Владелец: Игорь Крузе
+Чат / группа: CRM + PRM. Админство /   CRM.MongoDb
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-mprm-mongo-1' -> id=8780
+   Current notes:
+
+
+Проект / сервис: crm/prm/xrm
+Владелец: Игорь Крузе
+Чат / группа: CRM + PRM. Админство /   CRM.MongoDb
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-mprm-mongo-2' -> id=8781
+   Current notes:
+
+
+Проект / сервис: crm/prm/xrm
+Владелец: Игорь Крузе
+Чат / группа: CRM + PRM. Админство /   CRM.MongoDb
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-mprm-mongo-3' -> id=8782
+   Current notes:
+
+
+Проект / сервис: crm/prm/xrm
+Владелец: Игорь Крузе
+Чат / группа: CRM + PRM. Админство /   CRM.MongoDb
+   no update. same information given
+
+✅ Found computer 'sc-lux99-xmr-test-players-mongo-1' -> id=7888
+   Current notes:
+
+
+Проект / сервис: crm/prm/xrm
+Владелец: Игорь Крузе
+Чат / группа: CRM + PRM. Админство /   CRM.MongoDb
+   no update. same information given
+
+✅ Found computer 'sc-ams99-crm-prod-customer-mongo-1' -> id=10110
+   Current notes:
+
+
+Проект / сервис: crm/prm/xrm
+Владелец: Игорь Крузе
+Чат / группа: CRM + PRM. Админство /   CRM.MongoDb
+   no update. same information given
+
+✅ Found computer 'sc-ams99-crm-prod-customer-mongo-2' -> id=10112
+   Current notes:
+
+
+Проект / сервис: crm/prm/xrm
+Владелец: Игорь Крузе
+Чат / группа: CRM + PRM. Админство /   CRM.MongoDb
+   no update. same information given
+
+✅ Found computer 'sc-ams99-crm-prod-customer-mongo-3' -> id=10111
+   Current notes:
+
+
+Проект / сервис: crm/prm/xrm
+Владелец: Игорь Крузе
+Чат / группа: CRM + PRM. Админство /   CRM.MongoDb
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-march-mongo-1' -> id=10228
+   Current notes:
+
+
+Проект / сервис: Mathematics
+Владелец: Махнев Дмитрий
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-march-mongo-2' -> id=10229
+   Current notes:
+
+
+Проект / сервис: Mathematics
+Владелец: Махнев Дмитрий
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-march-mongo-3' -> id=10230
+   Current notes:
+
+
+Проект / сервис: Mathematics
+Владелец: Махнев Дмитрий
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-mathmembership-mongo-1' -> id=7435
+   Current notes:
+
+
+Проект / сервис: Mathematics
+Владелец: Махнев Дмитрий
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-mathmembership-mongo-2' -> id=7436
+   Current notes:
+
+
+Проект / сервис: Mathematics
+Владелец: Махнев Дмитрий
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-mathmembership-mongo-3' -> id=7437
+   Current notes:
+
+
+Проект / сервис: Mathematics
+Владелец: Махнев Дмитрий
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-mathmembership-mongo-4' -> id=7438
+   Current notes:
+
+
+Проект / сервис: Mathematics
+Владелец: Махнев Дмитрий
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-mathmembership-mongo-5' -> id=7439
+   Current notes:
+
+
+Проект / сервис: Mathematics
+Владелец: Махнев Дмитрий
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'ams-msportrobot1' -> id=2421
+   Current notes:
+
+
+Проект / сервис: Mathematics
+Владелец: Махнев Дмитрий
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'ams-msportrobot2' -> id=2422
+   Current notes:
+
+
+Проект / сервис: Mathematics
+Владелец: Махнев Дмитрий
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'ams-msportrobot3' -> id=2420
+   Current notes:
+
+
+Проект / сервис: Mathematics
+Владелец: Махнев Дмитрий
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-cashoutarh-mongo-1' -> id=5888
+   Current notes:
+
+
+Проект / сервис: Mathematics
+Владелец: Махнев Дмитрий
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-cashoutarh-mongo-2' -> id=5892
+   Current notes:
+
+
+Проект / сервис: Mathematics
+Владелец: Махнев Дмитрий
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-cashoutarh-mongo-3' -> id=5893
+   Current notes:
+
+
+Проект / сервис: Mathematics
+Владелец: Махнев Дмитрий
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-mregionalarchive-mongo-1' -> id=8919
+   Current notes:
+
+
+Проект / сервис: Mathematics
+Владелец: Махнев Дмитрий
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-mregionalarchive-mongo-2' -> id=8918
+   Current notes:
+
+
+Проект / сервис: Mathematics
+Владелец: Махнев Дмитрий
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-mregionalarchive-mongo-3' -> id=8920
+   Current notes:
+
+
+Проект / сервис: Mathematics
+Владелец: Махнев Дмитрий
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'ams-mweather1' -> id=1134
+   Current notes:
+
+
+Проект / сервис: Парсеры погода
+Владелец: Евгений Трегубенко
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'ams-mweather2' -> id=844
+   Current notes:
+
+
+Проект / сервис: Парсеры погода
+Владелец: Евгений Трегубенко
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'ams-mweather3' -> id=845
+   Current notes:
+
+
+Проект / сервис: Парсеры погода
+Владелец: Евгений Трегубенко
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-mathmembership-mongo-1' -> id=8584
+   Current notes:
+
+
+Проект / сервис: Mathematics
+Владелец: Махнев Дмитрий
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-mathmembership-mongo-2' -> id=8585
+   Current notes:
+
+
+Проект / сервис: Mathematics
+Владелец: Махнев Дмитрий
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-mathmembership-mongo-3' -> id=8586
+   Current notes:
+
+
+Проект / сервис: Mathematics
+Владелец: Махнев Дмитрий
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-mathmembership-mongo-4' -> id=8587
+   Current notes:
+
+
+Проект / сервис: Mathematics
+Владелец: Махнев Дмитрий
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-mathmembership-mongo-5' -> id=8588
+   Current notes:
+
+
+Проект / сервис: Mathematics
+Владелец: Махнев Дмитрий
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-msportrobot-mongo-1' -> id=8581
+   Current notes:
+
+
+Проект / сервис: Mathematics
+Владелец: Махнев Дмитрий
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-msportrobot-mongo-2' -> id=8582
+   Current notes:
+
+
+Проект / сервис: Mathematics
+Владелец: Махнев Дмитрий
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-msportrobot-mongo-3' -> id=8583
+   Current notes:
+
+
+Проект / сервис: Mathematics
+Владелец: Махнев Дмитрий
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-cashoutarh-mongo-1' -> id=7891
+   Current notes:
+
+
+Проект / сервис: Mathematics
+Владелец: Махнев Дмитрий
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-cashoutarh-mongo-2' -> id=7890
+   Current notes:
+
+
+Проект / сервис: Mathematics
+Владелец: Махнев Дмитрий
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-cashoutarh-mongo-3' -> id=7889
+   Current notes:
+
+
+Проект / сервис: Mathematics
+Владелец: Махнев Дмитрий
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-mciarch-mongo-1' -> id=8747
+   Current notes:
+
+
+Проект / сервис: Mathematics
+Владелец: Махнев Дмитрий
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-mciarch-mongo-2' -> id=8748
+   Current notes:
+
+
+Проект / сервис: Mathematics
+Владелец: Махнев Дмитрий
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-mciarch-mongo-3' -> id=8749
+   Current notes:
+
+
+Проект / сервис: Mathematics
+Владелец: Махнев Дмитрий
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-1xgames-mongo-1' -> id=3354
+   Current notes:
+
+
+Проект / сервис: 1xgames
+Владелец: У Елисеева нет инфо
+Чат / группа: 1xGames Админство / XGames. Вопросы по MongoDb к Админам
+
+
+Проект / сервис: 1xgames
+Владелец: нет инфо!
+Чат / группа: 1xGames Админство / XGames. Вопросы по MongoDb к Админам
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-1xgames-mongo-2' -> id=1110
+   Current notes:
+
+
+Проект / сервис: 1xgames
+Владелец: У Елисеева нет инфо
+Чат / группа: 1xGames Админство / XGames. Вопросы по MongoDb к Админам
+
+
+Проект / сервис: 1xgames
+Владелец: нет инфо!
+Чат / группа: 1xGames Админство / XGames. Вопросы по MongoDb к Админам
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-1xgames-mongo-3' -> id=193
+   Current notes:
+
+
+Проект / сервис: 1xgames
+Владелец: У Елисеева нет инфо
+Чат / группа: 1xGames Админство / XGames. Вопросы по MongoDb к Админам
+
+
+Проект / сервис: 1xgames
+Владелец: нет инфо!
+Чат / группа: 1xGames Админство / XGames. Вопросы по MongoDb к Админам
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-1xgamesbdr-mongo-1' -> id=6392
+   Current notes:
+
+
+Проект / сервис: 1xgames
+Владелец: У Елисеева нет инфо
+Чат / группа: 1xGames Админство / XGames. Вопросы по MongoDb к Админам
+
+
+Проект / сервис: 1xgames
+Владелец: нет инфо!
+Чат / группа: 1xGames Админство / XGames. Вопросы по MongoDb к Админам
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-1xgamesbdr-mongo-2' -> id=6390
+   Current notes:
+
+
+Проект / сервис: 1xgames
+Владелец: У Елисеева нет инфо
+Чат / группа: 1xGames Админство / XGames. Вопросы по MongoDb к Админам
+
+
+Проект / сервис: 1xgames
+Владелец: нет инфо!
+Чат / группа: 1xGames Админство / XGames. Вопросы по MongoDb к Админам
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-1xgamesbdr-mongo-3' -> id=6391
+   Current notes:
+
+
+Проект / сервис: 1xgames
+Владелец: У Елисеева нет инфо
+Чат / группа: 1xGames Админство / XGames. Вопросы по MongoDb к Админам
+
+
+Проект / сервис: 1xgames
+Владелец: нет инфо!
+Чат / группа: 1xGames Админство / XGames. Вопросы по MongoDb к Админам
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-1xgamesdemo-mongo-1' -> id=227
+   Current notes:
+
+
+Проект / сервис: 1xgames
+Владелец: У Елисеева нет инфо
+Чат / группа: 1xGames Админство / XGames. Вопросы по MongoDb к Админам
+
+
+Проект / сервис: 1xgames
+Владелец: нет инфо!
+Чат / группа: 1xGames Админство / XGames. Вопросы по MongoDb к Админам
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-1xgamesdemo-mongo-2' -> id=228
+   Current notes:
+
+
+Проект / сервис: 1xgames
+Владелец: У Елисеева нет инфо
+Чат / группа: 1xGames Админство / XGames. Вопросы по MongoDb к Админам
+
+
+Проект / сервис: 1xgames
+Владелец: нет инфо!
+Чат / группа: 1xGames Админство / XGames. Вопросы по MongoDb к Админам
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-1xgamesdemo-mongo-3' -> id=210
+   Current notes:
+
+
+Проект / сервис: 1xgames
+Владелец: У Елисеева нет инфо
+Чат / группа: 1xGames Админство / XGames. Вопросы по MongoDb к Админам
+
+
+Проект / сервис: 1xgames
+Владелец: нет инфо!
+Чат / группа: 1xGames Админство / XGames. Вопросы по MongoDb к Админам
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-1xgamesgermes-mongo-1' -> id=9990
+   Current notes:
+
+
+Проект / сервис: 1xgames
+Владелец: У Елисеева нет инфо
+Чат / группа: 1xGames Админство / XGames. Вопросы по MongoDb к Админам
+
+
+Проект / сервис: 1xgames
+Владелец: нет инфо!
+Чат / группа: 1xGames Админство / XGames. Вопросы по MongoDb к Админам
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-1xgamesgermes-mongo-2' -> id=9991
+   Current notes:
+
+
+Проект / сервис: 1xgames
+Владелец: У Елисеева нет инфо
+Чат / группа: 1xGames Админство / XGames. Вопросы по MongoDb к Админам
+
+
+Проект / сервис: 1xgames
+Владелец: нет инфо!
+Чат / группа: 1xGames Админство / XGames. Вопросы по MongoDb к Админам
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-1xgamesgermes-mongo-3' -> id=9992
+   Current notes:
+
+
+Проект / сервис: 1xgames
+Владелец: У Елисеева нет инфо
+Чат / группа: 1xGames Админство / XGames. Вопросы по MongoDb к Админам
+
+
+Проект / сервис: 1xgames
+Владелец: нет инфо!
+Чат / группа: 1xGames Админство / XGames. Вопросы по MongoDb к Админам
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-1xgamesquest-mongo-1' -> id=6380
+   Current notes:
+
+
+Проект / сервис: 1xgames
+Владелец: У Елисеева нет инфо
+Чат / группа: 1xGames Админство / XGames. Вопросы по MongoDb к Админам
+
+
+Проект / сервис: 1xgames
+Владелец: нет инфо!
+Чат / группа: 1xGames Админство / XGames. Вопросы по MongoDb к Админам
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-1xgamesquest-mongo-2' -> id=6382
+   Current notes:
+
+
+Проект / сервис: 1xgames
+Владелец: У Елисеева нет инфо
+Чат / группа: 1xGames Админство / XGames. Вопросы по MongoDb к Админам
+
+
+Проект / сервис: 1xgames
+Владелец: нет инфо!
+Чат / группа: 1xGames Админство / XGames. Вопросы по MongoDb к Админам
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-1xgamesquest-mongo-3' -> id=6381
+   Current notes:
+
+
+Проект / сервис: 1xgames
+Владелец: У Елисеева нет инфо
+Чат / группа: 1xGames Админство / XGames. Вопросы по MongoDb к Админам
+
+
+Проект / сервис: 1xgames
+Владелец: нет инфо!
+Чат / группа: 1xGames Админство / XGames. Вопросы по MongoDb к Админам
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-1xGamesSale-mongo-1' -> id=1128
+   Current notes:
+
+
+Проект / сервис: 1xgames
+Владелец: У Елисеева нет инфо
+Чат / группа: 1xGames Админство / XGames. Вопросы по MongoDb к Админам
+
+
+Проект / сервис: 1xgames
+Владелец: нет инфо!
+Чат / группа: 1xGames Админство / XGames. Вопросы по MongoDb к Админам
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-1xGamesSale-mongo-2' -> id=186
+   Current notes:
+
+
+Проект / сервис: 1xgames
+Владелец: У Елисеева нет инфо
+Чат / группа: 1xGames Админство / XGames. Вопросы по MongoDb к Админам
+
+
+Проект / сервис: 1xgames
+Владелец: нет инфо!
+Чат / группа: 1xGames Админство / XGames. Вопросы по MongoDb к Админам
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-1xGamesSale-mongo-3' -> id=161
+   Current notes:
+
+
+Проект / сервис: 1xgames
+Владелец: У Елисеева нет инфо
+Чат / группа: 1xGames Админство / XGames. Вопросы по MongoDb к Админам
+
+
+Проект / сервис: 1xgames
+Владелец: нет инфо!
+Чат / группа: 1xGames Админство / XGames. Вопросы по MongoDb к Админам
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-1xgamessolitaire-mongo-1' -> id=888
+   Current notes:
+
+
+Проект / сервис: 1xgames
+Владелец: У Елисеева нет инфо
+Чат / группа: 1xGames Админство / XGames. Вопросы по MongoDb к Админам
+
+
+Проект / сервис: 1xgames
+Владелец: нет инфо!
+Чат / группа: 1xGames Админство / XGames. Вопросы по MongoDb к Админам
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-1xgamessolitaire-mongo-2' -> id=732
+   Current notes:
+
+
+Проект / сервис: 1xgames
+Владелец: У Елисеева нет инфо
+Чат / группа: 1xGames Админство / XGames. Вопросы по MongoDb к Админам
+
+
+Проект / сервис: 1xgames
+Владелец: нет инфо!
+Чат / группа: 1xGames Админство / XGames. Вопросы по MongoDb к Админам
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-1xgamessolitaire-mongo-3' -> id=730
+   Current notes:
+
+
+Проект / сервис: 1xgames
+Владелец: У Елисеева нет инфо
+Чат / группа: 1xGames Админство / XGames. Вопросы по MongoDb к Админам
+
+
+Проект / сервис: 1xgames
+Владелец: нет инфо!
+Чат / группа: 1xGames Админство / XGames. Вопросы по MongoDb к Админам
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-1xgamesthree-mongo-1' -> id=5745
+   Current notes:
+
+
+Проект / сервис: 1xgames
+Владелец: У Елисеева нет инфо
+Чат / группа: 1xGames Админство / XGames. Вопросы по MongoDb к Админам
+
+
+Проект / сервис: 1xgames
+Владелец: нет инфо!
+Чат / группа: 1xGames Админство / XGames. Вопросы по MongoDb к Админам
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-1xgamesthree-mongo-2' -> id=5747
+   Current notes:
+
+
+Проект / сервис: 1xgames
+Владелец: У Елисеева нет инфо
+Чат / группа: 1xGames Админство / XGames. Вопросы по MongoDb к Админам
+
+
+Проект / сервис: 1xgames
+Владелец: нет инфо!
+Чат / группа: 1xGames Админство / XGames. Вопросы по MongoDb к Админам
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-1xgamesthree-mongo-3' -> id=5746
+   Current notes:
+
+
+Проект / сервис: 1xgames
+Владелец: У Елисеева нет инфо
+Чат / группа: 1xGames Админство / XGames. Вопросы по MongoDb к Админам
+
+
+Проект / сервис: 1xgames
+Владелец: нет инфо!
+Чат / группа: 1xGames Админство / XGames. Вопросы по MongoDb к Админам
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-1xgamestwo-mongo-1' -> id=904
+   Current notes:
+
+
+Проект / сервис: 1xgames
+Владелец: У Елисеева нет инфо
+Чат / группа: 1xGames Админство / XGames. Вопросы по MongoDb к Админам
+
+
+Проект / сервис: 1xgames
+Владелец: нет инфо!
+Чат / группа: 1xGames Админство / XGames. Вопросы по MongoDb к Админам
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-1xgamestwo-mongo-2' -> id=690
+   Current notes:
+
+
+Проект / сервис: 1xgames
+Владелец: У Елисеева нет инфо
+Чат / группа: 1xGames Админство / XGames. Вопросы по MongoDb к Админам
+
+
+Проект / сервис: 1xgames
+Владелец: нет инфо!
+Чат / группа: 1xGames Админство / XGames. Вопросы по MongoDb к Админам
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-1xgamestwo-mongo-3' -> id=691
+   Current notes:
+
+
+Проект / сервис: 1xgames
+Владелец: У Елисеева нет инфо
+Чат / группа: 1xGames Админство / XGames. Вопросы по MongoDb к Админам
+
+
+Проект / сервис: 1xgames
+Владелец: нет инфо!
+Чат / группа: 1xGames Админство / XGames. Вопросы по MongoDb к Админам
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-muserpromotion-mongo-1' -> id=7440
+   Current notes:
+
+
+Проект / сервис: 1xgames
+Владелец: У Елисеева нет инфо
+Чат / группа: 1xGames Админство / XGames. Вопросы по MongoDb к Админам
+
+
+Проект / сервис: 1xgames
+Владелец: нет инфо!
+Чат / группа: 1xGames Админство / XGames. Вопросы по MongoDb к Админам
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-muserpromotion-mongo-2' -> id=7441
+   Current notes:
+
+
+Проект / сервис: 1xgames
+Владелец: У Елисеева нет инфо
+Чат / группа: 1xGames Админство / XGames. Вопросы по MongoDb к Админам
+
+
+Проект / сервис: 1xgames
+Владелец: нет инфо!
+Чат / группа: 1xGames Админство / XGames. Вопросы по MongoDb к Админам
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-muserpromotion-mongo-3' -> id=7442
+   Current notes:
+
+
+Проект / сервис: 1xgames
+Владелец: У Елисеева нет инфо
+Чат / группа: 1xGames Админство / XGames. Вопросы по MongoDb к Админам
+
+
+Проект / сервис: 1xgames
+Владелец: нет инфо!
+Чат / группа: 1xGames Админство / XGames. Вопросы по MongoDb к Админам
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-stage-1xGamesSale-mongo-1' -> id=8410
+   Current notes:
+
+
+Проект / сервис: 1xgames
+Владелец: У Елисеева нет инфо
+Чат / группа: 1xGames Админство / XGames. Вопросы по MongoDb к Админам
+
+
+Проект / сервис: 1xgames
+Владелец: нет инфо!
+Чат / группа: 1xGames Админство / XGames. Вопросы по MongoDb к Админам
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-stage-1xGamesSale-mongo-2' -> id=8411
+   Current notes:
+
+
+Проект / сервис: 1xgames
+Владелец: У Елисеева нет инфо
+Чат / группа: 1xGames Админство / XGames. Вопросы по MongoDb к Админам
+
+
+Проект / сервис: 1xgames
+Владелец: нет инфо!
+Чат / группа: 1xGames Админство / XGames. Вопросы по MongoDb к Админам
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-stage-1xGamesSale-mongo-3' -> id=8412
+   Current notes:
+
+
+Проект / сервис: 1xgames
+Владелец: У Елисеева нет инфо
+Чат / группа: 1xGames Админство / XGames. Вопросы по MongoDb к Админам
+
+
+Проект / сервис: 1xgames
+Владелец: нет инфо!
+Чат / группа: 1xGames Админство / XGames. Вопросы по MongoDb к Админам
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-1xGames-mongo-1' -> id=5886
+   Current notes:
+
+
+Проект / сервис: 1xgames
+Владелец: У Елисеева нет инфо
+Чат / группа: 1xGames Админство / XGames. Вопросы по MongoDb к Админам
+
+
+Проект / сервис: 1xgames
+Владелец: нет инфо!
+Чат / группа: 1xGames Админство / XGames. Вопросы по MongoDb к Админам
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-1xGames-mongo-2' -> id=5884
+   Current notes:
+
+
+Проект / сервис: 1xgames
+Владелец: У Елисеева нет инфо
+Чат / группа: 1xGames Админство / XGames. Вопросы по MongoDb к Админам
+
+
+Проект / сервис: 1xgames
+Владелец: нет инфо!
+Чат / группа: 1xGames Админство / XGames. Вопросы по MongoDb к Админам
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-1xGames-mongo-3' -> id=5885
+   Current notes:
+
+
+Проект / сервис: 1xgames
+Владелец: У Елисеева нет инфо
+Чат / группа: 1xGames Админство / XGames. Вопросы по MongoDb к Админам
+
+
+Проект / сервис: 1xgames
+Владелец: нет инфо!
+Чат / группа: 1xGames Админство / XGames. Вопросы по MongoDb к Админам
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-1xGamesDemo-mongo-1' -> id=5707
+   Current notes:
+
+
+Проект / сервис: 1xgames
+Владелец: У Елисеева нет инфо
+Чат / группа: 1xGames Админство / XGames. Вопросы по MongoDb к Админам
+
+
+Проект / сервис: 1xgames
+Владелец: нет инфо!
+Чат / группа: 1xGames Админство / XGames. Вопросы по MongoDb к Админам
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-1xGamesDemo-mongo-2' -> id=5710
+   Current notes:
+
+
+Проект / сервис: 1xgames
+Владелец: У Елисеева нет инфо
+Чат / группа: 1xGames Админство / XGames. Вопросы по MongoDb к Админам
+
+
+Проект / сервис: 1xgames
+Владелец: нет инфо!
+Чат / группа: 1xGames Админство / XGames. Вопросы по MongoDb к Админам
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-1xGamesDemo-mongo-3' -> id=5709
+   Current notes:
+
+
+Проект / сервис: 1xgames
+Владелец: У Елисеева нет инфо
+Чат / группа: 1xGames Админство / XGames. Вопросы по MongoDb к Админам
+
+
+Проект / сервис: 1xgames
+Владелец: нет инфо!
+Чат / группа: 1xGames Админство / XGames. Вопросы по MongoDb к Админам
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-1xgamesrnd-mongo-1' -> id=9781
+   Current notes:
+
+
+Проект / сервис: 1xgames
+Владелец: У Елисеева нет инфо
+Чат / группа: 1xGames Админство / XGames. Вопросы по MongoDb к Админам
+
+
+Проект / сервис: 1xgames
+Владелец: нет инфо!
+Чат / группа: 1xGames Админство / XGames. Вопросы по MongoDb к Админам
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-1xgamesrnd-mongo-2' -> id=9782
+   Current notes:
+
+
+Проект / сервис: 1xgames
+Владелец: У Елисеева нет инфо
+Чат / группа: 1xGames Админство / XGames. Вопросы по MongoDb к Админам
+
+
+Проект / сервис: 1xgames
+Владелец: нет инфо!
+Чат / группа: 1xGames Админство / XGames. Вопросы по MongoDb к Админам
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-1xgamesrnd-mongo-3' -> id=9783
+   Current notes:
+
+
+Проект / сервис: 1xgames
+Владелец: У Елисеева нет инфо
+Чат / группа: 1xGames Админство / XGames. Вопросы по MongoDb к Админам
+
+
+Проект / сервис: 1xgames
+Владелец: нет инфо!
+Чат / группа: 1xGames Админство / XGames. Вопросы по MongoDb к Админам
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-1xGamesSale-mongo-1' -> id=5711
+   Current notes:
+
+
+Проект / сервис: 1xgames
+Владелец: У Елисеева нет инфо
+Чат / группа: 1xGames Админство / XGames. Вопросы по MongoDb к Админам
+
+
+Проект / сервис: 1xgames
+Владелец: нет инфо!
+Чат / группа: 1xGames Админство / XGames. Вопросы по MongoDb к Админам
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-1xGamesSale-mongo-2' -> id=5706
+   Current notes:
+
+
+Проект / сервис: 1xgames
+Владелец: У Елисеева нет инфо
+Чат / группа: 1xGames Админство / XGames. Вопросы по MongoDb к Админам
+
+
+Проект / сервис: 1xgames
+Владелец: нет инфо!
+Чат / группа: 1xGames Админство / XGames. Вопросы по MongoDb к Админам
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-1xGamesSale-mongo-3' -> id=5708
+   Current notes:
+
+
+Проект / сервис: 1xgames
+Владелец: У Елисеева нет инфо
+Чат / группа: 1xGames Админство / XGames. Вопросы по MongoDb к Админам
+
+
+Проект / сервис: 1xgames
+Владелец: нет инфо!
+Чат / группа: 1xGames Админство / XGames. Вопросы по MongoDb к Админам
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-stat-mongo-1' -> id=123
+   Current notes:
+
+
+Проект / сервис: Статистика
+Владелец: Вавина Марина
+Чат / группа: Статистика - Админство
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-stat-mongo-2' -> id=130
+   Current notes:
+
+
+Проект / сервис: Статистика
+Владелец: Вавина Марина
+Чат / группа: Статистика - Админство
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-stat-mongo-3' -> id=133
+   Current notes:
+
+
+Проект / сервис: Статистика
+Владелец: Вавина Марина
+Чат / группа: Статистика - Админство
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-stat-mongo-4' -> id=762
+   Current notes:
+
+
+Проект / сервис: Статистика
+Владелец: Вавина Марина
+Чат / группа: Статистика - Админство
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-stat-mongo-5' -> id=766
+   Current notes:
+
+
+Проект / сервис: Статистика
+Владелец: Вавина Марина
+Чат / группа: Статистика - Админство
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-stat-mongo-6' -> id=3709
+   Current notes:
+
+
+Проект / сервис: Статистика
+Владелец: Вавина Марина
+Чат / группа: Статистика - Админство
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-stat-mongo-7' -> id=3705
+   Current notes:
+
+
+Проект / сервис: Статистика
+Владелец: Вавина Марина
+Чат / группа: Статистика - Админство
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-stat-mongo-8' -> id=3706
+   Current notes:
+
+
+Проект / сервис: Статистика
+Владелец: Вавина Марина
+Чат / группа: Статистика - Админство
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-stat-mongo-9' -> id=3711
+   Current notes:
+
+
+Проект / сервис: Статистика
+Владелец: Вавина Марина
+Чат / группа: Статистика - Админство
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-stat-mongo-1' -> id=6125
+   Current notes:
+
+
+Проект / сервис: Статистика
+Владелец: Вавина Марина
+Чат / группа: Статистика - Админство
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-stat-mongo-2' -> id=6124
+   Current notes:
+
+
+Проект / сервис: Статистика
+Владелец: Вавина Марина
+Чат / группа: Статистика - Админство
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-stat-mongo-3' -> id=6123
+   Current notes:
+
+
+Проект / сервис: Статистика
+Владелец: Вавина Марина
+Чат / группа: Статистика - Админство
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-b2bfeed-mongo-1' -> id=6710
+   Current notes:
+
+
+Проект / сервис: B2B регионалка
+Владелец: Максим Петров
+Чат / группа: Фиды - Админство
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-b2bfeed-mongo-2' -> id=6711
+   Current notes:
+
+
+Проект / сервис: B2B регионалка
+Владелец: Максим Петров
+Чат / группа: Фиды - Админство
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-b2bfeed-mongo-3' -> id=6709
+   Current notes:
+
+
+Проект / сервис: B2B регионалка
+Владелец: Максим Петров
+Чат / группа: Фиды - Админство
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-feed-mongo-1' -> id=5822
+   Current notes:
+
+
+Проект / сервис: Feeds Нотификации
+Владелец: Максим Терешин
+Чат / группа: Фиды - Админство
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-feed-mongo-2' -> id=5824
+   Current notes:
+
+
+Проект / сервис: Feeds Нотификации
+Владелец: Максим Терешин
+Чат / группа: Фиды - Админство
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-feed-mongo-3' -> id=5821
+   Current notes:
+
+
+Проект / сервис: Feeds Нотификации
+Владелец: Максим Терешин
+Чат / группа: Фиды - Админство
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-feedgameresults-mongo-1' -> id=9682
+   Current notes:
+
+
+Проект / сервис: Feeds Результаты
+Владелец: Дмитрий Щербаков
+Чат / группа: Фиды - Админство
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-feedgameresults-mongo-2' -> id=9683
+   Current notes:
+
+
+Проект / сервис: Feeds Результаты
+Владелец: Дмитрий Щербаков
+Чат / группа: Фиды - Админство
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-feedgameresults-mongo-3' -> id=9684
+   Current notes:
+
+
+Проект / сервис: Feeds Результаты
+Владелец: Дмитрий Щербаков
+Чат / группа: Фиды - Админство
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-mfeeds-mongo-1' -> id=9416
+   Current notes:
+
+
+Проект / сервис: Feeds Кэша фидов и настройки
+Владелец: Дмитрий Щербаков
+Чат / группа: Фиды - Админство
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-mfeeds-mongo-2' -> id=9417
+   Current notes:
+
+
+Проект / сервис: Feeds Кэша фидов и настройки
+Владелец: Дмитрий Щербаков
+Чат / группа: Фиды - Админство
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-mfeeds-mongo-3' -> id=9418
+   Current notes:
+
+
+Проект / сервис: Feeds Кэша фидов и настройки
+Владелец: Дмитрий Щербаков
+Чат / группа: Фиды - Админство
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-secure-mongo-1' -> id=129
+   Current notes:
+
+
+Проект / сервис: Feeds Аутентификация
+Владелец: Дмитрий Зарубин
+Чат / группа: Фиды - Админство
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-secure-mongo-2' -> id=200
+   Current notes:
+
+
+Проект / сервис: Feeds Аутентификация
+Владелец: Дмитрий Зарубин
+Чат / группа: Фиды - Админство
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-secure-mongo-3' -> id=189
+   Current notes:
+
+
+Проект / сервис: Feeds Аутентификация
+Владелец: Дмитрий Зарубин
+Чат / группа: Фиды - Админство
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-mservices-mongo-1' -> id=9420
+   Current notes:
+
+
+Проект / сервис: Feeds Сборная солянка
+Владелец: Щербаков Дмитрий
+Чат / группа: Фиды - Админство
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-mservices-mongo-2' -> id=9419
+   Current notes:
+
+
+Проект / сервис: Feeds Сборная солянка
+Владелец: Щербаков Дмитрий
+Чат / группа: Фиды - Админство
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-mservices-mongo-3' -> id=9421
+   Current notes:
+
+
+Проект / сервис: Feeds Сборная солянка
+Владелец: Щербаков Дмитрий
+Чат / группа: Фиды - Админство
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-b2bfeed-mongo-1' -> id=8599
+   Current notes:
+
+
+Проект / сервис: B2B регионалка
+Владелец: Максим Петров
+Чат / группа: Фиды - Админство
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-b2bfeed-mongo-2' -> id=8600
+   Current notes:
+
+
+Проект / сервис: B2B регионалка
+Владелец: Максим Петров
+Чат / группа: Фиды - Админство
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-b2bfeed-mongo-3' -> id=8601
+   Current notes:
+
+
+Проект / сервис: B2B регионалка
+Владелец: Максим Петров
+Чат / группа: Фиды - Админство
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-feedgameresults-mongo-1' -> id=9679
+   Current notes:
+
+
+Проект / сервис: Feeds Результаты
+Владелец: Дмитрий Щербаков
+Чат / группа: Фиды - Админство
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-feedgameresults-mongo-2' -> id=9680
+   Current notes:
+
+
+Проект / сервис: Feeds Результаты
+Владелец: Дмитрий Щербаков
+Чат / группа: Фиды - Админство
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-feedgameresults-mongo-3' -> id=9681
+   Current notes:
+
+
+Проект / сервис: Feeds Результаты
+Владелец: Дмитрий Щербаков
+Чат / группа: Фиды - Админство
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-feedmes-mongo-1' -> id=8637
+   Current notes:
+
+
+Проект / сервис: Feeds Нотификации
+Владелец: Максим Терешин
+Чат / группа: Фиды - Админство
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-feedmes-mongo-2' -> id=8638
+   Current notes:
+
+
+Проект / сервис: Feeds Нотификации
+Владелец: Максим Терешин
+Чат / группа: Фиды - Админство
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-feedmes-mongo-3' -> id=8639
+   Current notes:
+
+
+Проект / сервис: Feeds Нотификации
+Владелец: Максим Терешин
+Чат / группа: Фиды - Админство
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-feeds-mongo-1' -> id=8596
+   Current notes:
+
+
+Проект / сервис: Feeds Кэша фидов и настройки
+Владелец: Дмитрий Щербаков
+Чат / группа: Фиды - Админство
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-feeds-mongo-2' -> id=8597
+   Current notes:
+
+
+Проект / сервис: Feeds Кэша фидов и настройки
+Владелец: Дмитрий Щербаков
+Чат / группа: Фиды - Админство
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-feeds-mongo-3' -> id=8598
+   Current notes:
+
+
+Проект / сервис: Feeds Кэша фидов и настройки
+Владелец: Дмитрий Щербаков
+Чат / группа: Фиды - Админство
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-msecure-mongo-1' -> id=8541
+   Current notes:
+
+
+Проект / сервис: Feeds Аутентификация
+Владелец: Дмитрий Зарубин
+Чат / группа: Фиды - Админство
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-msecure-mongo-2' -> id=8542
+   Current notes:
+
+
+Проект / сервис: Feeds Аутентификация
+Владелец: Дмитрий Зарубин
+Чат / группа: Фиды - Админство
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-msecure-mongo-3' -> id=8543
+   Current notes:
+
+
+Проект / сервис: Feeds Аутентификация
+Владелец: Дмитрий Зарубин
+Чат / группа: Фиды - Админство
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-mservices-mongo-1' -> id=8570
+   Current notes:
+
+
+Проект / сервис: Feeds Сборная солянка
+Владелец: Щербаков Дмитрий
+Чат / группа: Фиды - Админство
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-mservices-mongo-2' -> id=8571
+   Current notes:
+
+
+Проект / сервис: Feeds Сборная солянка
+Владелец: Щербаков Дмитрий
+Чат / группа: Фиды - Админство
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-mservices-mongo-3' -> id=8572
+   Current notes:
+
+
+Проект / сервис: Feeds Сборная солянка
+Владелец: Щербаков Дмитрий
+Чат / группа: Фиды - Админство
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-raschet-mongo-1' -> id=8879
+   Current notes:
+
+
+Проект / сервис: Расчет ставок
+Владелец: Максим Войновский
+Чат / группа: Вопросы по MongoDB
+✅ Project info added to notes for 'sc-ams99-x-prod-raschet-mongo-1'
+
+✅ Found computer 'sc-ams99-x-prod-raschet-mongo-2' -> id=8880
+   Current notes:
+
+
+Проект / сервис: Расчет ставок
+Владелец: Максим Войновский
+Чат / группа: Вопросы по MongoDB
+✅ Project info added to notes for 'sc-ams99-x-prod-raschet-mongo-2'
+
+✅ Found computer 'sc-ams99-x-prod-raschet-mongo-3' -> id=8881
+   Current notes:
+
+
+Проект / сервис: Расчет ставок
+Владелец: Максим Войновский
+Чат / группа: Вопросы по MongoDB
+✅ Project info added to notes for 'sc-ams99-x-prod-raschet-mongo-3'
+
+✅ Found computer 'sc-ams99-x-prod-raschet-mongo-4' -> id=8883
+   Current notes:
+
+
+Проект / сервис: Расчет ставок
+Владелец: Максим Войновский
+Чат / группа: Вопросы по MongoDB
+✅ Project info added to notes for 'sc-ams99-x-prod-raschet-mongo-4'
+
+✅ Found computer 'sc-ams99-x-prod-raschet-mongo-5' -> id=8882
+   Current notes:
+
+
+Проект / сервис: Расчет ставок
+Владелец: Максим Войновский
+Чат / группа: Вопросы по MongoDB
+✅ Project info added to notes for 'sc-ams99-x-prod-raschet-mongo-5'
+
+✅ Found computer 'sc-lux99-x-test-raschet-mongo-1' -> id=6085
+   Current notes:
+
+
+Проект / сервис: Расчет ставок
+Владелец: Максим Войновский
+Чат / группа: Вопросы по MongoDB
+✅ Project info added to notes for 'sc-lux99-x-test-raschet-mongo-1'
+
+✅ Found computer 'sc-lux99-x-test-raschet-mongo-2' -> id=6086
+   Current notes:
+
+
+Проект / сервис: Расчет ставок
+Владелец: Максим Войновский
+Чат / группа: Вопросы по MongoDB
+✅ Project info added to notes for 'sc-lux99-x-test-raschet-mongo-2'
+
+✅ Found computer 'sc-lux99-x-test-raschet-mongo-3' -> id=6082
+   Current notes:
+
+
+Проект / сервис: Расчет ставок
+Владелец: Максим Войновский
+Чат / группа: Вопросы по MongoDB
+✅ Project info added to notes for 'sc-lux99-x-test-raschet-mongo-3'
+
+✅ Found computer 'sc-ams99-x-prod-betintegration-mongo-1' -> id=5908
+   Current notes:
+
+
+Проект / сервис: BetIntegration
+Владелец: Александр Сидоров
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-betintegration-mongo-2' -> id=5909
+   Current notes:
+
+
+Проект / сервис: BetIntegration
+Владелец: Александр Сидоров
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-betintegration-mongo-3' -> id=5910
+   Current notes:
+
+
+Проект / сервис: BetIntegration
+Владелец: Александр Сидоров
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-casino-mongo-1' -> id=5646
+   Current notes:
+
+
+Проект / сервис: Integration
+Владелец: У Елисеева нет инфо
+Чат / группа: Вопросы по MongoDB
+
+
+Проект / сервис: Integration
+Владелец: нет инфо!
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-casino-mongo-2' -> id=5645
+   Current notes:
+
+
+Проект / сервис: Integration
+Владелец: У Елисеева нет инфо
+Чат / группа: Вопросы по MongoDB
+
+
+Проект / сервис: Integration
+Владелец: нет инфо!
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-casino-mongo-3' -> id=5647
+   Current notes:
+
+
+Проект / сервис: Integration
+Владелец: У Елисеева нет инфо
+Чат / группа: Вопросы по MongoDB
+
+
+Проект / сервис: Integration
+Владелец: нет инфо!
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-betintegration-mongo-1' -> id=6215
+   Current notes:
+
+
+Проект / сервис: BetIntegration
+Владелец: Александр Сидоров
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-betintegration-mongo-2' -> id=6214
+   Current notes:
+
+
+Проект / сервис: BetIntegration
+Владелец: Александр Сидоров
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-betintegration-mongo-3' -> id=6216
+   Current notes:
+
+
+Проект / сервис: BetIntegration
+Владелец: Александр Сидоров
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-casino-mongo-1' -> id=8663
+   Current notes:
+
+
+Проект / сервис: Integration
+Владелец: У Елисеева нет инфо
+Чат / группа: Вопросы по MongoDB
+
+
+Проект / сервис: Integration
+Владелец: нет инфо!
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-casino-mongo-2' -> id=8665
+   Current notes:
+
+
+Проект / сервис: Integration
+Владелец: У Елисеева нет инфо
+Чат / группа: Вопросы по MongoDB
+
+
+Проект / сервис: Integration
+Владелец: нет инфо!
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-casino-mongo-3' -> id=8664
+   Current notes:
+
+
+Проект / сервис: Integration
+Владелец: У Елисеева нет инфо
+Чат / группа: Вопросы по MongoDB
+
+
+Проект / сервис: Integration
+Владелец: нет инфо!
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-parsers-mongo-1' -> id=7661
+   Current notes:
+
+
+Проект / сервис: Парсеры
+Владелец: Евгений Трегубенко
+Чат / группа: Парсеры - Админство
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-parsers-mongo-2' -> id=7662
+   Current notes:
+
+
+Проект / сервис: Парсеры
+Владелец: Евгений Трегубенко
+Чат / группа: Парсеры - Админство
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-parsers-mongo-3' -> id=7663
+   Current notes:
+
+
+Проект / сервис: Парсеры
+Владелец: Евгений Трегубенко
+Чат / группа: Парсеры - Админство
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-parsers-mongo-1' -> id=8590
+   Current notes:
+
+
+Проект / сервис: Парсеры
+Владелец: Евгений Трегубенко
+Чат / группа: Парсеры - Админство
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-parsers-mongo-2' -> id=8591
+   Current notes:
+
+
+Проект / сервис: Парсеры
+Владелец: Евгений Трегубенко
+Чат / группа: Парсеры - Админство
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-parsers-mongo-3' -> id=8592
+   Current notes:
+
+
+Проект / сервис: Парсеры
+Владелец: Евгений Трегубенко
+Чат / группа: Парсеры - Админство
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-prod-wplan-mongo-1' -> id=9338
+   Current notes:
+
+
+Проект / сервис: wplan
+Владелец: У Елисеева нет инфо
+Чат / группа: Админство wplan
+
+
+Проект / сервис: wplan
+Владелец: нет инфо!
+Чат / группа: Админство wplan
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-prod-wplan-mongo-2' -> id=9339
+   Current notes:
+
+
+Проект / сервис: wplan
+Владелец: У Елисеева нет инфо
+Чат / группа: Админство wplan
+
+
+Проект / сервис: wplan
+Владелец: нет инфо!
+Чат / группа: Админство wplan
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-prod-wplan-mongo-3' -> id=9337
+   Current notes:
+
+
+Проект / сервис: wplan
+Владелец: У Елисеева нет инфо
+Чат / группа: Админство wplan
+
+
+Проект / сервис: wplan
+Владелец: нет инфо!
+Чат / группа: Админство wplan
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-msync-mongo-1' -> id=7443
+   Current notes:
+
+
+Проект / сервис: Синхронизация окружений
+Владелец: Максим Петров
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-msync-mongo-2' -> id=7444
+   Current notes:
+
+
+Проект / сервис: Синхронизация окружений
+Владелец: Максим Петров
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-msync-mongo-3' -> id=7445
+   Current notes:
+
+
+Проект / сервис: Синхронизация окружений
+Владелец: Максим Петров
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-challhighs-mongo-1' -> id=6488
+   Current notes:
+
+
+Проект / сервис: Челлендж Хайлайтс
+Владелец: Максим Петров
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-challhighs-mongo-2' -> id=6491
+   Current notes:
+
+
+Проект / сервис: Челлендж Хайлайтс
+Владелец: Максим Петров
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-challhighs-mongo-3' -> id=6489
+   Current notes:
+
+
+Проект / сервис: Челлендж Хайлайтс
+Владелец: Максим Петров
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-minfrastructure-mongo-1' -> id=7531
+   Current notes:
+
+
+Проект / сервис: Betting Infrastructure
+Владелец: Максим Петров
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-minfrastructure-mongo-2' -> id=7532
+   Current notes:
+
+
+Проект / сервис: Betting Infrastructure
+Владелец: Максим Петров
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-minfrastructure-mongo-3' -> id=7533
+   Current notes:
+
+
+Проект / сервис: Betting Infrastructure
+Владелец: Максим Петров
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-challhighs-mongo-1' -> id=8603
+   Current notes:
+
+
+Проект / сервис: Челлендж Хайлайтс
+Владелец: Максим Петров
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-challhighs-mongo-2' -> id=8602
+   Current notes:
+
+
+Проект / сервис: Челлендж Хайлайтс
+Владелец: Максим Петров
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-challhighs-mongo-3' -> id=9615
+   Current notes:
+
+
+Проект / сервис: Челлендж Хайлайтс
+Владелец: Максим Петров
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-minfrastructure-mongo-1' -> id=8593
+   Current notes:
+
+
+Проект / сервис: Betting Infrastructure
+Владелец: Максим Петров
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-minfrastructure-mongo-2' -> id=8594
+   Current notes:
+
+
+Проект / сервис: Betting Infrastructure
+Владелец: Максим Петров
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-minfrastructure-mongo-3' -> id=8595
+   Current notes:
+
+
+Проект / сервис: Betting Infrastructure
+Владелец: Максим Петров
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-mfinbet-mongo-1' -> id=9491
+   Current notes:
+
+
+Проект / сервис: ФинСтавки
+Владелец: Лазаренко Дмитрий
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-mfinbet-mongo-2' -> id=9490
+   Current notes:
+
+
+Проект / сервис: ФинСтавки
+Владелец: Лазаренко Дмитрий
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-mfinbet-mongo-3' -> id=9483
+   Current notes:
+
+
+Проект / сервис: ФинСтавки
+Владелец: Лазаренко Дмитрий
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-mwcl-mongo-1' -> id=9407
+   Current notes:
+
+
+Проект / сервис: разное частное
+Владелец: Скорей всего винклиент - Сергей Бакурей
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-mwcl-mongo-2' -> id=9408
+   Current notes:
+
+
+Проект / сервис: разное частное
+Владелец: Скорей всего винклиент - Сергей Бакурей
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-mwcl-mongo-3' -> id=9409
+   Current notes:
+
+
+Проект / сервис: разное частное
+Владелец: Скорей всего винклиент - Сергей Бакурей
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-mwcl-mongo-1' -> id=9370
+   Current notes:
+
+
+Проект / сервис: разное частное
+Владелец: Скорей всего винклиент - Сергей Бакурей
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-mwcl-mongo-2' -> id=9371
+   Current notes:
+
+
+Проект / сервис: разное частное
+Владелец: Скорей всего винклиент - Сергей Бакурей
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-mwcl-mongo-3' -> id=9372
+   Current notes:
+
+
+Проект / сервис: разное частное
+Владелец: Скорей всего винклиент - Сергей Бакурей
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-lim-mongo-1' -> id=6613
+   Current notes:
+
+
+Проект / сервис: разное частное
+Владелец: Олег Лемзяков
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-lim-mongo-2' -> id=6612
+   Current notes:
+
+
+Проект / сервис: разное частное
+Владелец: Олег Лемзяков
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-lim-mongo-3' -> id=6614
+   Current notes:
+
+
+Проект / сервис: разное частное
+Владелец: Олег Лемзяков
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-lim-mongo-1' -> id=8797
+   Current notes:
+
+
+Проект / сервис: разное частное
+Владелец: Олег Лемзяков
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-lim-mongo-2' -> id=6589
+   Current notes:
+
+
+Проект / сервис: разное частное
+Владелец: Олег Лемзяков
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-lim-mongo-3' -> id=6588
+   Current notes:
+
+
+Проект / сервис: разное частное
+Владелец: Олег Лемзяков
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-chistov-mongo-1' -> id=10029
+   Current notes:
+
+
+Проект / сервис: разное частное
+Владелец: Чистов Игорь
+Чат / группа: mongo (slack)
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-chistov-mongo-2' -> id=10030
+   Current notes:
+
+
+Проект / сервис: разное частное
+Владелец: Чистов Игорь
+Чат / группа: mongo (slack)
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-chistov-mongo-3' -> id=10031
+   Current notes:
+
+
+Проект / сервис: разное частное
+Владелец: Чистов Игорь
+Чат / группа: mongo (slack)
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-chistov2-mongo-1' -> id=10291
+   Current notes:
+
+
+Проект / сервис: разное частное
+Владелец: Чистов Игорь
+Чат / группа: mongo (slack)
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-chistov2-mongo-2' -> id=10292
+   Current notes:
+
+
+Проект / сервис: разное частное
+Владелец: Чистов Игорь
+Чат / группа: mongo (slack)
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-chistov2-mongo-3' -> id=10293
+   Current notes:
+
+
+Проект / сервис: разное частное
+Владелец: Чистов Игорь
+Чат / группа: mongo (slack)
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-elonmusk-mongo-1' -> id=7629
+   Current notes:
+
+
+Проект / сервис: разное частное
+Владелец: Владислав Камшуков
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-elonmusk-mongo-2' -> id=7630
+   Current notes:
+
+
+Проект / сервис: разное частное
+Владелец: Владислав Камшуков
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-elonmusk-mongo-3' -> id=7631
+   Current notes:
+
+
+Проект / сервис: разное частное
+Владелец: Владислав Камшуков
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-mongos-mongo-1' -> id=9590
+   Current notes:
+
+
+Проект / сервис: разное частное
+Владелец: Infra team
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-mongos-mongo-2' -> id=9591
+   Current notes:
+
+
+Проект / сервис: разное частное
+Владелец: Infra team
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-cfg-mongo-1' -> id=9569
+   Current notes:
+
+
+Проект / сервис: разное частное
+Владелец: У Елисеева нет инфо
+Чат / группа: Вопросы по MongoDB
+
+
+Проект / сервис: разное частное
+Владелец: нет инфо!
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-cfg-mongo-2' -> id=9570
+   Current notes:
+
+
+Проект / сервис: разное частное
+Владелец: У Елисеева нет инфо
+Чат / группа: Вопросы по MongoDB
+
+
+Проект / сервис: разное частное
+Владелец: нет инфо!
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-cfg-mongo-3' -> id=9571
+   Current notes:
+
+
+Проект / сервис: разное частное
+Владелец: У Елисеева нет инфо
+Чат / группа: Вопросы по MongoDB
+
+
+Проект / сервис: разное частное
+Владелец: нет инфо!
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-shard1-mongo-1' -> id=9572
+   Current notes:
+
+
+Проект / сервис: разное частное
+Владелец: У Елисеева нет инфо
+Чат / группа: Вопросы по MongoDB
+
+
+Проект / сервис: разное частное
+Владелец: нет инфо!
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-shard1-mongo-2' -> id=9573
+   Current notes:
+
+
+Проект / сервис: разное частное
+Владелец: У Елисеева нет инфо
+Чат / группа: Вопросы по MongoDB
+
+
+Проект / сервис: разное частное
+Владелец: нет инфо!
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-shard1-mongo-3' -> id=9574
+   Current notes:
+
+
+Проект / сервис: разное частное
+Владелец: У Елисеева нет инфо
+Чат / группа: Вопросы по MongoDB
+
+
+Проект / сервис: разное частное
+Владелец: нет инфо!
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-shard2-mongo-1' -> id=9584
+   Current notes:
+
+
+Проект / сервис: разное частное
+Владелец: У Елисеева нет инфо
+Чат / группа: Вопросы по MongoDB
+
+
+Проект / сервис: разное частное
+Владелец: нет инфо!
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-shard2-mongo-2' -> id=9585
+   Current notes:
+
+
+Проект / сервис: разное частное
+Владелец: У Елисеева нет инфо
+Чат / группа: Вопросы по MongoDB
+
+
+Проект / сервис: разное частное
+Владелец: нет инфо!
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-shard2-mongo-3' -> id=9586
+   Current notes:
+
+
+Проект / сервис: разное частное
+Владелец: У Елисеева нет инфо
+Чат / группа: Вопросы по MongoDB
+
+
+Проект / сервис: разное частное
+Владелец: нет инфо!
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-shard3-mongo-1' -> id=9587
+   Current notes:
+
+
+Проект / сервис: разное частное
+Владелец: У Елисеева нет инфо
+Чат / группа: Вопросы по MongoDB
+
+
+Проект / сервис: разное частное
+Владелец: нет инфо!
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-shard3-mongo-2' -> id=9588
+   Current notes:
+
+
+Проект / сервис: разное частное
+Владелец: У Елисеева нет инфо
+Чат / группа: Вопросы по MongoDB
+
+
+Проект / сервис: разное частное
+Владелец: нет инфо!
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-shard3-mongo-3' -> id=9589
+   Current notes:
+
+
+Проект / сервис: разное частное
+Владелец: У Елисеева нет инфо
+Чат / группа: Вопросы по MongoDB
+
+
+Проект / сервис: разное частное
+Владелец: нет инфо!
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-backcs-mongo-1' -> id=5887
+   Current notes:
+
+
+Проект / сервис: разное частное
+Владелец: У Елисеева нет инфо
+Чат / группа: Вопросы по MongoDB
+
+
+Проект / сервис: разное частное
+Владелец: нет инфо!
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-backcs-mongo-2' -> id=5891
+   Current notes:
+
+
+Проект / сервис: разное частное
+Владелец: У Елисеева нет инфо
+Чат / группа: Вопросы по MongoDB
+
+
+Проект / сервис: разное частное
+Владелец: нет инфо!
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-backcs-mongo-3' -> id=5889
+   Current notes:
+
+
+Проект / сервис: разное частное
+Владелец: У Елисеева нет инфо
+Чат / группа: Вопросы по MongoDB
+
+
+Проект / сервис: разное частное
+Владелец: нет инфо!
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-clisoft-mongo-1' -> id=8725
+   Current notes:
+
+
+Проект / сервис: Back Office
+Владелец: Евгений Надобный
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-clisoft-mongo-2' -> id=8727
+   Current notes:
+
+
+Проект / сервис: Back Office
+Владелец: Евгений Надобный
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-clisoft-mongo-3' -> id=8726
+   Current notes:
+
+
+Проект / сервис: Back Office
+Владелец: Евгений Надобный
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-bcs2-mongo-1' -> id=6868
+   Current notes:
+
+
+Проект / сервис: разное частное
+Владелец: У Елисеева нет инфо
+Чат / группа: Вопросы по MongoDB
+
+
+Проект / сервис: разное частное
+Владелец: нет инфо!
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-bcs2-mongo-2' -> id=6867
+   Current notes:
+
+
+Проект / сервис: разное частное
+Владелец: У Елисеева нет инфо
+Чат / группа: Вопросы по MongoDB
+
+
+Проект / сервис: разное частное
+Владелец: нет инфо!
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-bcs2-mongo-3' -> id=6869
+   Current notes:
+
+
+Проект / сервис: разное частное
+Владелец: У Елисеева нет инфо
+Чат / группа: Вопросы по MongoDB
+
+
+Проект / сервис: разное частное
+Владелец: нет инфо!
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-cmsapi-mongo-1' -> id=5712
+   Current notes:
+
+
+Проект / сервис: разное частное
+Владелец: См примечание
+Чат / группа: Вопросы по MongoDB
+
+
+Проект / сервис: CMS
+Владелец: нет инфо! Павел Кузнецов / Евгений Юркин / Артур Ким
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-cmsapi-mongo-2' -> id=5714
+   Current notes:
+
+
+Проект / сервис: разное частное
+Владелец: См примечание
+Чат / группа: Вопросы по MongoDB
+
+
+Проект / сервис: CMS
+Владелец: нет инфо! Павел Кузнецов / Евгений Юркин / Артур Ким
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-cmsapi-mongo-3' -> id=5713
+   Current notes:
+
+
+Проект / сервис: разное частное
+Владелец: См примечание
+Чат / группа: Вопросы по MongoDB
+
+
+Проект / сервис: CMS
+Владелец: нет инфо! Павел Кузнецов / Евгений Юркин / Артур Ким
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-mcms-mongo-1' -> id=8987
+   Current notes:
+
+
+Проект / сервис: разное частное
+Владелец: См примечание
+Чат / группа: Вопросы по MongoDB
+
+
+Проект / сервис: CMS
+Владелец: нет инфо! Павел Кузнецов / Евгений Юркин / Артур Ким
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-mcms-mongo-2' -> id=8988
+   Current notes:
+
+
+Проект / сервис: разное частное
+Владелец: См примечание
+Чат / группа: Вопросы по MongoDB
+
+
+Проект / сервис: CMS
+Владелец: нет инфо! Павел Кузнецов / Евгений Юркин / Артур Ким
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-mcms-mongo-3' -> id=8989
+   Current notes:
+
+
+Проект / сервис: разное частное
+Владелец: См примечание
+Чат / группа: Вопросы по MongoDB
+
+
+Проект / сервис: CMS
+Владелец: нет инфо! Павел Кузнецов / Евгений Юркин / Артур Ким
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-dbaggregator-mongo-1' -> id=8697
+   Current notes:
+
+
+Проект / сервис: DBAggregator
+Владелец: Солдаткин Юрий/Курбатов Алексей
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-dbaggregator-mongo-2' -> id=8695
+   Current notes:
+
+
+Проект / сервис: DBAggregator
+Владелец: Солдаткин Юрий/Курбатов Алексей
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-dbaggregator-mongo-3' -> id=8696
+   Current notes:
+
+
+Проект / сервис: DBAggregator
+Владелец: Солдаткин Юрий/Курбатов Алексей
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-dbaggregator-mongo-1' -> id=8678
+   Current notes:
+
+
+Проект / сервис: DBAggregator
+Владелец: Солдаткин Юрий/Курбатов Алексей
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-dbaggregator-mongo-2' -> id=8679
+   Current notes:
+
+
+Проект / сервис: DBAggregator
+Владелец: Солдаткин Юрий/Курбатов Алексей
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-dbaggregator-mongo-3' -> id=8677
+   Current notes:
+
+
+Проект / сервис: DBAggregator
+Владелец: Солдаткин Юрий/Курбатов Алексей
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-mcoins-mongo-1' -> id=9367
+   Current notes:
+
+
+Проект / сервис: SocialBookmaker / WebAdminka
+Владелец: Тимченко Александр / Федчук Сергей
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-mcoins-mongo-2' -> id=9368
+   Current notes:
+
+
+Проект / сервис: SocialBookmaker / WebAdminka
+Владелец: Тимченко Александр / Федчук Сергей
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-mcoins-mongo-3' -> id=9369
+   Current notes:
+
+
+Проект / сервис: SocialBookmaker / WebAdminka
+Владелец: Тимченко Александр / Федчук Сергей
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-mdocker-mongo-1' -> id=7751
+   Current notes:
+
+
+Проект / сервис: разное частное
+Владелец: У Елисеева нет инфо
+Чат / группа: Вопросы по MongoDB
+
+
+Проект / сервис: разное частное
+Владелец: нет инфо!
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-mdocker-mongo-2' -> id=7767
+   Current notes:
+
+
+Проект / сервис: разное частное
+Владелец: У Елисеева нет инфо
+Чат / группа: Вопросы по MongoDB
+
+
+Проект / сервис: разное частное
+Владелец: нет инфо!
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-mdocker-mongo-3' -> id=7753
+   Current notes:
+
+
+Проект / сервис: разное частное
+Владелец: У Елисеева нет инфо
+Чат / группа: Вопросы по MongoDB
+
+
+Проект / сервис: разное частное
+Владелец: нет инфо!
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-mdocker-mongo-1' -> id=9232
+   Current notes:
+
+
+Проект / сервис: разное частное
+Владелец: У Елисеева нет инфо
+Чат / группа: Вопросы по MongoDB
+
+
+Проект / сервис: разное частное
+Владелец: нет инфо!
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-mdocker-mongo-2' -> id=9233
+   Current notes:
+
+
+Проект / сервис: разное частное
+Владелец: У Елисеева нет инфо
+Чат / группа: Вопросы по MongoDB
+
+
+Проект / сервис: разное частное
+Владелец: нет инфо!
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-mdocker-mongo-3' -> id=9234
+   Current notes:
+
+
+Проект / сервис: разное частное
+Владелец: У Елисеева нет инфо
+Чат / группа: Вопросы по MongoDB
+
+
+Проект / сервис: разное частное
+Владелец: нет инфо!
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-mlbet-mongo-1' -> id=6573
+   Current notes:
+
+
+Проект / сервис: MlBet
+Владелец: Сабиров Сергей
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-mlbet-mongo-2' -> id=6574
+   Current notes:
+
+
+Проект / сервис: MlBet
+Владелец: Сабиров Сергей
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-mlbet-mongo-3' -> id=6575
+   Current notes:
+
+
+Проект / сервис: MlBet
+Владелец: Сабиров Сергей
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-mlbet-mongo-1' -> id=6580
+   Current notes:
+
+
+Проект / сервис: MlBet
+Владелец: Сабиров Сергей
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-mlbet-mongo-2' -> id=6579
+   Current notes:
+
+
+Проект / сервис: MlBet
+Владелец: Сабиров Сергей
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-mlbet-mongo-3' -> id=6578
+   Current notes:
+
+
+Проект / сервис: MlBet
+Владелец: Сабиров Сергей
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-ovb-mongo-1' -> id=8974
+   Current notes:
+
+
+Проект / сервис: разное частное
+Владелец: У Елисеева нет инфо
+Чат / группа: Вопросы по MongoDB
+
+
+Проект / сервис: разное частное
+Владелец: нет инфо!
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-ovb-mongo-2' -> id=8975
+   Current notes:
+
+
+Проект / сервис: разное частное
+Владелец: У Елисеева нет инфо
+Чат / группа: Вопросы по MongoDB
+
+
+Проект / сервис: разное частное
+Владелец: нет инфо!
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-ovb-mongo-3' -> id=8976
+   Current notes:
+
+
+Проект / сервис: разное частное
+Владелец: У Елисеева нет инфо
+Чат / группа: Вопросы по MongoDB
+
+
+Проект / сервис: разное частное
+Владелец: нет инфо!
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-loqos-mongo-1' -> id=10102
+   Current notes:
+
+
+Проект / сервис: разное частное
+Владелец: У Елисеева нет инфо
+Чат / группа: Вопросы по MongoDB
+
+
+Проект / сервис: разное частное
+Владелец: нет инфо!
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-loqos-mongo-2' -> id=10103
+   Current notes:
+
+
+Проект / сервис: разное частное
+Владелец: У Елисеева нет инфо
+Чат / группа: Вопросы по MongoDB
+
+
+Проект / сервис: разное частное
+Владелец: нет инфо!
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-loqos-mongo-3' -> id=10104
+   Current notes:
+
+
+Проект / сервис: разное частное
+Владелец: У Елисеева нет инфо
+Чат / группа: Вопросы по MongoDB
+
+
+Проект / сервис: разное частное
+Владелец: нет инфо!
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-pay-mongo-1' -> id=131
+   Current notes:
+
+
+Проект / сервис: разное частное
+Владелец: 1xPay ОБратиться к Егор Коробов
+Чат / группа: Вопросы по MongoDB
+
+
+Проект / сервис: 1xPay
+Владелец: нет инфо! Егор Коробов ?
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-pay-mongo-2' -> id=191
+   Current notes:
+
+
+Проект / сервис: разное частное
+Владелец: 1xPay ОБратиться к Егор Коробов
+Чат / группа: Вопросы по MongoDB
+
+
+Проект / сервис: 1xPay
+Владелец: нет инфо! Егор Коробов ?
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-pay-mongo-3' -> id=188
+   Current notes:
+
+
+Проект / сервис: разное частное
+Владелец: 1xPay ОБратиться к Егор Коробов
+Чат / группа: Вопросы по MongoDB
+
+
+Проект / сервис: 1xPay
+Владелец: нет инфо! Егор Коробов ?
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-pay-mongo-1' -> id=8767
+   Current notes:
+
+
+Проект / сервис: разное частное
+Владелец: 1xPay ОБратиться к Егор Коробов
+Чат / группа: Вопросы по MongoDB
+
+
+Проект / сервис: 1xPay
+Владелец: нет инфо! Егор Коробов ?
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-pay-mongo-2' -> id=8769
+   Current notes:
+
+
+Проект / сервис: разное частное
+Владелец: 1xPay ОБратиться к Егор Коробов
+Чат / группа: Вопросы по MongoDB
+
+
+Проект / сервис: 1xPay
+Владелец: нет инфо! Егор Коробов ?
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-pay-mongo-3' -> id=8768
+   Current notes:
+
+
+Проект / сервис: разное частное
+Владелец: 1xPay ОБратиться к Егор Коробов
+Чат / группа: Вопросы по MongoDB
+
+
+Проект / сервис: 1xPay
+Владелец: нет инфо! Егор Коробов ?
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-seo-mongo-1' -> id=6476
+   Current notes:
+
+
+Проект / сервис: разное частное
+Владелец: У Елисеева нет инфо
+Чат / группа: Вопросы по MongoDB
+
+
+Проект / сервис: разное частное
+Владелец: нет инфо!
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-seo-mongo-2' -> id=6478
+   Current notes:
+
+
+Проект / сервис: разное частное
+Владелец: У Елисеева нет инфо
+Чат / группа: Вопросы по MongoDB
+
+
+Проект / сервис: разное частное
+Владелец: нет инфо!
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-seo-mongo-3' -> id=6477
+   Current notes:
+
+
+Проект / сервис: разное частное
+Владелец: У Елисеева нет инфо
+Чат / группа: Вопросы по MongoDB
+
+
+Проект / сервис: разное частное
+Владелец: нет инфо!
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-ytmetrics-mongo-1' -> id=9905
+   Current notes:
+
+
+Проект / сервис: разное частное
+Владелец: У Елисеева нет инфо
+Чат / группа: Вопросы по MongoDB
+
+
+Проект / сервис: разное частное
+Владелец: нет инфо!
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-ytmetrics-mongo-2' -> id=9906
+   Current notes:
+
+
+Проект / сервис: разное частное
+Владелец: У Елисеева нет инфо
+Чат / группа: Вопросы по MongoDB
+
+
+Проект / сервис: разное частное
+Владелец: нет инфо!
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-ytmetrics-mongo-3' -> id=9907
+   Current notes:
+
+
+Проект / сервис: разное частное
+Владелец: У Елисеева нет инфо
+Чат / группа: Вопросы по MongoDB
+
+
+Проект / сервис: разное частное
+Владелец: нет инфо!
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-backsec-mongo-1' -> id=5890
+   Current notes:
+
+
+Проект / сервис: Back Office
+Владелец: Дмитрий Зарубин
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-backsec-mongo-2' -> id=5895
+   Current notes:
+
+
+Проект / сервис: Back Office
+Владелец: Дмитрий Зарубин
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-ams99-x-prod-backsec-mongo-3' -> id=5894
+   Current notes:
+
+
+Проект / сервис: Back Office
+Владелец: Дмитрий Зарубин
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-backsec-mongo-1' -> id=8619
+   Current notes:
+
+
+Проект / сервис: Back Office
+Владелец: Дмитрий Зарубин
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-backsec-mongo-2' -> id=8620
+   Current notes:
+
+
+Проект / сервис: Back Office
+Владелец: Дмитрий Зарубин
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Found computer 'sc-lux99-x-test-backsec-mongo-3' -> id=8621
+   Current notes:
+
+
+Проект / сервис: Back Office
+Владелец: Дмитрий Зарубин
+Чат / группа: Вопросы по MongoDB
+   no update. same information given
+
+✅ Session killed
+
+==================================================
+📊 СТАТИСТИКА ВЫПОЛНЕНИЯ
+==================================================
+⏱️  Время выполнения: 72 мин 30 сек
+✅ Серверов с добавленными notes: 8
+🔍 Серверов с проверенными, но не добавленными notes: 526
+📋 Всего обработано серверов: 534
+==================================================
+
+============================================================
+❌ СЕРВЕРЫ, КОТОРЫЕ НЕ БЫЛИ НАЙДЕНЫ (COMPUTER NOT FOUND)
+============================================================
+ 1. sc-lux1-slots-prod-mongo-1 ()
+ 2. sc-lux1-slots-prod-mongo-2 ()
+ 3. sc-lux1-slots-prod-mongo-3 ()
+ 4. sc-lux1-slots-prod-two-mongo-1 ()
+ 5. sc-lux1-slots-prod-two-mongo-2 ()
+ 6. sc-lux1-slots-prod-two-mongo-3 ()
+ 7. bit-vaultmongo1 ()
+ 8. bit-vaultmongo2 ()
+ 9. bit-vaultmongo3 ()
+
+Всего не найдено серверов: 9
+============================================================
+
+============================================================
+✅ СЕРВЕРЫ, ДЛЯ КОТОРЫХ NOTES БЫЛИ ИЗМЕНЕНЫ/ДОБАВЛЕНЫ
+============================================================
+ 1. sc-ams99-x-prod-raschet-mongo-1 (Расчет ставок)
+ 2. sc-ams99-x-prod-raschet-mongo-2 (Расчет ставок)
+ 3. sc-ams99-x-prod-raschet-mongo-3 (Расчет ставок)
+ 4. sc-ams99-x-prod-raschet-mongo-4 (Расчет ставок)
+ 5. sc-ams99-x-prod-raschet-mongo-5 (Расчет ставок)
+ 6. sc-lux99-x-test-raschet-mongo-1 (Расчет ставок)
+ 7. sc-lux99-x-test-raschet-mongo-2 (Расчет ставок)
+ 8. sc-lux99-x-test-raschet-mongo-3 (Расчет ставок)
+
+Всего серверов с измененными notes: 8
+============================================================
+
+======================================================================
+📊 КОЛИЧЕСТВО СЕРВЕРОВ ПО ПРОЕКТАМ/СЕРВИСАМ
+======================================================================
+  1xPay: 6 серверов
+  1xgames: 45 серверов
+  B2B регионалка: 6 серверов
+  Back Office: 9 серверов
+  BetIntegration: 6 серверов
+  Betting Infrastructure: 6 серверов
+  Bit / cpr: 6 серверов
+  CMS: 6 серверов
+  Consultant: 14 серверов
+  DBAggregator: 6 серверов
+  Feeds Stage: 5 серверов
+  Feeds Аутентификация: 6 серверов
+  Feeds Кэша фидов и настройки: 6 серверов
+  Feeds Мобильные уведомления: 6 серверов
+  Feeds Нотификации: 6 серверов
+  Feeds Результаты: 6 серверов
+  Feeds Сборная солянка: 6 серверов
+  Integration: 6 серверов
+  Integration / CRM: 3 серверов
+  LiveRisk: 13 серверов
+  LiveRisk Архив: 3 серверов
+  Mathematics: 31 серверов
+  MlBet: 6 серверов
+  MoneyGO / BTMK: 12 серверов
+  PHP: 17 серверов
+  Ref: 6 серверов
+  Slots: 39 серверов
+  SocialBookmaker / WebAdminka: 3 серверов
+  crm/prm/xrm: 110 серверов
+  live: 8 серверов
+  wplan: 3 серверов
+  Линия: 9 серверов
+  Линия Архив: 3 серверов
+  Общий тестовый кластер: 3 серверов
+  Парсеры: 6 серверов
+  Парсеры погода: 3 серверов
+  Расчет ставок: 8 серверов
+  Синхронизация окружений: 3 серверов
+  Старые ТГ боты: 3 серверов
+  Статистика: 12 серверов
+  Транспортный кластер.
+Используется для парсеров, прокачки в Obelis и не только: 5 серверов
+  ФинСтавки: 3 серверов
+  Челлендж Хайлайтс: 6 серверов
+  разное частное: 59 серверов
+----------------------------------------------------------------------
+ИТОГО обработано строк из CSV файла: 534
+======================================================================

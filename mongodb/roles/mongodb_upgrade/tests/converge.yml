@@ -1,0 +1,7 @@
+- name: Apply mongodb_upgrade role
+  hosts: all
+  become: yes
+  gather_facts: yes
+
+  roles:
+    - role: roles/mongodb_upgrade

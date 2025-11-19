@@ -7,10 +7,10 @@ node_exporter_version: "1.8.1"
 
 # Порты для прослушивания
 mongodb_exporter_port: 9216
-node_exporter_port: 9100
+node_exporter_port: 50420
 
 # Пользователь MongoDB для мониторинга
-mongodb_exporter_user: "zabbix"
+mongodb_exporter_user: "grafana"
 
 # Пароль пользователя (должен быть переопределен)
 mongodb_exporter_password: ""
