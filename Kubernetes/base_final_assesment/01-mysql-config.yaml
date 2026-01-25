@@ -1,0 +1,36 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mysql-configmap
+  namespace: db
+  labels:
+    app: db
+data:
+  init.sql: |
+    CREATE TABLE IF NOT EXISTS speedtest_users (
+      id int(11) NOT NULL AUTO_INCREMENT,
+      timestamp timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      ip text NOT NULL,
+      isp text NOT NULL,
+      ua text NOT NULL,
+      lang text NOT NULL,
+      dl text NOT NULL,
+      ul text NOT NULL,
+      ping text NOT NULL,
+      jitter text NOT NULL,
+      log text NOT NULL,
+      uuid text NOT NULL,
+      PRIMARY KEY (id)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: mysql-secret
+  namespace: db
+  labels:
+    app: db
+type: Opaque
+stringData:
+  mysql-root-password: "superrootpassword"
+  mysql-password: "speedtestpassword"

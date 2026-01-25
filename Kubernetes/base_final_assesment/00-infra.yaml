@@ -1,0 +1,26 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: db
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: final
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: registrysecret
+  namespace: final
+type: kubernetes.io/dockerconfigjson
+stringData:
+  # Используем stringData, чтобы избежать ошибок ручного кодирования base64
+  .dockerconfigjson: |
+    {
+      "auths": {
+        "registry.rebrainme.com": {
+          "auth": "Y29yZS1yZWdpc3RyeS1hdXRoOnB1bGwtY3JlZHM6Z2xkdC1IdEdfSkhCTVh5ekNDaUlncHpo"
+        }
+      }
+    }
