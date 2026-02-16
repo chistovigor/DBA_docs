@@ -24,23 +24,19 @@ cp -rfp inventory/sample inventory/ha-cluster
 # keys setup
 
 ssh-keygen -t ed25519 -N "" -f ~/.ssh/id_rsa
-# Для самого себя (мастера)
-ssh-copy-id -o StrictHostKeyChecking=no user@10.130.0.27
 
-# Для первой ноды
-ssh-copy-id -o StrictHostKeyChecking=no user@10.130.0.31
-
-# Для второй ноды
-ssh-copy-id -o StrictHostKeyChecking=no user@10.130.0.29
+ssh-copy-id -o StrictHostKeyChecking=no user@10.130.0.18
+ssh-copy-id -o StrictHostKeyChecking=no user@10.130.0.21
+ssh-copy-id -o StrictHostKeyChecking=no user@10.130.0.6
 
 # inventory setup
 
 vim inventory/ha-cluster/inventory.ini
 
 [all]
-kube-master ansible_host=10.130.0.27 ip=10.130.0.27 etcd_member_name=etcd1
-kube-node01 ansible_host=10.130.0.31 ip=10.130.0.31 etcd_member_name=etcd2
-kube-node02 ansible_host=10.130.0.29 ip=10.130.0.29 etcd_member_name=etcd3
+kube-master ansible_host=10.130.0.18 ip=10.130.0.18 etcd_member_name=etcd1
+kube-node01 ansible_host=10.130.0.21 ip=10.130.0.21 etcd_member_name=etcd2
+kube-node02 ansible_host=10.130.0.6  ip=10.130.0.6  etcd_member_name=etcd3
 
 [kube_control_plane]
 kube-master
@@ -63,7 +59,10 @@ kube_node
 
 # add name resolution
 
-echo "158.160.177.85 lb-apiserver.kubernetes.local" | sudo tee -a /etc/hosts
+echo "84.201.180.19 lb-apiserver.kubernetes.local" | sudo tee -a /etc/hosts
+
+ansible -i inventory/ha-cluster/inventory.ini all -m lineinfile -u user -b \
+-a "path=/etc/hosts regexp='.*lb-apiserver.kubernetes.local' line='10.130.0.18 lb-apiserver.kubernetes.local'"
 
 # load balancer add
 
@@ -71,7 +70,7 @@ vim inventory/ha-cluster/group_vars/all/all.yml
 
 loadbalancer_apiserver_localhost: true
 loadbalancer_apiserver:
-  address: 158.160.177.85
+  address: 84.201.180.19
   port: 6443
 
 # check all
@@ -80,4 +79,4 @@ ansible -i inventory/ha-cluster/inventory.ini all -m ping -u user -b
 
 # run setup
 
-ansible-playbook -i inventory/ha-cluster/inventory.ini -u user -b --become-user=root cluster.yml -e ignore_assert_errors=yes
+nohup ansible-playbook -i inventory/ha-cluster/inventory.ini -u user -b --become-user=root cluster.yml -e ignore_assert_errors=yes > install_ha.log 2>&1 &
