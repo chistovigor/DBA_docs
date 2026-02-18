@@ -1,42 +1,45 @@
 # initial environment setup for kubespray
 
+# Если папка уже есть, лучше начать с чистого листа
+rm -rf kubespray
+
 # Клонируем репозиторий
 git clone https://github.com/kubernetes-sigs/kubespray.git
 cd kubespray
 
-# Переключаемся на нужную версию
+# Переключаемся на стабильную ветку (используем ту же версию v2.29.1)
 git checkout v2.29.1
 
-# Установка venv, если его нет (для Ubuntu)
-sudo apt update && sudo apt install -y python3-venv
-
-# Создаем и активируем окружение
+# Установка venv и зависимостей
+sudo apt update && sudo apt install -y python3-venv sshpass
 python3 -m venv venv
 source venv/bin/activate
-
-# Обновляем pip и ставим зависимости
 pip install --upgrade pip
 pip install -r requirements.txt
 
-# Копируем шаблон в папку ha-cluster
+# Копируем шаблон инвентаря
 cp -rfp inventory/sample inventory/ha-cluster
 
 # keys setup
 
+# Генерируем ключ (без парольной фразы)
 ssh-keygen -t ed25519 -N "" -f ~/.ssh/id_rsa
 
-ssh-copy-id -o StrictHostKeyChecking=no user@10.130.0.18
-ssh-copy-id -o StrictHostKeyChecking=no user@10.130.0.21
+# Копируем ключи (вводите password при запросе)
+# Master
 ssh-copy-id -o StrictHostKeyChecking=no user@10.130.0.6
+# Node 1
+ssh-copy-id -o StrictHostKeyChecking=no user@10.130.0.5
+# Node 2
+ssh-copy-id -o StrictHostKeyChecking=no user@10.130.0.39
 
 # inventory setup
 
-vim inventory/ha-cluster/inventory.ini
-
+cat > inventory/ha-cluster/inventory.ini <<EOF
 [all]
-kube-master ansible_host=10.130.0.18 ip=10.130.0.18 etcd_member_name=etcd1
-kube-node01 ansible_host=10.130.0.21 ip=10.130.0.21 etcd_member_name=etcd2
-kube-node02 ansible_host=10.130.0.6  ip=10.130.0.6  etcd_member_name=etcd3
+kube-master ansible_host=10.130.0.6 ip=10.130.0.6 etcd_member_name=etcd1
+kube-node01 ansible_host=10.130.0.5 ip=10.130.0.5 etcd_member_name=etcd2
+kube-node02 ansible_host=10.130.0.39 ip=10.130.0.39 etcd_member_name=etcd3
 
 [kube_control_plane]
 kube-master
@@ -56,22 +59,21 @@ kube-node02
 [k8s_cluster:children]
 kube_control_plane
 kube_node
+EOF
 
-# add name resolution
+# load balancer setup
 
-echo "84.201.180.19 lb-apiserver.kubernetes.local" | sudo tee -a /etc/hosts
+cat > inventory/ha-cluster/group_vars/all/custom_lb.yml <<EOF
+## Отключаем локальный балансировщик (требование поддержки)
+loadbalancer_apiserver_localhost: false
 
-ansible -i inventory/ha-cluster/inventory.ini all -m lineinfile -u user -b \
--a "path=/etc/hosts regexp='.*lb-apiserver.kubernetes.local' line='10.130.0.18 lb-apiserver.kubernetes.local'"
-
-# load balancer add
-
-vim inventory/ha-cluster/group_vars/all/all.yml
-
-loadbalancer_apiserver_localhost: true
+## Указываем внешний балансировщик
 loadbalancer_apiserver:
-  address: 84.201.180.19
+  address: 84.252.134.62
   port: 6443
+EOF
+
+cat inventory/ha-cluster/group_vars/all/custom_lb.yml
 
 # check all
 
@@ -79,4 +81,4 @@ ansible -i inventory/ha-cluster/inventory.ini all -m ping -u user -b
 
 # run setup
 
-nohup ansible-playbook -i inventory/ha-cluster/inventory.ini -u user -b --become-user=root cluster.yml -e ignore_assert_errors=yes > install_ha.log 2>&1 &
+ansible-playbook -i inventory/ha-cluster/inventory.ini -u user -b --become-user=root cluster.yml -e ignore_assert_errors=yes
