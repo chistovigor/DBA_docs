@@ -26,20 +26,17 @@ cp -rfp inventory/sample inventory/ha-cluster
 ssh-keygen -t ed25519 -N "" -f ~/.ssh/id_rsa
 
 # Копируем ключи (вводите password при запросе)
-# Master
-ssh-copy-id -o StrictHostKeyChecking=no user@10.130.0.6
-# Node 1
-ssh-copy-id -o StrictHostKeyChecking=no user@10.130.0.5
-# Node 2
-ssh-copy-id -o StrictHostKeyChecking=no user@10.130.0.39
+ssh-copy-id -o StrictHostKeyChecking=no user@158.160.209.15
+ssh-copy-id -o StrictHostKeyChecking=no user@158.160.220.170
+ssh-copy-id -o StrictHostKeyChecking=no user@158.160.222.77
 
 # inventory setup
 
 cat > inventory/ha-cluster/inventory.ini <<EOF
 [all]
-kube-master ansible_host=10.130.0.6 ip=10.130.0.6 etcd_member_name=etcd1
-kube-node01 ansible_host=10.130.0.5 ip=10.130.0.5 etcd_member_name=etcd2
-kube-node02 ansible_host=10.130.0.39 ip=10.130.0.39 etcd_member_name=etcd3
+kube-master ansible_host=10.130.0.22 ip=10.130.0.22 etcd_member_name=etcd1
+kube-node01 ansible_host=10.130.0.38 ip=10.130.0.38 etcd_member_name=etcd2
+kube-node02 ansible_host=10.130.0.13 ip=10.130.0.13 etcd_member_name=etcd3
 
 [kube_control_plane]
 kube-master
@@ -63,14 +60,20 @@ EOF
 
 # load balancer setup
 
-cat > inventory/ha-cluster/group_vars/all/custom_lb.yml <<EOF
-## Отключаем локальный балансировщик (требование поддержки)
+cat > inventory/ha-cluster/group_vars/all/external_lb.yml <<EOF
+## Отключаем локальный прокси
 loadbalancer_apiserver_localhost: false
 
-## Указываем внешний балансировщик
+## Внешний балансировщик (как просила поддержка)
 loadbalancer_apiserver:
-  address: 84.252.134.62
+  address: 158.160.139.54
   port: 6443
+
+## Лайфхак от поддержки: записываем IP в доменное имя
+apiserver_loadbalancer_domain_name: "158.160.139.54"
+
+## Обязательно добавляем IP в сертификаты, иначе kubectl не пустит
+supplementary_addresses_in_ssl_keys: [ "158.160.139.54" ]
 EOF
 
 cat inventory/ha-cluster/group_vars/all/custom_lb.yml
