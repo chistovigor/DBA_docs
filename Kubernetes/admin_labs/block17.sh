@@ -1,5 +1,7 @@
 # подготовка и применение манифестов на мастере
 
+# подготовка и применение манифестов на мастере
+
 #!/bin/bash
 set -e
 
@@ -137,6 +139,15 @@ spec:
 EOF
 
 echo "=== Готово! Ожидание инициализации таргетов (30-60 сек) ==="
+
+# 1. Проверь статус HPA:
+
+kubectl get --raw "/apis/custom.metrics.k8s.io/v1beta1/namespaces/default/pods/*/http_requests" | jq .
+
+# 2. Сымитируй нагрузку
+
+# В отдельном терминале (без port-forward, прямо внутри кластера)
+kubectl run load-gen --image=busybox:1.28 --restart=Never -- /bin/sh -c "while true; do wget -q -O- http://autoscale-svc.default.svc.cluster.local; sleep 0.01; done"
 
 # 1. Проверь статус HPA:
 
